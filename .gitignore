@@ -176,3 +176,5 @@ shapiq/games/benchmark/precomputed/
 precomputed.zip
 yahpodata
 yahpodata/*
+
+*.png
