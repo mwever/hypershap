@@ -92,9 +92,8 @@ if __name__ == "__main__":
     local_config.set_data_path("yahpodata")
 
     game_types = ["local", "global", "universal"]
-    benchmark_list = [
-        "rbv2_xgboost"
-    ]  # ["rbv2_svm", "rbv2_rpart", "rbv2_aknn", "rbv2_glmnet", "rbv2_ranger", "rbv2_xgboost"] # ,"rbv2_super"]
+    # ["rbv2_svm", "rbv2_rpart", "rbv2_aknn", "rbv2_glmnet", "rbv2_ranger", "rbv2_xgboost", "rbv2_super"]
+    benchmark_list = ["rbv2_xgboost"]
     metrics = ["acc"]  # , "bac", "auc", "brier", "f1", "logloss"]
     approx = ["kerneliq"]  # , "svarmiq", "exact"]
     precis_list = [100]
