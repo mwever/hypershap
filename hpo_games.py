@@ -179,3 +179,32 @@ class LocalHyperparameterImportanceGame(AbstractHyperparameterImportanceGame):
             [self.optimized_cfg], coalition
         )[0]
         return self.try_error_active_parameters_objective_eval(cfg)
+
+
+class UniversalLocalHyperparameterImportanceGame(AbstractHyperparameterImportanceGame):
+    def __init__(self, bench, metric, optimized_cfg_list, aggregate_instances="mean"):
+        self.optimized_cfg_list = optimized_cfg_list
+        self.aggregate_instances = aggregate_instances
+        super().__init__(bench, metric)
+
+    def _before_first_value_function_hook(self):
+        pass
+
+    def evaluate_single_coalition(self, coalition: np.ndarray):
+        cfgs = self.blind_parameters_according_to_coalition(self.optimized_cfg_list, coalition)
+        obj = list()
+
+        for i, instance in enumerate(self.bench.instances):
+            self.bench.set_instance(instance)
+            obj += [self.try_error_active_parameters_objective_eval(cfgs[i])]
+
+        if self.aggregate_instances == "median":
+            agg_value = np.median(np.array(obj))
+        elif self.aggregate_instances == "max":
+            agg_value = np.array(obj).max()
+        elif self.aggregate_instances == "mean":
+            agg_value = np.array(obj).mean()
+        elif self.aggregate_instances == "min":
+            agg_value = np.array(obj).min()
+
+        return agg_value

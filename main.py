@@ -1,3 +1,4 @@
+from tqdm import tqdm
 from yahpo_gym import benchmark_set, local_config
 import matplotlib
 from shapiq import SHAPIQ, SVARMIQ, KernelSHAPIQ, ExactComputer, network_plot
@@ -5,7 +6,7 @@ from shapiq import SHAPIQ, SVARMIQ, KernelSHAPIQ, ExactComputer, network_plot
 from hpo_games import (
     UniversalHyperparameterImportanceGame,
     GlobalHyperparameterImportanceGame,
-    LocalHyperparameterImportanceGame,
+    LocalHyperparameterImportanceGame, UniversalLocalHyperparameterImportanceGame,
 )
 
 
@@ -39,6 +40,24 @@ def evaluate_scenario(benchmark, game_type, metric, approx, precis, instance=Non
                 opt_cfg_value = cfg_value
         print("Optimized configuration ", opt_cfg, opt_cfg_value)
         game = LocalHyperparameterImportanceGame(bench, metric, opt_cfg)
+    elif game_type == "universallocal":
+        opt_cfg_list = list()
+        print("compile opt cfg list")
+        for instance in tqdm(bench.instances):
+            bench.set_instance(instance)
+            opt_cfg = None
+            opt_cfg_value = None
+            for cfg in bench.get_opt_space(
+                drop_fidelity_params=False, seed=1337
+            ).sample_configuration(10000):
+                cfg_dict = cfg.get_dictionary()
+                cfg_value = bench.objective_function(cfg_dict)[0][metric]
+                if opt_cfg_value is None or cfg_value > opt_cfg_value:
+                    opt_cfg = cfg_dict
+                    opt_cfg_value = cfg_value
+            opt_cfg_list += [opt_cfg]
+        game = UniversalLocalHyperparameterImportanceGame(bench, metric, opt_cfg_list)
+
 
     approx_cfg = {"n": game.n_players, "random_state": 42}
 
@@ -54,8 +73,7 @@ def evaluate_scenario(benchmark, game_type, metric, approx, precis, instance=Non
     try:
         res = shap.approximate(budget=precis, game=game)
     except AttributeError:
-        res = shap(index="k-SII", order=2)
-    res.get_top_k_interactions(25)
+        res = shap(index="k-SII", order=6)
 
     value_list = list()
     for k, v in res.interaction_lookup.items():
@@ -91,15 +109,16 @@ if __name__ == "__main__":
     local_config.init_config()
     local_config.set_data_path("yahpodata")
 
-    game_types = ["local", "global", "universal"]
+    game_types = ["local", "global", "universal", "universallocal"]
     # ["rbv2_svm", "rbv2_rpart", "rbv2_aknn", "rbv2_glmnet", "rbv2_ranger", "rbv2_xgboost", "rbv2_super"]
-    benchmark_list = ["rbv2_xgboost"]
+    game_types = ["universallocal"]
+    benchmark_list = ["rbv2_svm"]
     metrics = ["acc"]  # , "bac", "auc", "brier", "f1", "logloss"]
-    approx = ["kerneliq"]  # , "svarmiq", "exact"]
-    precis_list = [100]
+    approx = ["exact"]  # , "svarmiq", "exact"]
+    precis_list = [10]
 
-    # benchmark = "lcbench"
-    # metric = "val_accuracy"
+    benchmark_list = ["lcbench"]
+    metrics = ["val_accuracy"]
     # game_type = "global"
 
     for game_type in game_types:
