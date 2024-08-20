@@ -25,14 +25,18 @@ def test_exact_computer_on_soum():
 
         moebius_transform = exact_computer.moebius_transform()
         # Assert equality with ground truth Möbius coefficients from SOUM
-        assert np.sum((moebius_transform - soum.moebius_coefficients).values ** 2) < 10e-7
+        assert (
+            np.sum((moebius_transform - soum.moebius_coefficients).values ** 2) < 10e-7
+        )
 
         # Compare ground truth via MoebiusConvert with exact computation of ExactComputer
         shapley_interactions_gt = {}
         shapley_interactions_exact = {}
         for index in ["STII", "k-SII", "FSII"]:
-            shapley_interactions_gt[index] = moebius_converter.moebius_to_shapley_interaction(
-                index=index, order=order
+            shapley_interactions_gt[index] = (
+                moebius_converter.moebius_to_shapley_interaction(
+                    index=index, order=order
+                )
             )
             shapley_interactions_exact[index] = exact_computer.shapley_interaction(
                 index=index, order=order
@@ -40,7 +44,11 @@ def test_exact_computer_on_soum():
             # Check equality with ground truth calculations from SOUM
             assert (
                 np.sum(
-                    (shapley_interactions_exact[index] - shapley_interactions_gt[index]).values ** 2
+                    (
+                        shapley_interactions_exact[index]
+                        - shapley_interactions_gt[index]
+                    ).values
+                    ** 2
                 )
                 < 10e-7
             )
@@ -50,7 +58,9 @@ def test_exact_computer_on_soum():
             order=order, index=index
         )
         # Assert efficiency
-        assert (np.sum(shapley_generalized_values.values) - predicted_value) ** 2 < 10e-7
+        assert (
+            np.sum(shapley_generalized_values.values) - predicted_value
+        ) ** 2 < 10e-7
 
         index = "kADD-SHAP"
         shapley_interactions_exact[index] = exact_computer.shapley_interaction(
@@ -74,10 +84,14 @@ def test_exact_computer_on_soum():
         probabilistic_values_indices = ["SV", "BV"]
         probabilistic_values = {}
         for pv_index in probabilistic_values_indices:
-            probabilistic_values[pv_index] = exact_computer.probabilistic_value(index=pv_index)
+            probabilistic_values[pv_index] = exact_computer.probabilistic_value(
+                index=pv_index
+            )
 
         # Assert efficiency for SV
-        assert (np.sum(probabilistic_values["SV"].values) - predicted_value) ** 2 < 10e-7
+        assert (
+            np.sum(probabilistic_values["SV"].values) - predicted_value
+        ) ** 2 < 10e-7
 
 
 @pytest.mark.parametrize(

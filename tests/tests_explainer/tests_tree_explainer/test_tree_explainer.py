@@ -13,14 +13,18 @@ def test_decision_tree_classifier(dt_clf_model, background_clf_data):
     x_explain = background_clf_data[0]
     explanation = explainer.explain(x_explain)
 
-    assert type(explanation).__name__ == "InteractionValues"  # check correct return type
+    assert (
+        type(explanation).__name__ == "InteractionValues"
+    )  # check correct return type
 
     # check init with class label
     _ = TreeExplainer(model=dt_clf_model, max_order=2, min_order=1, class_label=0)
 
     assert True
 
-    explainer = _ = TreeExplainer(model=dt_clf_model, max_order=1, min_order=1, class_label=1)
+    explainer = _ = TreeExplainer(
+        model=dt_clf_model, max_order=1, min_order=1, class_label=1
+    )
     explanation = explainer.explain(x_explain)
 
     # compare baseline_value with empty_predictions
@@ -37,7 +41,9 @@ def test_decision_tree_regression(dt_reg_model, background_reg_data):
     x_explain = background_reg_data[0]
     explanation = explainer.explain(x_explain)
 
-    assert type(explanation).__name__ == "InteractionValues"  # check correct return type
+    assert (
+        type(explanation).__name__ == "InteractionValues"
+    )  # check correct return type
 
     # compare baseline_value with empty_predictions
     assert explainer.baseline_value == sum(
@@ -53,7 +59,9 @@ def test_random_forrest_regression(rf_reg_model, background_reg_data):
     x_explain = background_reg_data[0]
     explanation = explainer.explain(x_explain)
 
-    assert type(explanation).__name__ == "InteractionValues"  # check correct return type
+    assert (
+        type(explanation).__name__ == "InteractionValues"
+    )  # check correct return type
 
     # compare baseline_value with empty_predictions
     assert explainer.baseline_value == sum(
@@ -69,7 +77,9 @@ def test_random_forrest_classification(rf_clf_model, background_clf_data):
     x_explain = background_clf_data[0]
     explanation = explainer.explain(x_explain)
 
-    assert type(explanation).__name__ == "InteractionValues"  # check correct return type
+    assert (
+        type(explanation).__name__ == "InteractionValues"
+    )  # check correct return type
 
     # compare baseline_value with empty_predictions
     assert explainer.baseline_value == sum(

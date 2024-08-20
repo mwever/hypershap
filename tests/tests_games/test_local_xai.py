@@ -96,7 +96,14 @@ def test_adult_census(model):
 
 
 @pytest.mark.parametrize(
-    "model", ["neural_network", "decision_tree", "random_forest", "gradient_boosting", "invalid"]
+    "model",
+    [
+        "neural_network",
+        "decision_tree",
+        "random_forest",
+        "gradient_boosting",
+        "invalid",
+    ],
 )
 def test_california_housing(model):
     """Tests the CaliforniaHousing game local XAI."""
@@ -188,7 +195,10 @@ def test_sentiment_classifier(mask_strategy):
     assert game(test_coalition) == game._full_output - game.normalization_value
 
     test_coalition = np.array([[1, 0, 1, 0, 1, 0]], dtype=bool)
-    assert game.value_function(test_coalition) == game(test_coalition) + game.normalization_value
+    assert (
+        game.value_function(test_coalition)
+        == game(test_coalition) + game.normalization_value
+    )
 
     # test ValueError with wrong param
     with pytest.raises(ValueError):
@@ -200,7 +210,9 @@ def test_sentiment_classifier(mask_strategy):
 def test_resnet_model_class(test_image_and_path):
     """Tests the creation of the ResNet Model class."""
     test_image, _ = test_image_and_path
-    resnet_model = ResNetModel(n_superpixels=14, input_image=test_image, verbose=True, batch_size=2)
+    resnet_model = ResNetModel(
+        n_superpixels=14, input_image=test_image, verbose=True, batch_size=2
+    )
     assert resnet_model.n_superpixels == 14
 
     test_coalitions = np.asarray(
@@ -259,7 +271,10 @@ def test_image_classifier_game_vit(test_image_and_path):
     """Tests the ImageClassifierGame with the ViT models."""
     test_image, path_from_test_root = test_image_and_path
     game = ImageClassifierLocalXAI(
-        x_explain_path=path_from_test_root, model_name="vit_9_patches", normalize=True, verbose=True
+        x_explain_path=path_from_test_root,
+        model_name="vit_9_patches",
+        normalize=True,
+        verbose=True,
     )
     assert game.n_players == 9
     assert game.normalization_value == game.model_function.empty_value
@@ -286,11 +301,15 @@ def test_image_classifier_game_vit(test_image_and_path):
         verbose=False,
     )
     assert game_16.n_players == 16
-    assert game_16.normalization_value == game.normalization_value  # should be the same as 9 patch
+    assert (
+        game_16.normalization_value == game.normalization_value
+    )  # should be the same as 9 patch
 
     # wrong model
     with pytest.raises(ValueError):
-        _ = ImageClassifierLocalXAI(x_explain_path=path_from_test_root, model_name="wrong_model")
+        _ = ImageClassifierLocalXAI(
+            x_explain_path=path_from_test_root, model_name="wrong_model"
+        )
 
     # no image path
     with pytest.raises(ValueError):

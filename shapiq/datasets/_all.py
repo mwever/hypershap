@@ -7,7 +7,9 @@ import pandas as pd
 GITHUB_DATA_URL = "https://raw.githubusercontent.com/mmschlk/shapiq/main/data/"
 
 # csv files are located next to this file in a folder called "data"
-SHAPIQ_DATASETS_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+SHAPIQ_DATASETS_FOLDER = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "data"
+)
 os.makedirs(SHAPIQ_DATASETS_FOLDER, exist_ok=True)
 
 
@@ -134,7 +136,13 @@ def load_adult_census(to_numpy=False) -> tuple[pd.DataFrame, pd.Series]:
     dataset = _try_load("adult_census.csv")
     class_label = "class"
 
-    num_feature_names = ["age", "capital-gain", "capital-loss", "hours-per-week", "fnlwgt"]
+    num_feature_names = [
+        "age",
+        "capital-gain",
+        "capital-loss",
+        "hours-per-week",
+        "fnlwgt",
+    ]
     cat_feature_names = [
         "workclass",
         "education",
@@ -148,7 +156,10 @@ def load_adult_census(to_numpy=False) -> tuple[pd.DataFrame, pd.Series]:
     ]
     dataset[num_feature_names] = dataset[num_feature_names].apply(pd.to_numeric)
     num_pipeline = Pipeline(
-        [("imputer", SimpleImputer(strategy="median")), ("std_scaler", StandardScaler())]
+        [
+            ("imputer", SimpleImputer(strategy="median")),
+            ("std_scaler", StandardScaler()),
+        ]
     )
     cat_pipeline = Pipeline(
         [

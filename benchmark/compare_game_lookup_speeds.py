@@ -108,12 +108,20 @@ def time_both_games(n_sets: int) -> tuple[float, float]:
     new_game = Game(path_to_values=path_to_values)
 
     # old game
-    old_game = OldLookUpGame(data_folder="OldSentimentAnalysis(Game)", n=n_players, set_zero=True)
+    old_game = OldLookUpGame(
+        data_folder="OldSentimentAnalysis(Game)", n=n_players, set_zero=True
+    )
 
     # new test coalitions
-    test_coalitions_new = list(powerset(range(n_players), min_size=0, max_size=n_players))
-    test_coalitions_new = transform_coalitions_to_array(test_coalitions_new, n_players=n_players)
-    test_coalitions_new = np.tile(test_coalitions_new, (n_sets, 1))  # make coalitions 10x larger
+    test_coalitions_new = list(
+        powerset(range(n_players), min_size=0, max_size=n_players)
+    )
+    test_coalitions_new = transform_coalitions_to_array(
+        test_coalitions_new, n_players=n_players
+    )
+    test_coalitions_new = np.tile(
+        test_coalitions_new, (n_sets, 1)
+    )  # make coalitions 10x larger
 
     # old test coalitions
     test_coalitions_old = [
@@ -166,7 +174,9 @@ if __name__ == "__main__":
 
         print(f"New game took {new_time_mean:.6f} ± {new_time_std:.6f} seconds.")
         print(f"Old game took {old_time_mean:.6f} ± {old_time_std:.6f} seconds.")
-        print(f"New game was {old_time_mean / new_time_mean:.2f} times faster than the old game.")
+        print(
+            f"New game was {old_time_mean / new_time_mean:.2f} times faster than the old game."
+        )
 
     ax.errorbar(0, 0, 0, fmt="o", c="orange", label="New game")
     ax.errorbar(0, 0, 0, fmt="o", c="blue", label="Old game")

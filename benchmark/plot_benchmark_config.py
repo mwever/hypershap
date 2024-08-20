@@ -13,7 +13,10 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
 
     from shapiq.games.benchmark.benchmark_config import GAME_NAME_TO_CLASS_MAPPING
-    from shapiq.games.benchmark.plot import get_game_title_name, plot_approximation_quality
+    from shapiq.games.benchmark.plot import (
+        get_game_title_name,
+        plot_approximation_quality,
+    )
     from shapiq.games.benchmark.run import load_benchmark_results
 
     print("Available games:", GAME_NAME_TO_CLASS_MAPPING.keys(), "\n")
@@ -47,7 +50,9 @@ if __name__ == "__main__":
     index_title = index if index != "k-SII" else rf"{order}" + r"\text{-}SII"
     index_title = r"$\bf{" + index_title + "}$:"  # makes index title bold
     n_games_str = "game" if n_games == 1 else "games"
-    title = f"{index_title} {game_title}\n(config. {config_id}, {n_games} {n_games_str})"
+    title = (
+        f"{index_title} {game_title}\n(config. {config_id}, {n_games} {n_games_str})"
+    )
 
     # load the benchmark results -------------------------------------------------------------------
     results_df, save_path = load_benchmark_results(

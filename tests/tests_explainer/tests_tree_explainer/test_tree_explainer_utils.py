@@ -26,7 +26,9 @@ def test_conditional_sample_weights():
     count_arr = [100, 70, 50, 20, 30, 15, 15]
     count_arr = np.asarray(count_arr)
 
-    weights = get_conditional_sample_weights(parent_array=par_arr, sample_count=count_arr)
+    weights = get_conditional_sample_weights(
+        parent_array=par_arr, sample_count=count_arr
+    )
     assert weights[0] == 1.0
     assert weights[2] == 50 / 70
     assert weights[5] == 0.5

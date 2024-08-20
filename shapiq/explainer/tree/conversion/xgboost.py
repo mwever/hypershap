@@ -32,7 +32,9 @@ def convert_xgboost_booster(
     if len(booster_df["Tree"].unique()) > tree_booster.num_boosted_rounds():
         # choose only trees for the selected class (xgboost grows n_estimators*n_class trees)
         # approximation for the number of classes in xgboost
-        n_class = int(len(booster_df["Tree"].unique()) / tree_booster.num_boosted_rounds())
+        n_class = int(
+            len(booster_df["Tree"].unique()) / tree_booster.num_boosted_rounds()
+        )
         if class_label is None:
             class_label = 0
         idc = booster_df["Tree"] % n_class == class_label
@@ -53,7 +55,9 @@ def convert_xgboost_booster(
             convert_feature_str_to_int
         )
     return [
-        _convert_xgboost_tree_as_df(tree_df=tree_df, output_type=output_type, scaling=scaling)
+        _convert_xgboost_tree_as_df(
+            tree_df=tree_df, output_type=output_type, scaling=scaling
+        )
         for _, tree_df in booster_df.groupby("Tree")
     ]
 
@@ -92,7 +96,8 @@ def _convert_xgboost_tree_as_df(
             .values,
             features=tree_df["Feature"].values,
             thresholds=tree_df["Split"].values,
-            values=tree_df["Gain"].values * scaling,  # values in non-leaf nodes are not used
+            values=tree_df["Gain"].values
+            * scaling,  # values in non-leaf nodes are not used
             node_sample_weight=tree_df["Cover"].values,
             empty_prediction=None,
             original_output_type=output_type,

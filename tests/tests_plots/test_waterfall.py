@@ -20,11 +20,15 @@ def test_waterfall_plot(interaction_values_list: list[InteractionValues]):
     assert isinstance(wp, plt.Axes)
     plt.close()
 
-    wp = waterfall_plot(iv, show=False, feature_names=feature_names, feature_values=feature_values)
+    wp = waterfall_plot(
+        iv, show=False, feature_names=feature_names, feature_values=feature_values
+    )
     assert isinstance(wp, plt.Axes)
     plt.close()
 
-    wp = waterfall_plot(iv, show=False, feature_names=None, feature_values=feature_values)
+    wp = waterfall_plot(
+        iv, show=False, feature_names=None, feature_values=feature_values
+    )
     assert isinstance(wp, plt.Axes)
     plt.close()
 

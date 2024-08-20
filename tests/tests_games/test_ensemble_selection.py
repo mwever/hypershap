@@ -19,8 +19,19 @@ from shapiq.games.benchmark import (
 )
 
 # with this set tests take around 1s
-ENSEMBLE_MEMBERS_FAST = ["regression", "decision_tree", "random_forest", "gradient_boosting", "knn"]
-ENSEMBLE_MEMBERS_VERY_FAST = ["regression", "decision_tree", "regression", "decision_tree"]
+ENSEMBLE_MEMBERS_FAST = [
+    "regression",
+    "decision_tree",
+    "random_forest",
+    "gradient_boosting",
+    "knn",
+]
+ENSEMBLE_MEMBERS_VERY_FAST = [
+    "regression",
+    "decision_tree",
+    "regression",
+    "decision_tree",
+]
 
 
 @pytest.mark.parametrize(

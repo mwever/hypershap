@@ -37,7 +37,9 @@ def test_base_class():
 
     for i, coalition in enumerate(powerset(range(n_players))):
         if len(coalition) <= 1:
-            assert values[i] == 0.0  # must be zero for empty and single player coalitions
+            assert (
+                values[i] == 0.0
+            )  # must be zero for empty and single player coalitions
         else:
             assert values[i] != 0.0  # should be non-zero for non-empty coalitions
 

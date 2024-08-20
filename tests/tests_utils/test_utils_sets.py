@@ -25,7 +25,16 @@ from shapiq.utils import (
             ["A", "B", "C"],
             0,
             None,
-            [(), ("A",), ("B",), ("C",), ("A", "B"), ("A", "C"), ("B", "C"), ("A", "B", "C")],
+            [
+                (),
+                ("A",),
+                ("B",),
+                ("C",),
+                ("A", "B"),
+                ("A", "C"),
+                ("B", "C"),
+                ("A", "B", "C"),
+            ],
         ),
     ],
 )
@@ -63,7 +72,9 @@ def test_split_subsets_budget(budget, order, n, q, expected):
     sampling_weights = np.asarray(q, dtype=float)
     assert split_subsets_budget(order, n, budget, sampling_weights) == expected
     assert (
-        split_subsets_budget(order=order, n=n, budget=budget, sampling_weights=sampling_weights)
+        split_subsets_budget(
+            order=order, n=n, budget=budget, sampling_weights=sampling_weights
+        )
         == expected
     )
 
@@ -87,7 +98,9 @@ def test_get_explicit_subsets(n, subset_sizes, expected):
 
     explicit_subsets = get_explicit_subsets(n, subset_sizes)  # without parameter names
     check_correctness(explicit_subsets, expected)
-    explicit_subsets = get_explicit_subsets(n=n, subset_sizes=subset_sizes)  # with parameter names
+    explicit_subsets = get_explicit_subsets(
+        n=n, subset_sizes=subset_sizes
+    )  # with parameter names
     check_correctness(explicit_subsets, expected)
 
 
@@ -98,7 +111,12 @@ def test_get_explicit_subsets(n, subset_sizes, expected):
         (3, 2, 2, {(0, 1): 0, (0, 2): 1, (1, 2): 2}),
         (3, 3, 3, {(0, 1, 2): 0}),
         (3, 1, 2, {(0,): 0, (1,): 1, (2,): 2, (0, 1): 3, (0, 2): 4, (1, 2): 5}),
-        (3, 1, 3, {(0,): 0, (1,): 1, (2,): 2, (0, 1): 3, (0, 2): 4, (1, 2): 5, (0, 1, 2): 6}),
+        (
+            3,
+            1,
+            3,
+            {(0,): 0, (1,): 1, (2,): 2, (0, 1): 3, (0, 2): 4, (1, 2): 5, (0, 1, 2): 6},
+        ),
         (["A", "B", "C"], 1, 1, {("A",): 0, ("B",): 1, ("C",): 2}),
         ({1, 5, 8}, 1, 2, {(1,): 0, (5,): 1, (8,): 2, (1, 5): 3, (1, 8): 4, (5, 8): 5}),
     ],
@@ -114,7 +132,17 @@ def test_generate_interaction_lookup(n, min_order, max_order, expected):
         (
             [(0,), (1,), (2,), (0, 1), (0, 2), (1, 2), (0, 1, 2)],
             None,
-            np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1], [1, 1, 0], [1, 0, 1], [0, 1, 1], [1, 1, 1]]),
+            np.array(
+                [
+                    [1, 0, 0],
+                    [0, 1, 0],
+                    [0, 0, 1],
+                    [1, 1, 0],
+                    [1, 0, 1],
+                    [0, 1, 1],
+                    [1, 1, 1],
+                ]
+            ),
         ),
         (
             [(0, 1), (1, 2), (0, 2)],
@@ -137,7 +165,17 @@ def test_transform_coalitions_to_array(coalitions, n_player, expected):
     "coalitions, expected",
     [
         (
-            np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1], [1, 1, 0], [1, 0, 1], [0, 1, 1], [1, 1, 1]]),
+            np.array(
+                [
+                    [1, 0, 0],
+                    [0, 1, 0],
+                    [0, 0, 1],
+                    [1, 1, 0],
+                    [1, 0, 1],
+                    [0, 1, 1],
+                    [1, 1, 1],
+                ]
+            ),
             [(0,), (1,), (2,), (0, 1), (0, 2), (1, 2), (0, 1, 2)],
         ),
         (

@@ -32,7 +32,9 @@ def test_approximator():
 
     wrong_index = "something"
     with pytest.raises(ValueError):
-        approx = concreter(Approximator)(n=7, max_order=2, index=wrong_index, top_order=False)
+        approx = concreter(Approximator)(
+            n=7, max_order=2, index=wrong_index, top_order=False
+        )
 
 
 def test_imputer():

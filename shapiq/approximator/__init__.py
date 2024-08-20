@@ -6,7 +6,13 @@ from .montecarlo import SHAPIQ, SVARM, SVARMIQ, UnbiasedKernelSHAP
 from .permutation.sii import PermutationSamplingSII
 from .permutation.stii import PermutationSamplingSTII
 from .permutation.sv import PermutationSamplingSV
-from .regression import InconsistentKernelSHAPIQ, KernelSHAP, KernelSHAPIQ, RegressionFSII, kADDSHAP
+from .regression import (
+    InconsistentKernelSHAPIQ,
+    KernelSHAP,
+    KernelSHAPIQ,
+    RegressionFSII,
+    kADDSHAP,
+)
 
 # contains all SV approximators
 SV_APPROXIMATORS: list[Approximator.__class__] = [

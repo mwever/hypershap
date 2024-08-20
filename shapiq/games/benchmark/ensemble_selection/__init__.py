@@ -4,8 +4,12 @@ from .base import EnsembleSelection, RandomForestEnsembleSelection
 from .benchmark import AdultCensus as AdultCensusEnsembleSelection
 from .benchmark import BikeSharing as BikeSharingEnsembleSelection
 from .benchmark import CaliforniaHousing as CaliforniaHousingEnsembleSelection
-from .benchmark_random_forest import AdultCensus as AdultCensusRandomForestEnsembleSelection
-from .benchmark_random_forest import BikeSharing as BikeSharingRandomForestEnsembleSelection
+from .benchmark_random_forest import (
+    AdultCensus as AdultCensusRandomForestEnsembleSelection,
+)
+from .benchmark_random_forest import (
+    BikeSharing as BikeSharingRandomForestEnsembleSelection,
+)
 from .benchmark_random_forest import (
     CaliforniaHousing as CaliforniaHousingRandomForestEnsembleSelection,
 )

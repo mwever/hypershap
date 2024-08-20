@@ -48,14 +48,16 @@ def load_games_from_configuration(
         An initialized game object with the given configuration.
     """
     game_class = (
-        GAME_NAME_TO_CLASS_MAPPING[game_class] if isinstance(game_class, str) else game_class
+        GAME_NAME_TO_CLASS_MAPPING[game_class]
+        if isinstance(game_class, str)
+        else game_class
     )
 
     # get config if it is an int
     try:
-        configuration: dict = BENCHMARK_CONFIGURATIONS[game_class][n_player_id]["configurations"][
-            config_id - 1
-        ]
+        configuration: dict = BENCHMARK_CONFIGURATIONS[game_class][n_player_id][
+            "configurations"
+        ][config_id - 1]
     except TypeError:  # not a dict
         configuration: dict = config_id
     params = {}
@@ -84,7 +86,9 @@ def load_games_from_configuration(
     )
     for i in range(n_games):
         game_iteration = iteration_param_values[i]  # from 1 to 30
-        game_iteration_value = iteration_param_values_names[i]  # i.e. the sentence or random state
+        game_iteration_value = iteration_param_values_names[
+            i
+        ]  # i.e. the sentence or random state
         params[iteration_param] = game_iteration_value  # set the iteration parameter
         if not game_should_be_precomputed:  # e.g. for SynthDataTreeSHAPIQXAI
             yield game_class(**params)
@@ -93,10 +97,15 @@ def load_games_from_configuration(
         else:
             try:  # try to load the game from disk
                 yield load_game_data(
-                    game_class, configuration, iteration=game_iteration, n_player_id=n_player_id
+                    game_class,
+                    configuration,
+                    iteration=game_iteration,
+                    n_player_id=n_player_id,
                 )
             except FileNotFoundError:
-                if only_pre_computed:  # if only pre-computed games are requested, skip the game
+                if (
+                    only_pre_computed
+                ):  # if only pre-computed games are requested, skip the game
                     continue
                 else:  # fallback to creating the game which is not pre-computed
                     yield game_class(**params)
@@ -166,7 +175,9 @@ def download_game_data(game_name: str, n_players: int, file_name: str) -> None:
     Raises:
         FileNotFoundError: If the file could not be downloaded.
     """
-    github_url = "https://raw.githubusercontent.com/mmschlk/shapiq/main/data/precomputed_games"
+    github_url = (
+        "https://raw.githubusercontent.com/mmschlk/shapiq/main/data/precomputed_games"
+    )
 
     # create the directory if it does not exist
     game_dir = str(os.path.join(SHAPIQ_DATA_DIR, game_name, str(n_players)))

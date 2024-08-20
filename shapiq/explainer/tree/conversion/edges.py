@@ -63,7 +63,9 @@ def create_edge_tree(
 
     features_last_seen_in_tree: dict[int, int] = {}
 
-    last_feature_node_in_path: np.ndarray[bool] = np.full_like(children_left, False, dtype=bool)
+    last_feature_node_in_path: np.ndarray[bool] = np.full_like(
+        children_left, False, dtype=bool
+    )
 
     def recursive_search(
         node_id: int = 0,
@@ -138,9 +140,13 @@ def create_edge_tree(
             ].copy()
         # correct if feature was seen before
         if seen_features[feature_id] > -1:  # feature has been seen before in the path
-            ancestor_id = seen_features[feature_id]  # get ancestor node with same feature
+            ancestor_id = seen_features[
+                feature_id
+            ]  # get ancestor node with same feature
             ancestors[node_id] = ancestor_id  # store ancestor node
-            last_feature_node_in_path[ancestor_id] = False  # correct previous assumption
+            last_feature_node_in_path[ancestor_id] = (
+                False  # correct previous assumption
+            )
             p_e *= p_e_values[ancestor_id]  # add ancestor weight to p_e
         else:
             for order in range(1, max_interaction + 1):

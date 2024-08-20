@@ -62,7 +62,9 @@ def test_approximate(n, max_order, top_order, budget, batch_size, index):
     """Tests the approximation of the PermutationSamplingSII approximator."""
     interaction = (1, 2)
     game = DummyGame(n, interaction)
-    approximator = PermutationSamplingSII(n, max_order, index, top_order, random_state=42)
+    approximator = PermutationSamplingSII(
+        n, max_order, index, top_order, random_state=42
+    )
     estimates = approximator.approximate(budget, game, batch_size=batch_size)
     assert isinstance(estimates, InteractionValues)
     assert estimates.max_order == max_order

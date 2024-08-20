@@ -89,7 +89,9 @@ class TabularExplainer(Explainer):
         from shapiq.games.imputer import ConditionalImputer, MarginalImputer
 
         if index not in AVAILABLE_INDICES:
-            raise ValueError(f"Invalid index `{index}`. " f"Valid indices are {AVAILABLE_INDICES}.")
+            raise ValueError(
+                f"Invalid index `{index}`. " f"Valid indices are {AVAILABLE_INDICES}."
+            )
 
         super().__init__(model, data)
 
@@ -102,7 +104,9 @@ class TabularExplainer(Explainer):
             self._imputer = ConditionalImputer(
                 self.predict, self.data, random_state=random_state, **kwargs
             )
-        elif isinstance(imputer, MarginalImputer) or isinstance(imputer, ConditionalImputer):
+        elif isinstance(imputer, MarginalImputer) or isinstance(
+            imputer, ConditionalImputer
+        ):
             self._imputer = imputer
         else:
             raise ValueError(
@@ -113,10 +117,15 @@ class TabularExplainer(Explainer):
 
         self.index = index
         self._max_order: int = max_order
-        self._approximator = self._init_approximator(approximator, self.index, self._max_order)
+        self._approximator = self._init_approximator(
+            approximator, self.index, self._max_order
+        )
 
     def explain(
-        self, x: np.ndarray, budget: Optional[int] = None, random_state: Optional[int] = None
+        self,
+        x: np.ndarray,
+        budget: Optional[int] = None,
+        random_state: Optional[int] = None,
     ) -> InteractionValues:
         """Explains the model's predictions.
 
@@ -157,7 +166,9 @@ class TabularExplainer(Explainer):
         self, approximator: Union[Approximator, str], index: str, max_order: int
     ) -> Approximator:
 
-        if isinstance(approximator, Approximator):  # if the approximator is already given
+        if isinstance(
+            approximator, Approximator
+        ):  # if the approximator is already given
             return approximator
 
         if approximator == "auto":

@@ -42,7 +42,9 @@ def test_import_package(package):
 )
 def test_import_submodules(package):
     """Tests whether all submodules of the package can be imported."""
-    for _, module_name, _ in pkgutil.walk_packages(package.__path__, package.__name__ + "."):
+    for _, module_name, _ in pkgutil.walk_packages(
+        package.__path__, package.__name__ + "."
+    ):
         importlib.import_module(module_name)
 
 

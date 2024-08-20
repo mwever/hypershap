@@ -17,7 +17,11 @@ from shapiq.interaction_values import InteractionValues
 
 BENCHMARK_RESULTS_DIR = "results"
 
-__all__ = ["run_benchmark_from_configuration", "run_benchmark", "load_benchmark_results"]
+__all__ = [
+    "run_benchmark_from_configuration",
+    "run_benchmark",
+    "load_benchmark_results",
+]
 
 
 def _save_results(results: pd.DataFrame, save_path: str) -> None:
@@ -85,14 +89,19 @@ def run_benchmark(
         ValueError: If the number of players in the games is not the same.
         ValueError: If the number of ground truth values is not the same as the number of games.
     """
-    from .configuration import APPROXIMATION_CONFIGURATIONS, APPROXIMATION_NAME_TO_CLASS_MAPPING
+    from .configuration import (
+        APPROXIMATION_CONFIGURATIONS,
+        APPROXIMATION_NAME_TO_CLASS_MAPPING,
+    )
 
     if save_path is None:
         save_path = os.path.join("results", f"{benchmark_name}.json")
         os.makedirs("results", exist_ok=True)
 
     if not rerun_if_exists and os.path.exists(save_path):
-        print(f"Results for the benchmark {benchmark_name} already exist. Skipping the benchmark.")
+        print(
+            f"Results for the benchmark {benchmark_name} already exist. Skipping the benchmark."
+        )
         return pd.read_json(save_path)
 
     # check that all games have the same number of players
@@ -113,13 +122,19 @@ def run_benchmark(
         )
 
     # transform the budget steps to integers if float is provided
-    if n_players > 16:  # sets the budget to 10k for synthetic games with more than 16 players
+    if (
+        n_players > 16
+    ):  # sets the budget to 10k for synthetic games with more than 16 players
         max_budget = 10_000
-    max_budget = max_budget or 2**n_players  # set budget to 2**n_players if not provided
+    max_budget = (
+        max_budget or 2**n_players
+    )  # set budget to 2**n_players if not provided
     if budget_steps is None:
         budget_steps = [
             int(round(budget_step, 2) * max_budget)
-            for budget_step in np.arange(budget_step, 1.0 + budget_step + budget_step, budget_step)
+            for budget_step in np.arange(
+                budget_step, 1.0 + budget_step + budget_step, budget_step
+            )
         ]
         print("Created budget steps: ", budget_steps)
 
@@ -128,7 +143,11 @@ def run_benchmark(
         approximators = APPROXIMATION_CONFIGURATIONS[index]
     # get approx classes if strings are provided
     approximators = [
-        APPROXIMATION_NAME_TO_CLASS_MAPPING[approx] if isinstance(approx, str) else approx
+        (
+            APPROXIMATION_NAME_TO_CLASS_MAPPING[approx]
+            if isinstance(approx, str)
+            else approx
+        )
         for approx in approximators
     ]
     approximators_per_iteration = {}
@@ -138,7 +157,9 @@ def run_benchmark(
                 _init_approximator_from_class(
                     approximator_class, n_players, index, order, random_state=iteration
                 )
-                if isinstance(approximator_class, type)  # check if the approximator is a class
+                if isinstance(
+                    approximator_class, type
+                )  # check if the approximator is a class
                 else approximator_class
             )
             for approximator_class in approximators
@@ -236,7 +257,9 @@ def _run_benchmark(args) -> dict[str, Union[str, int, float, InteractionValues]]
     result.update(metrics_all_orders)
     for order in range(1, gt_value.max_order + 1):
         metrics_order = get_all_metrics(
-            gt_value.get_n_order(order), estimates.get_n_order(order), order_indicator=str(order)
+            gt_value.get_n_order(order),
+            estimates.get_n_order(order),
+            order_indicator=str(order),
         )
         result.update(metrics_order)
     return result
@@ -264,7 +287,12 @@ def _init_approximator_from_class(
     from .configuration import APPROXIMATION_BENCHMARK_PARAMS
 
     params_tuple = APPROXIMATION_BENCHMARK_PARAMS[approximator_class]
-    all_par = {"index": index, "max_order": max_order, "random_state": random_state, "n": n_players}
+    all_par = {
+        "index": index,
+        "max_order": max_order,
+        "random_state": random_state,
+        "n": n_players,
+    }
     init_param = {}
     for param in params_tuple:
         init_param[param] = all_par[param]
@@ -293,7 +321,7 @@ def load_benchmark_results(
         game_n_games: The number of games to load the results for. Defaults to None.
 
     Returns:
-        The loaded benchmark results as a pandas DataFrame.
+        The loaded benchmark results as a pandas DataFrame and the save path.
 
     Raises:
         ValueError: If save path is None and the game configuration is not provided.
@@ -313,7 +341,9 @@ def load_benchmark_results(
             or index is None
             or order is None
         ):
-            raise ValueError("The game configuration must be provided if the save path is not.")
+            raise ValueError(
+                "The game configuration must be provided if the save path is not."
+            )
 
         if isinstance(game_class, str):
             game_class = get_game_class_from_name(game_class)
@@ -385,7 +415,11 @@ def run_benchmark_from_configuration(
     )
     from .load import load_games_from_configuration
 
-    game_class = get_game_class_from_name(game_class) if isinstance(game_class, str) else game_class
+    game_class = (
+        get_game_class_from_name(game_class)
+        if isinstance(game_class, str)
+        else game_class
+    )
     game_name = get_name_from_game_class(game_class)
     print(f"Running benchmark for the game: {game_name}.")
 
@@ -408,14 +442,22 @@ def run_benchmark_from_configuration(
     )
     if game_n_games is not None:
         games = games[:game_n_games]
-    print(f"Loaded {len(games)} games for the benchmark. Configuration ID: {config_id}.")
+    print(
+        f"Loaded {len(games)} games for the benchmark. Configuration ID: {config_id}."
+    )
     if not all(game.precomputed for game in games):
-        warnings.warn("Not all games are pre-computed. The benchmark might take longer to run.")
+        warnings.warn(
+            "Not all games are pre-computed. The benchmark might take longer to run."
+        )
     if not all(game.is_normalized for game in games):
-        warnings.warn("Not all games are normalized. The benchmark might not be accurate.")
+        warnings.warn(
+            "Not all games are normalized. The benchmark might not be accurate."
+        )
 
     # get the benchmark name for saving the results
-    benchmark_name = _make_benchmark_name(config_id, game_class, len(games), index, order)
+    benchmark_name = _make_benchmark_name(
+        config_id, game_class, len(games), index, order
+    )
     save_path = os.path.join("results", f"{benchmark_name}.json")
     os.makedirs("results", exist_ok=True)
     print(
@@ -423,16 +465,23 @@ def run_benchmark_from_configuration(
         f"save path: {save_path}."
     )
     if not rerun_if_exists and os.path.exists(save_path):
-        print(f"Results for the benchmark {benchmark_name} already exist. Skipping the benchmark.")
+        print(
+            f"Results for the benchmark {benchmark_name} already exist. Skipping the benchmark."
+        )
         return
     elif rerun_if_exists:
         print(f"Rerunning the benchmark {benchmark_name}.")
     else:
-        print(f"Results for the benchmark {benchmark_name} do not exist. Running the benchmark.")
+        print(
+            f"Results for the benchmark {benchmark_name} do not exist. Running the benchmark."
+        )
 
     # get the exact values
     print("Computing the exact values for the games.")
-    gt_values = [game.exact_values(index=index, order=order) for game in tqdm(games, unit=" games")]
+    gt_values = [
+        game.exact_values(index=index, order=order)
+        for game in tqdm(games, unit=" games")
+    ]
 
     # run the benchmark
     run_benchmark(
@@ -452,7 +501,11 @@ def run_benchmark_from_configuration(
 
 
 def _make_benchmark_name(
-    config_id: str, game_class: Union[Game.__class__, str], n_games: int, index: str, order: int
+    config_id: str,
+    game_class: Union[Game.__class__, str],
+    n_games: int,
+    index: str,
+    order: int,
 ) -> str:
     """Make the benchmark name for the given configuration."""
     try:

@@ -95,7 +95,9 @@ class ImageClassifier(Game):
             n_players = 9
             if model_name == "vit_16_patches":
                 n_players = 16
-            vit_model = ViTModel(n_patches=n_players, input_image=self.x_explain, verbose=verbose)
+            vit_model = ViTModel(
+                n_patches=n_players, input_image=self.x_explain, verbose=verbose
+            )
             normalization_value = vit_model.empty_value
             self.model_function = vit_model
         else:
@@ -110,7 +112,11 @@ class ImageClassifier(Game):
             )
             n_players = resnet_model.n_superpixels
             # warn if not 14 superpixels
-            warn(f"{n_players} superpixels found and not {n_sp}.") if n_players != n_sp else None
+            (
+                warn(f"{n_players} superpixels found and not {n_sp}.")
+                if n_players != n_sp
+                else None
+            )
             normalization_value = resnet_model.empty_value
             self.model_function = resnet_model
 

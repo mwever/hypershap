@@ -64,13 +64,17 @@ def test_basic_function(background_reg_dataset, dt_reg_model, mae_loss):
     assert not os.path.exists("test_values.npz")
 
 
-@pytest.mark.parametrize("model_name", ["decision_tree", "random_forest", "gradient_boosting"])
+@pytest.mark.parametrize(
+    "model_name", ["decision_tree", "random_forest", "gradient_boosting"]
+)
 def test_california(model_name):
     """Test the GlobalExplanation game with the california housing dataset."""
     test_coalitions = np.zeros(shape=(2, 8), dtype=bool)
     test_coalitions[1] = np.ones(8, dtype=bool)
     game = CaliforniaHousingGlobalXAI(
-        model_name=model_name, n_samples_eval=2, n_samples_empty=3  # small values for testing
+        model_name=model_name,
+        n_samples_eval=2,
+        n_samples_empty=3,  # small values for testing
     )
     worth = game(test_coalitions)
     assert game.n_players == 8
@@ -78,13 +82,17 @@ def test_california(model_name):
     assert game.game_name == "CaliforniaHousing_GlobalExplanation_Game"
 
 
-@pytest.mark.parametrize("model_name", ["decision_tree", "random_forest", "gradient_boosting"])
+@pytest.mark.parametrize(
+    "model_name", ["decision_tree", "random_forest", "gradient_boosting"]
+)
 def test_adult_census(model_name):
     """Test the GlobalExplanation game with the adult census dataset."""
     test_coalitions = np.zeros(shape=(2, 14), dtype=bool)
     test_coalitions[1] = np.ones(14, dtype=bool)
     game = AdultCensusGlobalXAI(
-        model_name=model_name, n_samples_eval=2, n_samples_empty=3  # small values for testing
+        model_name=model_name,
+        n_samples_eval=2,
+        n_samples_empty=3,  # small values for testing
     )
     worth = game(test_coalitions)
     assert game.n_players == 14
@@ -92,13 +100,17 @@ def test_adult_census(model_name):
     assert game.game_name == "AdultCensus_GlobalExplanation_Game"
 
 
-@pytest.mark.parametrize("model_name", ["decision_tree", "random_forest", "gradient_boosting"])
+@pytest.mark.parametrize(
+    "model_name", ["decision_tree", "random_forest", "gradient_boosting"]
+)
 def test_bike_sharing(model_name):
     """Test the GlobalExplanation game with the bike sharing dataset."""
     test_coalitions = np.zeros(shape=(2, 12), dtype=bool)
     test_coalitions[1] = np.ones(12, dtype=bool)
     game = BikeSharingGlobalXAI(
-        model_name=model_name, n_samples_eval=2, n_samples_empty=3  # small values for testing
+        model_name=model_name,
+        n_samples_eval=2,
+        n_samples_empty=3,  # small values for testing
     )
     worth = game(test_coalitions)
     assert game.n_players == 12

@@ -11,11 +11,17 @@ import pandas as pd
 from tqdm.auto import tqdm
 
 try:
-    from shapiq.games.benchmark.plot import abbreviate_application_name, create_application_name
+    from shapiq.games.benchmark.plot import (
+        abbreviate_application_name,
+        create_application_name,
+    )
 except ImportError:  # add shapiq to the path
     sys.path.insert(0, str(Path(__file__).parent.parent))
     os.makedirs("eval", exist_ok=True)
-    from shapiq.games.benchmark.plot import abbreviate_application_name, create_application_name
+    from shapiq.games.benchmark.plot import (
+        abbreviate_application_name,
+        create_application_name,
+    )
 
 EVAL_DIR = Path(__file__).parent / "eval"
 BENCHMARK_RESULTS_DIR = Path(__file__).parent / "results"
@@ -81,24 +87,26 @@ def sort_values(list_to_sort: list[str], ordering: dict[str, int]) -> list[str]:
 
 def _get_best_approximator(df: pd.DataFrame) -> dict[str, list[tuple]]:
     """Get the best (approximator, budget) for each budget for a set of metrics."""
-    best_approximators = {}  # will store for each metric the approximator name that performed best
+    best_approximators = (
+        {}
+    )  # will store for each metric the approximator name that performed best
     for metric, metric_type in METRICS.items():
         if metric_type == "max":
             best_value = df.groupby("budget")[metric].max()
             best_at_budget = []
             for budget, value in best_value.items():
-                best_approx_per_budget = df[(df["budget"] == budget) & (df[metric] >= value)][
-                    "approximator"
-                ].unique()
+                best_approx_per_budget = df[
+                    (df["budget"] == budget) & (df[metric] >= value)
+                ]["approximator"].unique()
                 for approx in best_approx_per_budget:
                     best_at_budget.append((approx, budget))
         else:
             best_value = df.groupby("budget")[metric].min()
             best_at_budget = []
             for budget, value in best_value.items():
-                best_approx_per_budget = df[(df["budget"] == budget) & (df[metric] <= value)][
-                    "approximator"
-                ].unique()
+                best_approx_per_budget = df[
+                    (df["budget"] == budget) & (df[metric] <= value)
+                ]["approximator"].unique()
                 for approx in best_approx_per_budget:
                     best_at_budget.append((approx, budget))
         best_approximators[metric] = best_at_budget
@@ -112,7 +120,9 @@ def create_eval_csv(n_evals: int = None) -> pd.DataFrame:
 
     # get all files in the benchmark results directory
     all_benchmark_results = list(os.listdir(BENCHMARK_RESULTS_DIR))
-    all_benchmark_results = [result for result in all_benchmark_results if result.endswith(".json")]
+    all_benchmark_results = [
+        result for result in all_benchmark_results if result.endswith(".json")
+    ]
     print(f"Found {len(all_benchmark_results)} benchmark results.\n")
     # iterate over all benchmark results
     all_results: list[dict] = []
@@ -183,7 +193,9 @@ def create_eval_csv(n_evals: int = None) -> pd.DataFrame:
     return results_df
 
 
-def plot_stacked_bar(df: pd.DataFrame, setting: str = "high", save: bool = False) -> None:
+def plot_stacked_bar(
+    df: pd.DataFrame, setting: str = "high", save: bool = False
+) -> None:
     """Summarizes the benchmark results by plotting a collection of stacked bar plots.
 
     For each metric, this function plots a stacked bar plot showing the percentage of the best
@@ -216,7 +228,9 @@ def plot_stacked_bar(df: pd.DataFrame, setting: str = "high", save: bool = False
 
     import matplotlib.pyplot as plt
 
-    from shapiq.games.benchmark.plot import STYLE_DICT  # maps approx names to colors and markers
+    from shapiq.games.benchmark.plot import (
+        STYLE_DICT,
+    )  # maps approx names to colors and markers
 
     # get all unique applications and metrics and index
     all_applications = df["application_name"].unique()
@@ -235,14 +249,17 @@ def plot_stacked_bar(df: pd.DataFrame, setting: str = "high", save: bool = False
         metric_df = df[(df["metric"] == metric) & (~df["full_budget"])]
         if setting != "all":
             if setting == "low":
-                max_budget_values_run_id = metric_df.groupby("run_id")["budget"].median()
+                max_budget_values_run_id = metric_df.groupby("run_id")[
+                    "budget"
+                ].median()
             else:  # budget_setting == "high":
                 max_budget_values_run_id = metric_df.groupby("run_id")["budget"].max()
             high_budget_dfs = []
             for run_id, max_budget in max_budget_values_run_id.items():
                 high_budget_dfs.append(
                     metric_df[
-                        (metric_df["run_id"] == run_id) & (metric_df["budget"] == max_budget)
+                        (metric_df["run_id"] == run_id)
+                        & (metric_df["budget"] == max_budget)
                     ].copy()
                 )
             metric_df = pd.concat(high_budget_dfs)
@@ -251,7 +268,12 @@ def plot_stacked_bar(df: pd.DataFrame, setting: str = "high", save: bool = False
         padding = 0.15
         sep = 0.6
         x = list(range(len(all_applications)))
-        x_ticks_index, x_tick_labels_index, x_ticks_app, x_ticks_labels_app = [], [], [], []
+        x_ticks_index, x_tick_labels_index, x_ticks_app, x_ticks_labels_app = (
+            [],
+            [],
+            [],
+            [],
+        )
         for app_i, application in enumerate(all_applications):
             position = x[app_i]
             all_pos = []
@@ -264,9 +286,13 @@ def plot_stacked_bar(df: pd.DataFrame, setting: str = "high", save: bool = False
                 )
                 approximators = index_approximators[index]
                 if index == "SV":
-                    approximators_sorted = sort_values(approximators, SV_APPROXIMATORS_ORDERING)
+                    approximators_sorted = sort_values(
+                        approximators, SV_APPROXIMATORS_ORDERING
+                    )
                 else:
-                    approximators_sorted = sort_values(approximators, SI_APPROXIMATORS_ORDERING)
+                    approximators_sorted = sort_values(
+                        approximators, SI_APPROXIMATORS_ORDERING
+                    )
                 start, height = 0, 0
                 pos = position + index_i * (width + padding) + (sep * position)
                 all_pos.append(pos)
@@ -290,7 +316,9 @@ def plot_stacked_bar(df: pd.DataFrame, setting: str = "high", save: bool = False
                 x_tick_labels_index.append(index_title)
             pos_mean = sum(all_pos) / len(all_pos)
             x_ticks_app.append(pos_mean)
-            x_ticks_labels_app.append(abbreviate_application_name(application, new_line=True))
+            x_ticks_labels_app.append(
+                abbreviate_application_name(application, new_line=True)
+            )
 
         # add the x-ticks for the indices
         ax.set_xticks(x_ticks_index)

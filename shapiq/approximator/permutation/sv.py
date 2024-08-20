@@ -31,11 +31,16 @@ class PermutationSamplingSV(Approximator):
         n: int,
         random_state: Optional[int] = None,
     ) -> None:
-        super().__init__(n=n, max_order=1, index="SV", top_order=False, random_state=random_state)
+        super().__init__(
+            n=n, max_order=1, index="SV", top_order=False, random_state=random_state
+        )
         self.iteration_cost: int = n - 1
 
     def approximate(
-        self, budget: int, game: Callable[[np.ndarray], np.ndarray], batch_size: Optional[int] = 5
+        self,
+        budget: int,
+        game: Callable[[np.ndarray], np.ndarray],
+        batch_size: Optional[int] = 5,
     ) -> InteractionValues:
         """Approximates the Shapley values using ApproShapley.
 
@@ -110,7 +115,9 @@ class PermutationSamplingSV(Approximator):
                 counts[permutation_idx] += 1
                 # update the players in the middle of the permutation
                 for i in range(1, self.n - 1):
-                    marginal_con = game_values[coalition_index + 1] - game_values[coalition_index]
+                    marginal_con = (
+                        game_values[coalition_index + 1] - game_values[coalition_index]
+                    )
                     permutation_idx = self._interaction_lookup[(permutation[i],)]
                     result[permutation_idx] += marginal_con
                     counts[permutation_idx] += 1

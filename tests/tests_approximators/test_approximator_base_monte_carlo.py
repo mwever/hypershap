@@ -70,7 +70,9 @@ def test_initialization(
         (7, "CHII", 2, 100, False, False),
     ],
 )
-def test_approximate(n, index, max_order, budget, stratify_intersection, stratify_coalition_size):
+def test_approximate(
+    n, index, max_order, budget, stratify_intersection, stratify_coalition_size
+):
     """Tests the approximation of the MonteCarlo approximation."""
     interaction = (1, 2)
     game = DummyGame(n, interaction)

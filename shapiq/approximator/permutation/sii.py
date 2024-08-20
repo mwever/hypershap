@@ -40,7 +40,11 @@ class PermutationSamplingSII(Approximator):
         if index not in ["SII", "k-SII"]:
             raise ValueError(f"Invalid index {index}. Must be either 'SII' or 'k-SII'.")
         super().__init__(
-            n=n, max_order=max_order, index=index, top_order=top_order, random_state=random_state
+            n=n,
+            max_order=max_order,
+            index=index,
+            top_order=top_order,
+            random_state=random_state,
         )
         self.iteration_cost: int = self._compute_iteration_cost()
 
@@ -117,7 +121,9 @@ class PermutationSamplingSII(Approximator):
                         subset = permutations[permutation_id, k : k + order]
                         previous_subset = permutations[permutation_id, :k]
                         for subset_ in powerset(subset, min_size=0):
-                            subset_eval = np.concatenate((previous_subset, subset_)).astype(int)
+                            subset_eval = np.concatenate(
+                                (previous_subset, subset_)
+                            ).astype(int)
                             subsets[subset_index, subset_eval] = True
                             subset_index += 1
 

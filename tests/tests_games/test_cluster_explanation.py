@@ -136,7 +136,9 @@ def test_bike(cluster_method, score_method):
     """Tests the bike sharing Dataset Valuation Benchmark game."""
     n_players = 12
     # setup game
-    game = BikeSharingClusterExplanation(cluster_method=cluster_method, score_method=score_method)
+    game = BikeSharingClusterExplanation(
+        cluster_method=cluster_method, score_method=score_method
+    )
     assert game.n_players == n_players
     assert game.game_name == "BikeSharing_ClusterExplanation_Game"
     # no run tests here since it takes too long
@@ -153,7 +155,9 @@ def test_adult_census(cluster_method, score_method):
     """Tests the adult census Dataset Valuation Benchmark game."""
     n_players = 14
     # setup game
-    game = AdultCensusClusterExplanation(cluster_method=cluster_method, score_method=score_method)
+    game = AdultCensusClusterExplanation(
+        cluster_method=cluster_method, score_method=score_method
+    )
     assert game.n_players == n_players
     assert game.game_name == "AdultCensus_ClusterExplanation_Game"
     # no run tests here since it takes too long

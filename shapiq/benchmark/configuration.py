@@ -158,7 +158,9 @@ IMAGENET_EXAMPLE_FILES = [
     "ILSVRC2012_val_00028489.JPEG",
 ]
 IMAGE_FOLDER = os.path.join(os.path.dirname(__file__), "imagenet_examples")
-IMAGENET_EXAMPLE_FILES = [os.path.join(IMAGE_FOLDER, file) for file in IMAGENET_EXAMPLE_FILES]
+IMAGENET_EXAMPLE_FILES = [
+    os.path.join(IMAGE_FOLDER, file) for file in IMAGENET_EXAMPLE_FILES
+]
 
 # stores the configurations of all the benchmark games and how they are set up
 BENCHMARK_CONFIGURATIONS: dict[Game.__class__, list[dict[str, Any]]] = {
@@ -215,7 +217,9 @@ BENCHMARK_CONFIGURATIONS: dict[Game.__class__, list[dict[str, Any]]] = {
         {
             "configurations": [{"mask_strategy": "mask"}],
             "iteration_parameter": "input_text",
-            "iteration_parameter_values": list(range(1, len(SENTIMENT_ANALYSIS_TEXTS) + 1)),
+            "iteration_parameter_values": list(
+                range(1, len(SENTIMENT_ANALYSIS_TEXTS) + 1)
+            ),
             "iteration_parameter_values_names": SENTIMENT_ANALYSIS_TEXTS,
             "n_players": 14,
             "precompute": True,
@@ -226,7 +230,9 @@ BENCHMARK_CONFIGURATIONS: dict[Game.__class__, list[dict[str, Any]]] = {
         {
             "configurations": [{"model_name": "resnet_18", "n_superpixel_resnet": 14}],
             "iteration_parameter": "x_explain_path",
-            "iteration_parameter_values": list(range(1, len(IMAGENET_EXAMPLE_FILES) + 1)),
+            "iteration_parameter_values": list(
+                range(1, len(IMAGENET_EXAMPLE_FILES) + 1)
+            ),
             "iteration_parameter_values_names": IMAGENET_EXAMPLE_FILES,
             "n_players": 14,
             "precompute": True,
@@ -234,7 +240,9 @@ BENCHMARK_CONFIGURATIONS: dict[Game.__class__, list[dict[str, Any]]] = {
         {
             "configurations": [{"model_name": "vit_9_patches"}],
             "iteration_parameter": "x_explain_path",
-            "iteration_parameter_values": list(range(1, len(IMAGENET_EXAMPLE_FILES) + 1)),
+            "iteration_parameter_values": list(
+                range(1, len(IMAGENET_EXAMPLE_FILES) + 1)
+            ),
             "iteration_parameter_values_names": IMAGENET_EXAMPLE_FILES,
             "n_players": 9,
             "precompute": True,
@@ -242,7 +250,9 @@ BENCHMARK_CONFIGURATIONS: dict[Game.__class__, list[dict[str, Any]]] = {
         {
             "configurations": [{"model_name": "vit_16_patches"}],
             "iteration_parameter": "x_explain_path",
-            "iteration_parameter_values": list(range(1, len(IMAGENET_EXAMPLE_FILES) + 1)),
+            "iteration_parameter_values": list(
+                range(1, len(IMAGENET_EXAMPLE_FILES) + 1)
+            ),
             "iteration_parameter_values_names": IMAGENET_EXAMPLE_FILES,
             "n_players": 16,
             "precompute": True,
@@ -378,9 +388,21 @@ BENCHMARK_CONFIGURATIONS: dict[Game.__class__, list[dict[str, Any]]] = {
     AdultCensusDatasetValuation: [
         {
             "configurations": [
-                {"model_name": "decision_tree", "player_sizes": "increasing", "n_players": 10},
-                {"model_name": "random_forest", "player_sizes": "increasing", "n_players": 10},
-                {"model_name": "gradient_boosting", "player_sizes": "increasing", "n_players": 10},
+                {
+                    "model_name": "decision_tree",
+                    "player_sizes": "increasing",
+                    "n_players": 10,
+                },
+                {
+                    "model_name": "random_forest",
+                    "player_sizes": "increasing",
+                    "n_players": 10,
+                },
+                {
+                    "model_name": "gradient_boosting",
+                    "player_sizes": "increasing",
+                    "n_players": 10,
+                },
             ],
             "iteration_parameter": "random_state",
             "n_players": 10,
@@ -388,7 +410,11 @@ BENCHMARK_CONFIGURATIONS: dict[Game.__class__, list[dict[str, Any]]] = {
         },
         {
             "configurations": [
-                {"model_name": "decision_tree", "player_sizes": "increasing", "n_players": 14},
+                {
+                    "model_name": "decision_tree",
+                    "player_sizes": "increasing",
+                    "n_players": 14,
+                },
                 # {"model_name": "random_forest", "player_sizes": "increasing", "n_players": 14},
                 # {"model_name": "gradient_boosting", "player_sizes": "increasing", "n_players": 14},
             ],
@@ -401,9 +427,21 @@ BENCHMARK_CONFIGURATIONS: dict[Game.__class__, list[dict[str, Any]]] = {
     BikeSharingDatasetValuation: [
         {
             "configurations": [
-                {"model_name": "decision_tree", "player_sizes": "increasing", "n_players": 10},
-                {"model_name": "random_forest", "player_sizes": "increasing", "n_players": 10},
-                {"model_name": "gradient_boosting", "player_sizes": "increasing", "n_players": 10},
+                {
+                    "model_name": "decision_tree",
+                    "player_sizes": "increasing",
+                    "n_players": 10,
+                },
+                {
+                    "model_name": "random_forest",
+                    "player_sizes": "increasing",
+                    "n_players": 10,
+                },
+                {
+                    "model_name": "gradient_boosting",
+                    "player_sizes": "increasing",
+                    "n_players": 10,
+                },
             ],
             "iteration_parameter": "random_state",
             "n_players": 10,
@@ -411,7 +449,11 @@ BENCHMARK_CONFIGURATIONS: dict[Game.__class__, list[dict[str, Any]]] = {
         },
         {
             "configurations": [
-                {"model_name": "decision_tree", "player_sizes": "increasing", "n_players": 14},
+                {
+                    "model_name": "decision_tree",
+                    "player_sizes": "increasing",
+                    "n_players": 14,
+                },
                 # {"model_name": "random_forest", "player_sizes": "increasing", "n_players": 14},
                 # {"model_name": "gradient_boosting", "player_sizes": "increasing", "n_players": 14},
             ],
@@ -424,9 +466,21 @@ BENCHMARK_CONFIGURATIONS: dict[Game.__class__, list[dict[str, Any]]] = {
     CaliforniaHousingDatasetValuation: [
         {
             "configurations": [
-                {"model_name": "decision_tree", "player_sizes": "increasing", "n_players": 10},
-                {"model_name": "random_forest", "player_sizes": "increasing", "n_players": 10},
-                {"model_name": "gradient_boosting", "player_sizes": "increasing", "n_players": 10},
+                {
+                    "model_name": "decision_tree",
+                    "player_sizes": "increasing",
+                    "n_players": 10,
+                },
+                {
+                    "model_name": "random_forest",
+                    "player_sizes": "increasing",
+                    "n_players": 10,
+                },
+                {
+                    "model_name": "gradient_boosting",
+                    "player_sizes": "increasing",
+                    "n_players": 10,
+                },
             ],
             "iteration_parameter": "random_state",
             "n_players": 10,
@@ -434,7 +488,11 @@ BENCHMARK_CONFIGURATIONS: dict[Game.__class__, list[dict[str, Any]]] = {
         },
         {
             "configurations": [
-                {"model_name": "decision_tree", "player_sizes": "increasing", "n_players": 14},
+                {
+                    "model_name": "decision_tree",
+                    "player_sizes": "increasing",
+                    "n_players": 14,
+                },
                 # {"model_name": "random_forest", "player_sizes": "increasing", "n_players": 14},
                 # {"model_name": "gradient_boosting", "player_sizes": "increasing", "n_players": 14},
             ],
@@ -486,10 +544,15 @@ BENCHMARK_CONFIGURATIONS: dict[Game.__class__, list[dict[str, Any]]] = {
         {
             "configurations": [
                 {"cluster_method": "kmeans", "score_method": "silhouette_score"},
-                {"cluster_method": "agglomerative", "score_method": "calinski_harabasz_score"},
+                {
+                    "cluster_method": "agglomerative",
+                    "score_method": "calinski_harabasz_score",
+                },
             ],
             "iteration_parameter": "random_state",  # for agglomerative this does not change the game
-            "iteration_parameter_values": [1],  # for agglomerative this does not change the game
+            "iteration_parameter_values": [
+                1
+            ],  # for agglomerative this does not change the game
             "n_players": 12,
             "precompute": True,
         },
@@ -498,10 +561,15 @@ BENCHMARK_CONFIGURATIONS: dict[Game.__class__, list[dict[str, Any]]] = {
         {
             "configurations": [
                 {"cluster_method": "kmeans", "score_method": "silhouette_score"},
-                {"cluster_method": "agglomerative", "score_method": "calinski_harabasz_score"},
+                {
+                    "cluster_method": "agglomerative",
+                    "score_method": "calinski_harabasz_score",
+                },
             ],
             "iteration_parameter": "random_state",  # for agglomerative this does not change the game
-            "iteration_parameter_values": [1],  # for agglomerative this does not change the game
+            "iteration_parameter_values": [
+                1
+            ],  # for agglomerative this does not change the game
             "n_players": 8,
             "precompute": True,
         },
@@ -554,10 +622,26 @@ BENCHMARK_CONFIGURATIONS: dict[Game.__class__, list[dict[str, Any]]] = {
     SynthDataTreeSHAPIQXAI: [
         {
             "configurations": [
-                {"model_name": "decision_tree", "classification": True, "n_features": 30},
-                {"model_name": "random_forest", "classification": True, "n_features": 30},
-                {"model_name": "decision_tree", "classification": False, "n_features": 30},
-                {"model_name": "random_forest", "classification": False, "n_features": 30},
+                {
+                    "model_name": "decision_tree",
+                    "classification": True,
+                    "n_features": 30,
+                },
+                {
+                    "model_name": "random_forest",
+                    "classification": True,
+                    "n_features": 30,
+                },
+                {
+                    "model_name": "decision_tree",
+                    "classification": False,
+                    "n_features": 30,
+                },
+                {
+                    "model_name": "random_forest",
+                    "classification": False,
+                    "n_features": 30,
+                },
             ],
             "iteration_parameter": "x",
             "iteration_parameter_values": list(range(1, 10 + 1)),
@@ -751,7 +835,10 @@ APPROXIMATION_BENCHMARK_PARAMS.update(
 APPROXIMATION_BENCHMARK_PARAMS.update(
     {
         approx: ("n", "random_state", "index", "max_order")
-        for approx in SI_APPROXIMATORS + SII_APPROXIMATORS + STII_APPROXIMATORS + FSII_APPROXIMATORS
+        for approx in SI_APPROXIMATORS
+        + SII_APPROXIMATORS
+        + STII_APPROXIMATORS
+        + FSII_APPROXIMATORS
     }
 )
 
@@ -804,7 +891,9 @@ def get_name_from_game_class(game_class: Game.__class__) -> str:
 def print_benchmark_configurations() -> None:
     """Print the configurations of the benchmark games."""
     game_classes = list(BENCHMARK_CONFIGURATIONS.keys())
-    game_identifiers = [GAME_CLASS_TO_NAME_MAPPING[game_class] for game_class in game_classes]
+    game_identifiers = [
+        GAME_CLASS_TO_NAME_MAPPING[game_class] for game_class in game_classes
+    ]
     game_identifiers = sorted(game_identifiers)
     for game_identifier in game_identifiers:
         game_class = GAME_NAME_TO_CLASS_MAPPING[game_identifier]

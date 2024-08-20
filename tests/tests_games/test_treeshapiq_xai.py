@@ -56,7 +56,9 @@ def test_random_forest_selection(
     assert game.n_players == len(x_explain)
 
     # get the test coalitions
-    test_coalitions = np.array([game.empty_coalition, game.empty_coalition, game.grand_coalition])
+    test_coalitions = np.array(
+        [game.empty_coalition, game.empty_coalition, game.grand_coalition]
+    )
     test_coalitions[1, 0] = True
     test_coalitions[1, 1] = True
 
@@ -69,7 +71,9 @@ def test_random_forest_selection(
     n_players = game.n_players
     budget = 2**n_players
     top_order = index in ["STII", "FSII"]  # false for k-SII and SII
-    approximator = SHAPIQ(n=n_players, max_order=max_order, index=index, top_order=top_order)
+    approximator = SHAPIQ(
+        n=n_players, max_order=max_order, index=index, top_order=top_order
+    )
     estimates = approximator.approximate(budget=budget, game=game)
     assert estimates.estimation_budget <= budget and not estimates.estimated
     assert estimates.index == index
@@ -78,7 +82,9 @@ def test_random_forest_selection(
     exact = ExactComputer(n_players=n_players, game_fun=game)
     exact_values = exact(index=index, order=max_order)
 
-    for interaction in powerset(range(n_players), min_size=min_order, max_size=max_order):
+    for interaction in powerset(
+        range(n_players), min_size=min_order, max_size=max_order
+    ):
         assert np.isclose(estimates[interaction], gt_interaction_values[interaction])
         assert np.isclose(exact_values[interaction], gt_interaction_values[interaction])
 
@@ -103,7 +109,9 @@ def test_adult():
     exact = ExactComputer(n_players=game.n_players, game_fun=game)
     exact_values = exact(index=index, order=max_order)
 
-    for interaction in powerset(range(game.n_players), min_size=min_order, max_size=max_order):
+    for interaction in powerset(
+        range(game.n_players), min_size=min_order, max_size=max_order
+    ):
         assert np.isclose(exact_values[interaction], gt_interaction_values[interaction])
 
 
@@ -129,7 +137,9 @@ def test_california(index_order):
     exact = ExactComputer(n_players=game.n_players, game_fun=game)
     exact_values = exact(index=index, order=max_order)
 
-    for interaction in powerset(range(game.n_players), min_size=min_order, max_size=max_order):
+    for interaction in powerset(
+        range(game.n_players), min_size=min_order, max_size=max_order
+    ):
         assert np.isclose(exact_values[interaction], gt_interaction_values[interaction])
 
 
@@ -153,5 +163,7 @@ def test_bike():
     exact = ExactComputer(n_players=game.n_players, game_fun=game)
     exact_values = exact(index=index, order=max_order)
 
-    for interaction in powerset(range(game.n_players), min_size=min_order, max_size=max_order):
+    for interaction in powerset(
+        range(game.n_players), min_size=min_order, max_size=max_order
+    ):
         assert np.isclose(exact_values[interaction], gt_interaction_values[interaction])

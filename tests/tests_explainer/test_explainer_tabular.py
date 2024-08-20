@@ -160,8 +160,10 @@ def test_explain(dt_model, data, index, budget, max_order, imputer):
     interaction_values0 = explainer.explain(x, budget=budget, random_state=0)
     interaction_values2 = explainer.explain(x, budget=budget, random_state=0)
     assert np.allclose(
-        interaction_values0.get_n_order_values(1), interaction_values2.get_n_order_values(1)
+        interaction_values0.get_n_order_values(1),
+        interaction_values2.get_n_order_values(1),
     )
     assert np.allclose(
-        interaction_values0.get_n_order_values(2), interaction_values2.get_n_order_values(2)
+        interaction_values0.get_n_order_values(2),
+        interaction_values2.get_n_order_values(2),
     )

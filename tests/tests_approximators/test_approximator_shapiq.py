@@ -71,7 +71,9 @@ def test_approximate_sii(n, max_order, top_order, budget):
     """Tests the approximation of the ShapIQ SII approximation."""
     interaction = (1, 2)
     game = DummyGame(n, interaction)
-    approximator = SHAPIQ(n, max_order, index="SII", top_order=top_order, random_state=42)
+    approximator = SHAPIQ(
+        n, max_order, index="SII", top_order=top_order, random_state=42
+    )
     estimates = approximator.approximate(budget, game)
     assert isinstance(estimates, InteractionValues)
     assert estimates.max_order == max_order
@@ -93,12 +95,16 @@ def test_approximate_sii(n, max_order, top_order, budget):
             assert estimates[(2,)] == pytest.approx(0.6429, 0.01)
 
 
-@pytest.mark.parametrize("n, max_order, top_order, budget", [(7, 2, False, 100), (7, 2, True, 100)])
+@pytest.mark.parametrize(
+    "n, max_order, top_order, budget", [(7, 2, False, 100), (7, 2, True, 100)]
+)
 def test_approximate_sti(n, max_order, top_order, budget):
     """Tests the approximation of the ShapIQ STII approximation."""
     interaction = (1, 2)
     game = DummyGame(n, interaction)
-    approximator = SHAPIQ(n, max_order, index="STII", top_order=top_order, random_state=42)
+    approximator = SHAPIQ(
+        n, max_order, index="STII", top_order=top_order, random_state=42
+    )
     estimates = approximator.approximate(budget, game)
     assert isinstance(estimates, InteractionValues)
     assert estimates.max_order == max_order

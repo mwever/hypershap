@@ -58,7 +58,11 @@ def test_basic_function(background_reg_dataset):
     # init with no score and or predict function
     with pytest.raises(ValueError):
         _ = FeatureSelection(
-            x_train=x_data, x_test=x_data, y_train=y_data, y_test=y_data, fit_function=model.fit
+            x_train=x_data,
+            x_test=x_data,
+            y_train=y_data,
+            y_test=y_data,
+            fit_function=model.fit,
         )
 
     # test save and load
@@ -86,7 +90,9 @@ def test_basic_function(background_reg_dataset):
     assert not os.path.exists("test_values.npz")
 
 
-@pytest.mark.parametrize("model_name", ["decision_tree", "random_forest", "gradient_boosting"])
+@pytest.mark.parametrize(
+    "model_name", ["decision_tree", "random_forest", "gradient_boosting"]
+)
 def test_california(model_name):
     """Test the FeatureSelection game with the california housing dataset."""
     n_players = 8
@@ -100,7 +106,9 @@ def test_california(model_name):
     assert game.game_name == "CaliforniaHousing_FeatureSelection_Game"
 
 
-@pytest.mark.parametrize("model_name", ["decision_tree", "random_forest", "gradient_boosting"])
+@pytest.mark.parametrize(
+    "model_name", ["decision_tree", "random_forest", "gradient_boosting"]
+)
 def test_adult_census(model_name):
     """Test the FeatureSelection game with the adult census dataset."""
     n_players = 14
@@ -114,7 +122,9 @@ def test_adult_census(model_name):
     assert game.game_name == "AdultCensus_FeatureSelection_Game"
 
 
-@pytest.mark.parametrize("model_name", ["decision_tree", "random_forest", "gradient_boosting"])
+@pytest.mark.parametrize(
+    "model_name", ["decision_tree", "random_forest", "gradient_boosting"]
+)
 def test_bike_sharing(model_name):
     """Test the FeatureSelection game with the bike sharing dataset."""
     n_players = 12

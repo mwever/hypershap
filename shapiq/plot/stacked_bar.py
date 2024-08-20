@@ -80,10 +80,18 @@ def stacked_bar_plot(
 
     # transform data to make plotting easier
     values_pos = np.array(
-        [values for order, values in n_shapley_values_pos.items() if order <= n_sii_max_order]
+        [
+            values
+            for order, values in n_shapley_values_pos.items()
+            if order <= n_sii_max_order
+        ]
     )
     values_neg = np.array(
-        [values for order, values in n_shapley_values_neg.items() if order <= n_sii_max_order]
+        [
+            values
+            for order, values in n_shapley_values_neg.items()
+            if order <= n_sii_max_order
+        ]
     )
     # get the number of features and the feature names
     n_features = len(values_pos[0])
@@ -98,8 +106,15 @@ def stacked_bar_plot(
 
     # plot the bar segments
     for order in range(len(values_pos)):
-        axis.bar(x, height=values_pos[order], bottom=reference_pos, color=COLORS_K_SII[order])
-        axis.bar(x, height=abs(values_neg[order]), bottom=reference_neg, color=COLORS_K_SII[order])
+        axis.bar(
+            x, height=values_pos[order], bottom=reference_pos, color=COLORS_K_SII[order]
+        )
+        axis.bar(
+            x,
+            height=abs(values_neg[order]),
+            bottom=reference_neg,
+            color=COLORS_K_SII[order],
+        )
         axis.axhline(y=0, color="black", linestyle="solid", linewidth=0.5)
         reference_pos += values_pos[order]
         try:
@@ -113,9 +128,15 @@ def stacked_bar_plot(
     legend_elements = []
     for order in range(n_sii_max_order):
         legend_elements.append(
-            Patch(facecolor=COLORS_K_SII[order], edgecolor="black", label=f"Order {order + 1}")
+            Patch(
+                facecolor=COLORS_K_SII[order],
+                edgecolor="black",
+                label=f"Order {order + 1}",
+            )
         )
-    axis.legend(handles=legend_elements, loc="upper center", ncol=min(n_sii_max_order, 4))
+    axis.legend(
+        handles=legend_elements, loc="upper center", ncol=min(n_sii_max_order, 4)
+    )
 
     x_ticks_labels = [feature for feature in feature_names]  # might be unnecessary
     axis.set_xticks(x)

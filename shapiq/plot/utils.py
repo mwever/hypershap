@@ -39,12 +39,16 @@ def get_interaction_values_and_feature_names(
         _values = _values_dict[_order]
         _shap_values.append(_values[interaction])
         if feature_names is not None:
-            _name = " x ".join(f"{feature_names[i]}".strip()[0:4] + "." for i in interaction)
+            _name = " x ".join(
+                f"{feature_names[i]}".strip()[0:4] + "." for i in interaction
+            )
         else:
             _name = " x ".join(f"{feature}" for feature in interaction)
         if feature_values is not None:
             _name += "\n"
-            _name += " x ".join(f"{feature_values[i]}".strip()[0:4] for i in interaction)
+            _name += " x ".join(
+                f"{feature_values[i]}".strip()[0:4] for i in interaction
+            )
         _labels.append(_name)
     _shap_values = np.array(_shap_values)
     _labels = np.array(_labels)

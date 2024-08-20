@@ -84,7 +84,9 @@ def _draw_fancy_hyper_edges(
         # draw the connection point of the hyper-edge
         circle = mpath.Path.circle(center_pos, radius=node_size / 2)
         all_paths.append(circle)
-        axis.scatter(center_pos[0], center_pos[1], s=0, c="none", lw=0)  # add empty point for limit
+        axis.scatter(
+            center_pos[0], center_pos[1], s=0, c="none", lw=0
+        )  # add empty point for limit
 
         # draw the fancy connections from the other nodes to the center node
         for player in hyper_edge:
@@ -93,7 +95,9 @@ def _draw_fancy_hyper_edges(
 
             circle_p = mpath.Path.circle(player_pos, radius=node_size / 2)
             all_paths.append(circle_p)
-            axis.scatter(player_pos[0], player_pos[1], s=0, c="none", lw=0)  # for axis limits
+            axis.scatter(
+                player_pos[0], player_pos[1], s=0, c="none", lw=0
+            )  # for axis limits
 
             # get the direction of the connection
             direction = (center_pos[0] - player_pos[0], center_pos[1] - player_pos[1])
@@ -170,7 +174,9 @@ def _draw_graph_nodes(
 
         position = pos[node]
         circle = mpath.Path.circle(position, radius=normal_node_size / 2)
-        patch = mpatches.PathPatch(circle, facecolor="white", lw=1, alpha=1, edgecolor="black")
+        patch = mpatches.PathPatch(
+            circle, facecolor="white", lw=1, alpha=1, edgecolor="black"
+        )
         ax.add_patch(patch)
 
         # add empty scatter for the axis to adjust the limits later
@@ -218,10 +224,14 @@ def _draw_explanation_nodes(
             radius = math.sqrt(combined_area / math.pi)
 
         circle = mpath.Path.circle(position, radius=radius)
-        patch = mpatches.PathPatch(circle, facecolor=color, lw=1, edgecolor="white", alpha=alpha)
+        patch = mpatches.PathPatch(
+            circle, facecolor=color, lw=1, edgecolor="white", alpha=alpha
+        )
         ax.add_patch(patch)
 
-        ax.scatter(position[0], position[1], s=0, c="none", lw=0)  # add empty point for limits
+        ax.scatter(
+            position[0], position[1], s=0, c="none", lw=0
+        )  # add empty point for limits
 
 
 def _draw_graph_edges(
@@ -258,7 +268,9 @@ def _draw_graph_edges(
             [mpath.Path.MOVETO, mpath.Path.LINETO],
         )
 
-        patch = mpatches.PathPatch(connection, facecolor="none", lw=1, edgecolor="black")
+        patch = mpatches.PathPatch(
+            connection, facecolor="none", lw=1, edgecolor="black"
+        )
         ax.add_patch(patch)
 
 
@@ -387,7 +399,9 @@ def si_graph_plot(
         # check if graph has labels
         if "label" not in original_graph.nodes[graph_nodes[0]]:
             for node in graph_nodes:
-                node_label = label_mapping.get(node, node) if label_mapping is not None else node
+                node_label = (
+                    label_mapping.get(node, node) if label_mapping is not None else node
+                )
                 original_graph.nodes[node]["label"] = node_label
     else:
         original_graph, graph_nodes = nx.Graph(), []
@@ -437,7 +451,10 @@ def si_graph_plot(
             "interaction": interaction,
             "weight": interaction_strength * compactness,
             "size": _normalize_value(
-                interaction_value, max_interaction, base_size * size_factor, cubic_scaling
+                interaction_value,
+                max_interaction,
+                base_size * size_factor,
+                cubic_scaling,
             ),
         }
 
@@ -478,10 +495,16 @@ def si_graph_plot(
     if plot_explanation:
         # position now again the hyper-edges onto the normal nodes weight param is weight
         pos_explain = nx.spring_layout(
-            explanation_graph, weight="weight", seed=random_seed, pos=pos, fixed=graph_nodes
+            explanation_graph,
+            weight="weight",
+            seed=random_seed,
+            pos=pos,
+            fixed=graph_nodes,
         )
         pos.update(pos_explain)
-        _draw_fancy_hyper_edges(ax, pos, explanation_graph, hyper_edges=explanation_edges)
+        _draw_fancy_hyper_edges(
+            ax, pos, explanation_graph, hyper_edges=explanation_edges
+        )
         _draw_explanation_nodes(
             ax,
             pos,

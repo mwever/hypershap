@@ -6,7 +6,8 @@ from shapiq import SHAPIQ, SVARMIQ, KernelSHAPIQ, ExactComputer, network_plot
 from hpo_games import (
     UniversalHyperparameterImportanceGame,
     GlobalHyperparameterImportanceGame,
-    LocalHyperparameterImportanceGame, UniversalLocalHyperparameterImportanceGame,
+    LocalHyperparameterImportanceGame,
+    UniversalLocalHyperparameterImportanceGame,
 )
 
 
@@ -57,7 +58,6 @@ def evaluate_scenario(benchmark, game_type, metric, approx, precis, instance=Non
                     opt_cfg_value = cfg_value
             opt_cfg_list += [opt_cfg]
         game = UniversalLocalHyperparameterImportanceGame(bench, metric, opt_cfg_list)
-
 
     approx_cfg = {"n": game.n_players, "random_state": 42}
 

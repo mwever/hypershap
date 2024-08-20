@@ -5,7 +5,10 @@ import numpy as np
 
 from shapiq.explainer.tree.base import TreeModel
 from shapiq.explainer.tree.conversion.edges import create_edge_tree
-from shapiq.explainer.tree.conversion.sklearn import convert_sklearn_forest, convert_sklearn_tree
+from shapiq.explainer.tree.conversion.sklearn import (
+    convert_sklearn_forest,
+    convert_sklearn_tree,
+)
 from shapiq.utils import safe_isinstance
 
 

@@ -62,7 +62,9 @@ class GlobalExplanation(Game):
 
         self._random_state = random_state
         self._rng = np.random.default_rng(self._random_state)
-        self.n_samples_eval = n_samples_eval  # how many samples to evaluate for each coalition
+        self.n_samples_eval = (
+            n_samples_eval  # how many samples to evaluate for each coalition
+        )
 
         self.data = copy.deepcopy(data)
         self._n_samples = self.data.shape[0]
@@ -107,7 +109,9 @@ class GlobalExplanation(Game):
                 worth[i] = self.empty_loss
                 continue
             # get the subset of the data
-            idx = self._rng.choice(self._n_samples, size=self.n_samples_eval, replace=False)
+            idx = self._rng.choice(
+                self._n_samples, size=self.n_samples_eval, replace=False
+            )
             subset = self.data[idx].copy()
             predictions = self.predictions[idx]
             # replace the features not part of the subset

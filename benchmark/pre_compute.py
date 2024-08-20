@@ -68,7 +68,9 @@ if __name__ == "__main__":
     game_class = get_game_class_from_name(game)
 
     # get the configuration
-    all_game_configs = BENCHMARK_CONFIGURATIONS[game_class][n_player_id]["configurations"]
+    all_game_configs = BENCHMARK_CONFIGURATIONS[game_class][n_player_id][
+        "configurations"
+    ]
     n_configs = len(all_game_configs)
     if config_id < 1 or config_id > n_configs:
         raise ValueError(

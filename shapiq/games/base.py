@@ -10,7 +10,11 @@ import numpy as np
 from tqdm.auto import tqdm
 
 from shapiq.interaction_values import InteractionValues
-from shapiq.utils import powerset, transform_array_to_coalitions, transform_coalitions_to_array
+from shapiq.utils import (
+    powerset,
+    transform_array_to_coalitions,
+    transform_coalitions_to_array,
+)
 
 
 class Game(ABC):
@@ -98,12 +102,16 @@ class Game(ABC):
         **kwargs,
     ) -> None:
         # manual flag for choosing precomputed values even if not all values might be stored
-        self.precompute_flag: bool = False  # flag to manually override the precomputed check
+        self.precompute_flag: bool = (
+            False  # flag to manually override the precomputed check
+        )
 
         # define storage variables
         self.value_storage: np.ndarray = np.zeros(0, dtype=float)
         self.coalition_lookup: dict[tuple[int, ...], int] = {}
-        self.n_players: int = n_players  # if path_to_values is provided, this may be overwritten
+        self.n_players: int = (
+            n_players  # if path_to_values is provided, this may be overwritten
+        )
 
         if n_players is None and path_to_values is None:
             raise ValueError(
@@ -184,7 +192,9 @@ class Game(ABC):
                 coalition = coalition.reshape((1, self.n_players))
                 values[i] = self.value_function(coalition)[0]
         else:
-            values = self._lookup_coalitions(coalitions)  # lookup the values present in the storage
+            values = self._lookup_coalitions(
+                coalitions
+            )  # lookup the values present in the storage
 
         return values - self.normalization_value
 
@@ -210,7 +220,9 @@ class Game(ABC):
         Note:
             This method has to be implemented in the inheriting class.
         """
-        raise NotImplementedError("The value function has to be implemented in inherited classes.")
+        raise NotImplementedError(
+            "The value function has to be implemented in inherited classes."
+        )
 
     def precompute(self, coalitions: Optional[np.ndarray] = None) -> None:
         """Precompute the game values for all or a given set of coalitions.
@@ -261,12 +273,16 @@ class Game(ABC):
             coalitions_dict = {coal: i for i, coal in enumerate(coalitions)}
         else:
             coalitions_array = coalitions
-            coalitions_tuple = transform_array_to_coalitions(coalitions=coalitions_array)
+            coalitions_tuple = transform_array_to_coalitions(
+                coalitions=coalitions_array
+            )
             coalitions_dict = {coal: i for i, coal in enumerate(coalitions_tuple)}
 
         # run the game for all coalitions (no normalization)
         norm_value, self.normalization_value = self.normalization_value, 0
-        game_values: np.ndarray = self(coalitions_array)  # call the game with the coalitions
+        game_values: np.ndarray = self(
+            coalitions_array
+        )  # call the game with the coalitions
         self.normalization_value = norm_value
 
         # update the storage with the new coalitions and values
@@ -286,7 +302,9 @@ class Game(ABC):
 
         if not self.precomputed:
             warnings.warn(
-                UserWarning("The game has not been precomputed yet. Saving the game may be slow.")
+                UserWarning(
+                    "The game has not been precomputed yet. Saving the game may be slow."
+                )
             )
             self.precompute()
 
@@ -329,7 +347,9 @@ class Game(ABC):
             )
         self.n_players = int(n_players)
         self.value_storage = data["values"]
-        coalition_lookup: list[tuple] = transform_array_to_coalitions(data["coalitions"])
+        coalition_lookup: list[tuple] = transform_array_to_coalitions(
+            data["coalitions"]
+        )
         self.coalition_lookup = {coal: i for i, coal in enumerate(coalition_lookup)}
         self.precompute_flag = precomputed
         self.normalization_value = float(data["normalization_value"])

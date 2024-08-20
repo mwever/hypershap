@@ -94,7 +94,10 @@ def test_adult():
     assert values.shape == (2,)
     assert values[0] == 0.0  # should be zero
     assert values[1] != 0.0  # should not be zero
-    assert game.game_name == "AdultCensus_RandomForestEnsembleSelection_EnsembleSelection_Game"
+    assert (
+        game.game_name
+        == "AdultCensus_RandomForestEnsembleSelection_EnsembleSelection_Game"
+    )
 
 
 def test_california():
@@ -110,7 +113,8 @@ def test_california():
     assert values[0] == 0.0  # should be zero
     assert values[1] != 0.0  # should not be zero
     assert (
-        game.game_name == "CaliforniaHousing_RandomForestEnsembleSelection_EnsembleSelection_Game"
+        game.game_name
+        == "CaliforniaHousing_RandomForestEnsembleSelection_EnsembleSelection_Game"
     )
 
 
@@ -126,4 +130,7 @@ def test_bike():
     assert values.shape == (2,)
     assert values[0] == 0.0  # should be zero
     assert values[1] != 0.0  # should not be zero
-    assert game.game_name == "BikeSharing_RandomForestEnsembleSelection_EnsembleSelection_Game"
+    assert (
+        game.game_name
+        == "BikeSharing_RandomForestEnsembleSelection_EnsembleSelection_Game"
+    )

@@ -28,7 +28,9 @@ class MoebiusConverter:
     def __init__(self, moebius_coefficients: InteractionValues):
         self.moebius_coefficients: InteractionValues = moebius_coefficients
         self.n = self.moebius_coefficients.n_players
-        self._computed: dict[tuple[str, int], InteractionValues] = {}  # will store all computations
+        self._computed: dict[tuple[str, int], InteractionValues] = (
+            {}
+        )  # will store all computations
         # setup callable mapping from index to computation
         self._index_mapping: dict[str, Callable[[str, int], InteractionValues]] = {
             # shapley_interaction
@@ -66,7 +68,9 @@ class MoebiusConverter:
             return copy.deepcopy(self._computed[(index, order)])
         elif index in self.available_indices:  # if index is supported, compute it
             computation_function = self._index_mapping[index]
-            computed_index: InteractionValues = computation_function(index=index, order=order)
+            computed_index: InteractionValues = computation_function(
+                index=index, order=order
+            )
             self._computed[(index, order)] = computed_index
             return copy.deepcopy(computed_index)
         else:
@@ -106,7 +110,9 @@ class MoebiusConverter:
         for moebius_size in range(1, self.n + 1):
             for interaction_size in range(1, min(order, moebius_size) + 1):
                 distribution_weights[moebius_size, interaction_size] = (
-                    _get_moebius_distribution_weight(moebius_size, interaction_size, order, index)
+                    _get_moebius_distribution_weight(
+                        moebius_size, interaction_size, order, index
+                    )
                 )
 
         for moebius_set, moebius_val in zip(
@@ -170,7 +176,9 @@ class MoebiusConverter:
         for moebius_size in range(1, self.n + 1):
             for interaction_size in range(1, min(order, moebius_size) + 1):
                 distribution_weights[moebius_size, interaction_size] = (
-                    _get_moebius_distribution_weight(moebius_size, interaction_size, order, index)
+                    _get_moebius_distribution_weight(
+                        moebius_size, interaction_size, order, index
+                    )
                 )
 
         for moebius_set, moebius_val in zip(
@@ -187,8 +195,12 @@ class MoebiusConverter:
                     stii_dict[moebius_set] = moebius_val * val_distributed
             else:
                 # higher-order Möbius sets (size > order) distribute to all top-order interactions
-                for interaction in powerset(moebius_set, min_size=order, max_size=order):
-                    val_distributed = distribution_weights[moebius_size, len(interaction)]
+                for interaction in powerset(
+                    moebius_set, min_size=order, max_size=order
+                ):
+                    val_distributed = distribution_weights[
+                        moebius_size, len(interaction)
+                    ]
                     # Check if Möbius value is distributed onto this interaction
                     if interaction in stii_dict:
                         stii_dict[interaction] += moebius_val * val_distributed
@@ -232,7 +244,9 @@ class MoebiusConverter:
         for moebius_size in range(self.n + 1):
             for interaction_size in range(min(order, moebius_size) + 1):
                 distribution_weights[moebius_size, interaction_size] = (
-                    _get_moebius_distribution_weight(moebius_size, interaction_size, order, index)
+                    _get_moebius_distribution_weight(
+                        moebius_size, interaction_size, order, index
+                    )
                 )
 
         # Handle empty set / baseline values differently for FSII and FBII
@@ -249,7 +263,9 @@ class MoebiusConverter:
                 moebius_size = len(moebius_set)
                 if moebius_size > order:
                     fii_dict[tuple()] += (-1) ** (order) * (
-                        (1 / 2) ** moebius_size * binom(moebius_size - 1, order) * moebius_val
+                        (1 / 2) ** moebius_size
+                        * binom(moebius_size - 1, order)
+                        * moebius_val
                     )
 
         # Distribute Moebius coefficients
@@ -303,13 +319,17 @@ class MoebiusConverter:
         elif index == "k-SII":
             # The distribution formula for k-SII is not correct. We therefore compute SII and
             # aggregate the values.
-            base_interactions = self.moebius_to_base_interaction(order=order, index="SII")
+            base_interactions = self.moebius_to_base_interaction(
+                order=order, index="SII"
+            )
             self._computed["SII"] = base_interactions
             shapley_interactions = self.base_aggregation(
                 base_interactions=base_interactions, order=order
             )
         else:
-            raise ValueError(f"Index {index} not supported. Please choose from STII, FSII, k-SII.")
+            raise ValueError(
+                f"Index {index} not supported. Please choose from STII, FSII, k-SII."
+            )
 
         self._computed[index] = shapley_interactions
         return copy.copy(shapley_interactions)

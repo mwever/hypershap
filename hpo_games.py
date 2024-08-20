@@ -191,7 +191,9 @@ class UniversalLocalHyperparameterImportanceGame(AbstractHyperparameterImportanc
         pass
 
     def evaluate_single_coalition(self, coalition: np.ndarray):
-        cfgs = self.blind_parameters_according_to_coalition(self.optimized_cfg_list, coalition)
+        cfgs = self.blind_parameters_according_to_coalition(
+            self.optimized_cfg_list, coalition
+        )
         obj = list()
 
         for i, instance in enumerate(self.bench.instances):

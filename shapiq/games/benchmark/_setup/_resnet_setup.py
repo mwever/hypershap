@@ -79,7 +79,9 @@ class ResNetModel:
         _background_image = np.zeros(self._image_shape, dtype=np.uint8)
         _background_image[:, :] = [127, 127, 127]
         self._background_image: Image.Image = Image.fromarray(_background_image)
-        self._background_image_tensor: torch.Tensor = self._tensor_transform(self._background_image)
+        self._background_image_tensor: torch.Tensor = self._tensor_transform(
+            self._background_image
+        )
         self._background_input_tensor: torch.Tensor = self._preprocess(
             self._background_image_tensor
         )
@@ -95,7 +97,11 @@ class ResNetModel:
 
         # setup bool mask for all superpixels
         self._superpixel_masks = torch.zeros(
-            (self.n_superpixels, self._image_tensor.shape[1], self._image_tensor.shape[2]),
+            (
+                self.n_superpixels,
+                self._image_tensor.shape[1],
+                self._image_tensor.shape[2],
+            ),
             dtype=torch.bool,
         )
         for i in range(self.n_superpixels):
@@ -137,7 +143,9 @@ class ResNetModel:
             for superpixel, is_present in enumerate(coalition, start=1):
                 if not is_present:
                     masked_images[i, :, self._superpixel_masks[superpixel - 1]] = (
-                        self._background_image_tensor[:, self._superpixel_masks[superpixel - 1]]
+                        self._background_image_tensor[
+                            :, self._superpixel_masks[superpixel - 1]
+                        ]
                     )
         # apply the model
         output = self.model_call(self._preprocess(masked_images))[..., self.class_id]
@@ -158,7 +166,9 @@ class ResNetModel:
             return output
 
     @staticmethod
-    def get_superpixels(image: np.ndarray, n_segments: int = 14) -> tuple[int, np.ndarray]:
+    def get_superpixels(
+        image: np.ndarray, n_segments: int = 14
+    ) -> tuple[int, np.ndarray]:
         """Returns the number of superpixels and the superpixel mask by running SLIC and retrying
         with randomized values if the number of superpixels does not match the desired number.
 
@@ -178,7 +188,9 @@ class ResNetModel:
             iteration, n_segments_iter = 0, n_segments
             while iteration < 20 and n_superpixels < n_segments:
                 n_segments_iter += 1
-                superpixels = slic(image, n_segments=n_segments_iter, start_label=1, slic_zero=True)
+                superpixels = slic(
+                    image, n_segments=n_segments_iter, start_label=1, slic_zero=True
+                )
                 n_superpixels = len(np.unique(superpixels))
                 iteration += 1
 

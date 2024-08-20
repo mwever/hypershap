@@ -74,7 +74,9 @@ if __name__ == "__main__":
                 for i, config in enumerate(player_id_configs):
                     config_id = i + 1
                     print()
-                    print(f"Pre-computing game: {game_name}, config {config} with ID {config_id}")
+                    print(
+                        f"Pre-computing game: {game_name}, config {config} with ID {config_id}"
+                    )
                     n_configs_tried += 1
                     try:
                         run_benchmark_from_configuration(
@@ -89,7 +91,9 @@ if __name__ == "__main__":
                             rerun_if_exists=rerun_if_exists,
                         )
                         n_runs_done += 1
-                        print(f"Ran {n_runs_done} out of {n_configs_tried} configurations.")
+                        print(
+                            f"Ran {n_runs_done} out of {n_configs_tried} configurations."
+                        )
                     except Exception as e:
                         print(f"Error occurred: {e}. Continuing.")
                         continue

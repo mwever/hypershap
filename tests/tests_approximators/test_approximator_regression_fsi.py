@@ -42,7 +42,9 @@ def test_initialization(n, max_order):
     assert hash(approximator) != hash(approximator_deepcopy)
 
 
-@pytest.mark.parametrize("n, max_order, budget", [(7, 2, 380), (7, 2, 380), (7, 2, 100)])
+@pytest.mark.parametrize(
+    "n, max_order, budget", [(7, 2, 380), (7, 2, 380), (7, 2, 100)]
+)
 def test_approximate(n, max_order, budget):
     """Tests the approximation of the RegressionFSII approximator."""
     interaction = (1, 2)
@@ -60,7 +62,9 @@ def test_approximate(n, max_order, budget):
     assert fsi_estimates.index == "FSII"
 
     # for order 1 all players should be equal
-    first_order: np.ndarray = fsi_estimates.values[1 : n + 1]  # fist n values are first order
+    first_order: np.ndarray = fsi_estimates.values[
+        1 : n + 1
+    ]  # fist n values are first order
     assert np.allclose(first_order, first_order[0])
 
     # for order 2 the interaction between player 1 and 2 is the most important (1.0)

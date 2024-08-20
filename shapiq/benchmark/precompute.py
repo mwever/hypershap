@@ -60,7 +60,9 @@ def pre_compute_and_store(
     if save_dir is None:
         # this file path
         save_dir = os.path.dirname(__file__)
-        save_dir = os.path.join(save_dir, "precomputed", game.game_name, str(game.n_players))
+        save_dir = os.path.join(
+            save_dir, "precomputed", game.game_name, str(game.n_players)
+        )
     else:  # check if n_players is in the path
         if str(game.n_players) not in save_dir:
             save_dir = os.path.join(save_dir, str(game.n_players))
@@ -100,7 +102,11 @@ def pre_compute_from_configuration(
         get_game_file_name_from_config,
     )
 
-    game_class = get_game_class_from_name(game_class) if isinstance(game_class, str) else game_class
+    game_class = (
+        get_game_class_from_name(game_class)
+        if isinstance(game_class, str)
+        else game_class
+    )
 
     show_tqdm = True
 
@@ -117,7 +123,9 @@ def pre_compute_from_configuration(
     iterations = game_class_config.get(
         "iteration_parameter_values", BENCHMARK_CONFIGURATIONS_DEFAULT_ITERATIONS
     )
-    iteration_names = game_class_config.get("iteration_parameter_values_names", iterations)
+    iteration_names = game_class_config.get(
+        "iteration_parameter_values_names", iterations
+    )
     if n_iterations is not None:
         iterations = iterations[:n_iterations]
         iteration_names = iteration_names[:n_iterations]
@@ -131,7 +139,9 @@ def pre_compute_from_configuration(
         )
 
         for iteration, iteration_name in zip(iterations, iteration_names):
-            save_dir = os.path.join(SHAPIQ_DATA_DIR, game_class.get_game_name(), str(n_players))
+            save_dir = os.path.join(
+                SHAPIQ_DATA_DIR, game_class.get_game_name(), str(n_players)
+            )
             game_id = get_game_file_name_from_config(config, iteration)
             save_path = os.path.join(save_dir, game_id)
 
@@ -140,7 +150,9 @@ def pre_compute_from_configuration(
                 or os.path.exists(save_path + ".npz")
                 or os.path.exists(save_path + ".csv")
             ):
-                print(f"Game data for {game_class.get_game_name()} already pre-computed.")
+                print(
+                    f"Game data for {game_class.get_game_name()} already pre-computed."
+                )
                 continue
 
             params = default_params.copy()
@@ -150,14 +162,18 @@ def pre_compute_from_configuration(
 
     created_files = []
     if n_jobs == 1:
-        print(f"Pre-computing game data for {len(parameter_space)} configurations in sequence.")
+        print(
+            f"Pre-computing game data for {len(parameter_space)} configurations in sequence."
+        )
         parameter_generator = tqdm(parameter_space) if show_tqdm else parameter_space
         for params, save_dir, game_id in parameter_generator:
             game = game_class(**params)
             save_path = pre_compute_and_store(game, save_dir, game_id)
             created_files.append(save_path)
     else:
-        print(f"Pre-computing game data for {len(parameter_space)} configurations in parallel.")
+        print(
+            f"Pre-computing game data for {len(parameter_space)} configurations in parallel."
+        )
         with mp.Pool(n_jobs) as pool:
             results = list(
                 pool.starmap(
@@ -197,7 +213,8 @@ def pre_compute_and_store_from_list(
 
     if n_jobs == 1:
         return [
-            pre_compute_and_store(game, save_dir, game_id) for game, game_id in zip(games, game_ids)
+            pre_compute_and_store(game, save_dir, game_id)
+            for game, game_id in zip(games, game_ids)
         ]
 
     with mp.Pool(n_jobs) as pool:
@@ -205,7 +222,10 @@ def pre_compute_and_store_from_list(
             tqdm(
                 pool.starmap(
                     pre_compute_and_store,
-                    [(game, save_dir, game_id) for game, game_id in zip(games, game_ids)],
+                    [
+                        (game, save_dir, game_id)
+                        for game, game_id in zip(games, game_ids)
+                    ],
                 ),
                 total=len(games),
             )

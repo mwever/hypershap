@@ -31,7 +31,9 @@ class StratifiedSamplingSV(Approximator):
         n: int,
         random_state: Optional[int] = None,
     ) -> None:
-        super().__init__(n, max_order=1, index="SV", top_order=False, random_state=random_state)
+        super().__init__(
+            n, max_order=1, index="SV", top_order=False, random_state=random_state
+        )
         self.iteration_cost: int = 2
 
     def approximate(
@@ -112,5 +114,8 @@ class StratifiedSamplingSV(Approximator):
             result_to_finalize[idx] = result[player]
 
         return self._finalize_result(
-            result_to_finalize, baseline_value=empty_value, budget=used_budget, estimated=True
+            result_to_finalize,
+            baseline_value=empty_value,
+            budget=used_budget,
+            estimated=True,
         )

@@ -69,14 +69,20 @@ def test_lookup_vs_run():
     dummy_game = DummyGame(n=4, interaction=(0, 1))
 
     test_coalition = dummy_game.empty_coalition
-    assert np.allclose(dummy_game(test_coalition), dummy_game_precomputed(test_coalition))
+    assert np.allclose(
+        dummy_game(test_coalition), dummy_game_precomputed(test_coalition)
+    )
 
     test_coalition = dummy_game.empty_coalition
     test_coalition[0] = True
-    assert np.allclose(dummy_game(test_coalition), dummy_game_precomputed(test_coalition))
+    assert np.allclose(
+        dummy_game(test_coalition), dummy_game_precomputed(test_coalition)
+    )
 
     test_coalition = dummy_game.grand_coalition
-    assert np.allclose(dummy_game(test_coalition), dummy_game_precomputed(test_coalition))
+    assert np.allclose(
+        dummy_game(test_coalition), dummy_game_precomputed(test_coalition)
+    )
 
 
 def test_load_and_save():
@@ -166,7 +172,9 @@ def test_progress_bar():
     dummy_game = DummyGame(n=5, interaction=(0, 1))
 
     test_coalitions = list(powerset(range(dummy_game.n_players)))
-    test_coalitions = transform_coalitions_to_array(test_coalitions, dummy_game.n_players)
+    test_coalitions = transform_coalitions_to_array(
+        test_coalitions, dummy_game.n_players
+    )
 
     # check if the progress bar is displayed
 

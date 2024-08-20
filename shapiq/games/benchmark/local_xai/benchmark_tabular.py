@@ -54,7 +54,9 @@ class AdultCensus(LocalExplanation):
 
         # get class_to_explain
         if class_to_explain is None:
-            class_to_explain = int(np.argmax(self.setup.predict_function(x.reshape(1, -1))))
+            class_to_explain = int(
+                np.argmax(self.setup.predict_function(x.reshape(1, -1)))
+            )
 
         def predict_function(x):
             return self.setup.predict_function(x)[:, class_to_explain]

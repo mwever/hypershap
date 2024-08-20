@@ -34,10 +34,14 @@ class ViTModel:
         ValueError: If the number of patches is not 9 or 16.
     """
 
-    def __init__(self, n_patches: int, input_image: Image, verbose: bool = True) -> None:
+    def __init__(
+        self, n_patches: int, input_image: Image, verbose: bool = True
+    ) -> None:
         # check input
         if n_patches not in [9, 16]:
-            raise ValueError(f"The number of patches must be either 9 or 16 and not {n_patches}")
+            raise ValueError(
+                f"The number of patches must be either 9 or 16 and not {n_patches}"
+            )
 
         self.n_patches = n_patches
         self.class_id = None  # will be overwritten after we know the original class
@@ -46,7 +50,9 @@ class ViTModel:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         # load model
-        feature_extractor = ViTFeatureExtractor.from_pretrained("google/vit-base-patch32-384")
+        feature_extractor = ViTFeatureExtractor.from_pretrained(
+            "google/vit-base-patch32-384"
+        )
         model = ViTForImageClassification.from_pretrained("google/vit-base-patch32-384")
         model.to(device)
 
@@ -65,7 +71,9 @@ class ViTModel:
         self._embedding_layer.mask_token = nn.Parameter(torch.zeros(1, 1, 768))
 
         # run input image through model
-        self._transformed_image = feature_extractor(images=input_image, return_tensors="pt")
+        self._transformed_image = feature_extractor(
+            images=input_image, return_tensors="pt"
+        )
 
         # get original output
         probit_output = self(np.ones(self.n_patches, dtype=bool))
@@ -73,7 +81,9 @@ class ViTModel:
         self.original_output = float(probit_output[0, self.class_id])
         self.original_class_name = str(model.config.id2label[self.class_id])
         if verbose:
-            print(f"Original class: {self.original_class_name} ({self.original_output:.4f})")
+            print(
+                f"Original class: {self.original_class_name} ({self.original_output:.4f})"
+            )
 
         # call the model with no information to get empty prediction
         empty_output = self(np.zeros(self.n_patches, dtype=bool))
@@ -97,7 +107,9 @@ class ViTModel:
 
         for i in range(n_coalitions):
             coalition = coalitions[i]
-            bool_masked_pos = self._transform_coalition_into_bool_mask(coalition, self.n_patches)
+            bool_masked_pos = self._transform_coalition_into_bool_mask(
+                coalition, self.n_patches
+            )
             with torch.no_grad():
                 embeddings = self._embedding_layer(
                     **self._transformed_image, bool_masked_pos=bool_masked_pos
@@ -121,7 +133,9 @@ class ViTModel:
         return probit_output_all
 
     @staticmethod
-    def _transform_coalition_into_bool_mask(coalition: np.ndarray, n_patches: int) -> torch.Tensor:
+    def _transform_coalition_into_bool_mask(
+        coalition: np.ndarray, n_patches: int
+    ) -> torch.Tensor:
         """Transforms a coalition of players (i.e. super-patches) into a boolean mask for the Vision
         Transformer model.
 
@@ -147,7 +161,10 @@ class ViTModel:
                     )
                     bool_mask_2d[y : y + 3, x : x + 3] = False
                 else:
-                    x, y = MAPPING_PLAYER_MASK[9][player]["x"], MAPPING_PLAYER_MASK[9][player]["y"]
+                    x, y = (
+                        MAPPING_PLAYER_MASK[9][player]["x"],
+                        MAPPING_PLAYER_MASK[9][player]["y"],
+                    )
                     bool_mask_2d[y : y + 4, x : x + 4] = False
         bool_mask_1d = bool_mask_2d.flatten()
         return bool_mask_1d

@@ -41,7 +41,10 @@ def test_benchmark(index, n_jobs):
         raise ValueError("Wrong index for test.")
 
     games = load_games_from_configuration(
-        game_class=game_identifier, n_player_id=n_player_id, config_id=config_id, n_games=n_games
+        game_class=game_identifier,
+        n_player_id=n_player_id,
+        config_id=config_id,
+        n_games=n_games,
     )
     games = list(games)  # convert to list (the generator is consumed)
     assert games[0].n_players == n_players
@@ -153,4 +156,6 @@ def test_download_games():
     assert os.path.exists(save_path)
 
     with pytest.raises(FileNotFoundError):
-        download_game_data(game_name=game_name, n_players=n_players, file_name="wrong_file_name")
+        download_game_data(
+            game_name=game_name, n_players=n_players, file_name="wrong_file_name"
+        )

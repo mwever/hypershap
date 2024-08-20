@@ -11,7 +11,11 @@ from warnings import warn
 import matplotlib.pyplot as plt
 import numpy as np
 
-from shapiq.indices import ALL_AVAILABLE_INDICES, index_generalizes_bv, index_generalizes_sv
+from shapiq.indices import (
+    ALL_AVAILABLE_INDICES,
+    index_generalizes_bv,
+    index_generalizes_sv,
+)
 from shapiq.utils.sets import count_interactions, generate_interaction_lookup, powerset
 
 
@@ -93,7 +97,9 @@ class InteractionValues:
                 1e-3.
         """
         # find interactions to remove in self.values
-        interactions_to_remove: set[int] = set(np.where(np.abs(self.values) < threshold)[0])
+        interactions_to_remove: set[int] = set(
+            np.where(np.abs(self.values) < threshold)[0]
+        )
         new_values = np.delete(self.values, list(interactions_to_remove))
         new_interaction_lookup = {}
         for index, interaction in enumerate(self.interaction_lookup):
@@ -169,8 +175,12 @@ class InteractionValues:
             if index in top_k_indices:
                 top_k_interactions[interaction] = self.values[index]
         sorted_top_k_interactions = []
-        for interaction in sorted(top_k_interactions, key=top_k_interactions.get, reverse=True):
-            sorted_top_k_interactions.append((interaction, top_k_interactions[interaction]))
+        for interaction in sorted(
+            top_k_interactions, key=top_k_interactions.get, reverse=True
+        ):
+            sorted_top_k_interactions.append(
+                (interaction, top_k_interactions[interaction])
+            )
         return top_k_interactions, sorted_top_k_interactions
 
     def __repr__(self) -> str:
@@ -187,7 +197,9 @@ class InteractionValues:
         """Returns the string representation of the InteractionValues object."""
         representation = self.__repr__()
         representation = representation[:-2]  # remove the last "\n)" and add values
-        _, sorted_top_10_interactions = self.get_top_k(10, False)  # get top 10 interactions
+        _, sorted_top_10_interactions = self.get_top_k(
+            10, False
+        )  # get top 10 interactions
         # add values to string representation
         representation += ",\n    Top 10 interactions:\n"
         for interaction, value in sorted_top_10_interactions:
@@ -197,7 +209,9 @@ class InteractionValues:
 
     def __len__(self) -> int:
         """Returns the length of the InteractionValues object."""
-        return len(self.values)  # might better to return the theoretical no. of interactions
+        return len(
+            self.values
+        )  # might better to return the theoretical no. of interactions
 
     def __iter__(self) -> np.nditer:
         """Returns an iterator over the values of the InteractionValues object."""
@@ -295,7 +309,9 @@ class InteractionValues:
             baseline_value=self.baseline_value,
         )
 
-    def __add__(self, other: Union["InteractionValues", int, float]) -> "InteractionValues":
+    def __add__(
+        self, other: Union["InteractionValues", int, float]
+    ) -> "InteractionValues":
         """Adds two InteractionValues objects together or a scalar."""
         n_players, min_order, max_order = self.n_players, self.min_order, self.max_order
         if isinstance(other, InteractionValues):
@@ -320,7 +336,9 @@ class InteractionValues:
                         position += 1
                         values_to_add.append(other[interaction])
                     else:
-                        added_values[interaction_lookup[interaction]] += other[interaction]
+                        added_values[interaction_lookup[interaction]] += other[
+                            interaction
+                        ]
                 added_values = np.concatenate((added_values, np.asarray(values_to_add)))
                 # adjust n_players, min_order, and max_order
                 n_players = max(self.n_players, other.n_players)
@@ -336,7 +354,9 @@ class InteractionValues:
             interaction_lookup = self.interaction_lookup.copy()
             baseline_value = self.baseline_value + other
         else:
-            raise TypeError("Cannot add InteractionValues with object of type " f"{type(other)}.")
+            raise TypeError(
+                "Cannot add InteractionValues with object of type " f"{type(other)}."
+            )
         return InteractionValues(
             values=added_values,
             index=self.index,
@@ -349,7 +369,9 @@ class InteractionValues:
             baseline_value=baseline_value,
         )
 
-    def __radd__(self, other: Union["InteractionValues", int, float]) -> "InteractionValues":
+    def __radd__(
+        self, other: Union["InteractionValues", int, float]
+    ) -> "InteractionValues":
         """Adds two InteractionValues objects together or a scalar."""
         return self.__add__(other)
 
@@ -367,11 +389,15 @@ class InteractionValues:
             baseline_value=-self.baseline_value,
         )
 
-    def __sub__(self, other: Union["InteractionValues", int, float]) -> "InteractionValues":
+    def __sub__(
+        self, other: Union["InteractionValues", int, float]
+    ) -> "InteractionValues":
         """Subtracts two InteractionValues objects or a scalar."""
         return self.__add__(-other)
 
-    def __rsub__(self, other: Union["InteractionValues", int, float]) -> "InteractionValues":
+    def __rsub__(
+        self, other: Union["InteractionValues", int, float]
+    ) -> "InteractionValues":
         """Subtracts two InteractionValues objects or a scalar."""
         return (-self).__add__(other)
 
@@ -423,21 +449,36 @@ class InteractionValues:
 
         return values
 
-    def get_n_order(self, order: int) -> "InteractionValues":
+    def get_n_order(
+        self,
+        order: int,
+        min_order: Optional[int] = None,
+        max_order: Optional[int] = None,
+    ) -> "InteractionValues":
         """Returns the interaction values of a specific order.
 
         Args:
             order: The order of the interactions to return.
+            min_order: The minimum order of the interactions to return. Defaults to ``None`` which
+                sets it to the order.
+            max_order: The maximum order of the interactions to return. Defaults to ``None`` which
+                sets it to the order.
 
         Returns:
             The interaction values of the specified order.
         """
+        max_order = order if max_order is None else max_order
+        min_order = order if min_order is None else min_order
+
         new_values = np.zeros(
-            count_interactions(n=self.n_players, max_order=order, min_order=order), dtype=float
+            count_interactions(
+                n=self.n_players, max_order=max_order, min_order=min_order
+            ),
+            dtype=float,
         )
         new_interaction_lookup = {}
         for i, interaction in enumerate(
-            powerset(range(self.n_players), min_size=order, max_size=order)
+            powerset(range(self.n_players), min_size=min_order, max_size=max_order)
         ):
             new_values[i] = self[interaction]
             new_interaction_lookup[interaction] = len(new_interaction_lookup)

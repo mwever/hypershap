@@ -38,7 +38,9 @@ def test_k_sii_estimation(sii_approximator, ksii_approximator):
 
     k_sii_transformed = ksii_approximator.aggregate_interaction_values(sii_estimates)
     assert k_sii_transformed.index == "k-SII"
-    assert k_sii_transformed == ksii_estimates  # check weather transform and estimation are equal
+    assert (
+        k_sii_transformed == ksii_estimates
+    )  # check weather transform and estimation are equal
 
     # k-SII values for player 1 and 2 should be approximately 0.1429 and the interaction 1.0
     assert ksii_estimates[(1,)] == pytest.approx(0.1429, 0.4)

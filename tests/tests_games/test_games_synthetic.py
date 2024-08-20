@@ -135,9 +135,17 @@ def test_dummy_game_access_counts():
     """Test how often the game was called."""
     game = DummyGame(n=10, interaction=(1, 2))
     assert game.access_counter == 0
-    game(np.asarray([True, False, False, False, False, False, False, False, False, False]))
+    game(
+        np.asarray(
+            [True, False, False, False, False, False, False, False, False, False]
+        )
+    )
     assert game.access_counter == 1
-    game(np.asarray([True, False, False, False, False, False, False, False, False, False]))
+    game(
+        np.asarray(
+            [True, False, False, False, False, False, False, False, False, False]
+        )
+    )
     assert game.access_counter == 2
     game(
         np.asarray(

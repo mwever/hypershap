@@ -93,7 +93,9 @@ class Approximator(ABC):
 
         # set up random state and random number generators
         self._random_state: Optional[int] = random_state
-        self._rng: Optional[np.random.Generator] = np.random.default_rng(seed=self._random_state)
+        self._rng: Optional[np.random.Generator] = np.random.default_rng(
+            seed=self._random_state
+        )
 
         # set up a coalition sampler
         self._big_M: int = 100_000_000  # large number for sampling weights
@@ -142,12 +144,16 @@ class Approximator(ABC):
         """
         weight_vector = np.zeros(shape=self.n + 1)
         for coalition_size in range(0, self.n + 1):
-            if (coalition_size < self.max_order) or (coalition_size > self.n - self.max_order):
+            if (coalition_size < self.max_order) or (
+                coalition_size > self.n - self.max_order
+            ):
                 # prioritize these subsets
                 weight_vector[coalition_size] = self._big_M
             else:
                 # KernelSHAP sampling weights
-                weight_vector[coalition_size] = 1 / (coalition_size * (self.n - coalition_size))
+                weight_vector[coalition_size] = 1 / (
+                    coalition_size * (self.n - coalition_size)
+                )
         sampling_weight = weight_vector / np.sum(weight_vector)
         return sampling_weight
 
@@ -211,7 +217,9 @@ class Approximator(ABC):
             idx = self._interaction_lookup[tuple()]
             empty_value = result[idx]
             # only for SII empty value is not the baseline value
-            if empty_value != baseline_value and is_empty_value_the_baseline(self.index):
+            if empty_value != baseline_value and is_empty_value_the_baseline(
+                self.index
+            ):
                 result[idx] = baseline_value
 
         interactions = InteractionValues(
@@ -233,7 +241,9 @@ class Approximator(ABC):
         return interactions
 
     @staticmethod
-    def _calc_iteration_count(budget: int, batch_size: int, iteration_cost: int) -> tuple[int, int]:
+    def _calc_iteration_count(
+        budget: int, batch_size: int, iteration_cost: int
+    ) -> tuple[int, int]:
         """Computes the number of iterations and the size of the last batch given the batch size and
         the budget.
 
@@ -289,7 +299,9 @@ class Approximator(ABC):
 
     def __hash__(self) -> int:
         """Returns the hash of the Approximator object."""
-        return hash((self.n, self.max_order, self.index, self.top_order, self._random_state))
+        return hash(
+            (self.n, self.max_order, self.index, self.top_order, self._random_state)
+        )
 
     @property
     def approximator_id(self) -> int:

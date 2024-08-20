@@ -11,7 +11,9 @@ def test_basic_functionality():
 
     # test init and default params
     n = 5
-    uniform_sampling_weights = np.ones(n + 1) / (n + 1)  # only empty and full should be complete
+    uniform_sampling_weights = np.ones(n + 1) / (
+        n + 1
+    )  # only empty and full should be complete
     sampler = CoalitionSampler(n, uniform_sampling_weights)
     assert sampler.n == n
     assert np.isclose(sampler._sampling_weights, uniform_sampling_weights).all()
