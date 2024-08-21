@@ -158,8 +158,9 @@ def evaluate_game(
 
 if __name__ == "__main__":
 
-    hpo_game, _, _ = setup_game(
+    hpo_game, _, names = setup_game(
         game_type="local", benchmark_name="rbv2_ranger", normalize_loaded=True
     )
+    assert len(names) == hpo_game.n_players
 
     evaluate_game(hpo_game, indices=["FSII"], uniform_weights=False)
