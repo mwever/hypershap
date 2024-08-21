@@ -109,8 +109,6 @@ class FeatureSelection(Game):
                 score = self._score_function(x_test, self._y_test)
             else:
                 y_pred = self._predict_function(x_test)  # get y hat prediction
-                score = self._loss_function(
-                    self._y_test, y_pred
-                )  # compare prediction with gt
+                score = self._loss_function(self._y_test, y_pred)  # compare prediction with gt
             scores[i] = score
         return scores

@@ -90,9 +90,7 @@ class DatasetValuation(Game):
         # get the holdout set (if not provided)
         if x_test is None or y_test is None:
             if isinstance(x_train, list):
-                raise ValueError(
-                    "x_test and y_test must be provided if x_train is a list."
-                )
+                raise ValueError("x_test and y_test must be provided if x_train is a list.")
             # randomly split the data into training and test set
             idx = rng.permutation(np.arange(x_train.shape[0]))
             x_train, y_train = x_train[idx], y_train[idx]
@@ -156,12 +154,8 @@ class DatasetValuation(Game):
                 worth[i] = self.empty_data_value
                 continue
             # create the training data for the coalition
-            x_train = np.concatenate(
-                [self.data_sets[j] for j in np.where(coalition)[0]]
-            )
-            y_train = np.concatenate(
-                [self.target_sets[j] for j in np.where(coalition)[0]]
-            )
+            x_train = np.concatenate([self.data_sets[j] for j in np.where(coalition)[0]])
+            y_train = np.concatenate([self.target_sets[j] for j in np.where(coalition)[0]])
             self._fit_function(x_train, y_train)
             y_pred = self._predict_function(self._x_test)
             worth[i] = self._loss_function(self._y_test, y_pred)

@@ -141,10 +141,7 @@ def print_classes_nicely(obj):
     {'tree': shapiq.TreeExplainer}  -> ['shapiq.TreeExplainer']
     """
     if isinstance(obj, dict):
-        return [
-            ".".join([print_class(v).split(".")[i] for i in (0, -1)])
-            for _, v in obj.items()
-        ]
+        return [".".join([print_class(v).split(".")[i] for i in (0, -1)]) for _, v in obj.items()]
     elif isinstance(obj, list):
         return [".".join([print_class(v).split(".")[i] for i in (0, -1)]) for v in obj]
 

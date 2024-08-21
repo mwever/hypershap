@@ -36,9 +36,7 @@ class Imputer(Game):
         self.model = model
         self.data = data
         self._n_features = self.data.shape[1]
-        self._cat_features: list = (
-            [] if categorical_features is None else categorical_features
-        )
+        self._cat_features: list = [] if categorical_features is None else categorical_features
         self._random_state = random_state
         self._rng = np.random.default_rng(self._random_state)
 

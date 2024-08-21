@@ -54,13 +54,9 @@ class MarginalImputer(Imputer):
         # setup attributes
         self._sample_replacements = sample_replacements
         self._sample_size: int = sample_size
-        self.replacement_data: np.ndarray = np.zeros(
-            (1, self._n_features)
-        )  # will be overwritten
+        self.replacement_data: np.ndarray = np.zeros((1, self._n_features))  # will be overwritten
         self.init_background(self.data)
-        self._x: np.ndarray = np.zeros(
-            (1, self._n_features)
-        )  # will be overwritten @ fit
+        self._x: np.ndarray = np.zeros((1, self._n_features))  # will be overwritten @ fit
         if x is not None:
             self.fit(x)
 
@@ -87,9 +83,7 @@ class MarginalImputer(Imputer):
             replacement_data = self._sample_replacement_values(coalitions)
             outputs = np.zeros((self._sample_size, n_coalitions))
             for i in range(self._sample_size):
-                replacements = replacement_data[i].reshape(
-                    n_coalitions, self._n_features
-                )
+                replacements = replacement_data[i].reshape(n_coalitions, self._n_features)
                 data[~coalitions] = replacements[~coalitions]
                 outputs[i] = self.predict(data)
             outputs = np.mean(outputs, axis=0)  # average over the samples

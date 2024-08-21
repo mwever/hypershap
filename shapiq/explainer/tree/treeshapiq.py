@@ -72,9 +72,7 @@ class TreeSHAPIQ:
         validated_model = validate_tree_model(model)  # the parsed and validated model
         # TODO: add support for other sample weights
         self._tree: TreeModel = copy.deepcopy(validated_model)
-        self._relevant_features: np.ndarray = np.array(
-            list(self._tree.feature_ids), dtype=int
-        )
+        self._relevant_features: np.ndarray = np.array(list(self._tree.feature_ids), dtype=int)
         self._tree.reduce_feature_complexity()
         self._n_nodes: int = self._tree.n_nodes
         self._n_features_in_tree: int = self._tree.n_features_in_tree
@@ -82,17 +80,11 @@ class TreeSHAPIQ:
         self._feature_ids: set = self._tree.feature_ids
 
         # precompute interaction lookup tables
-        self._interactions_lookup_relevant: dict[tuple, int] = (
-            generate_interaction_lookup(
-                self._relevant_features, self._min_order, self._max_order
-            )
+        self._interactions_lookup_relevant: dict[tuple, int] = generate_interaction_lookup(
+            self._relevant_features, self._min_order, self._max_order
         )
-        self._interactions_lookup: dict[int, dict[tuple, int]] = (
-            {}
-        )  # lookup for interactions
-        self._interaction_update_positions: dict[int, dict[int, np.ndarray[int]]] = (
-            {}
-        )  # lookup
+        self._interactions_lookup: dict[int, dict[tuple, int]] = {}  # lookup for interactions
+        self._interaction_update_positions: dict[int, dict[int, np.ndarray[int]]] = {}  # lookup
         self._init_interaction_lookup_tables()
 
         # get the edge representation of the tree
@@ -122,9 +114,7 @@ class TreeSHAPIQ:
         self.Ns_store: dict = {}
         self.n_interpolation_size = self._n_features_in_tree
         if self._index in ("SV", "SII", "k-SII"):  # SP is of order at most d_max
-            self.n_interpolation_size = min(
-                self._edge_tree.max_depth, self._n_features_in_tree
-            )
+            self.n_interpolation_size = min(self._edge_tree.max_depth, self._n_features_in_tree)
         self._init_summary_polynomials()
 
         # stores the nodes that are active in the tree for a given instance (new for each instance)
@@ -170,9 +160,7 @@ class TreeSHAPIQ:
         )
 
         if self._base_index != self._index:
-            shapley_interaction_values = aggregate_interaction_values(
-                shapley_interaction_values
-            )
+            shapley_interaction_values = aggregate_interaction_values(shapley_interaction_values)
 
         return shapley_interaction_values
 
@@ -411,15 +399,11 @@ class TreeSHAPIQ:
         """Initializes summary polynomial variables. This function is called once during the
         initialization of the explainer."""
         for order in range(1, self._max_order + 1):
-            subset_ancestors: dict[int, np.ndarray] = (
-                self._precalculate_interaction_ancestors(
-                    interaction_order=order, n_features=self._n_features_in_tree
-                )
+            subset_ancestors: dict[int, np.ndarray] = self._precalculate_interaction_ancestors(
+                interaction_order=order, n_features=self._n_features_in_tree
             )
             self.subset_ancestors_store[order] = subset_ancestors
-            self.D_store[order] = np.polynomial.chebyshev.chebpts2(
-                self.n_interpolation_size
-            )
+            self.D_store[order] = np.polynomial.chebyshev.chebpts2(self.n_interpolation_size)
             self.D_powers_store[order] = self._cache(self.D_store[order])
             if self._index in ("SV", "SII", "k-SII"):
                 self.Ns_store[order] = self._get_N(self.D_store[order])
@@ -434,9 +418,7 @@ class TreeSHAPIQ:
         summary_poly_up: np.ndarray[float] = None,
         interaction_poly_down: np.ndarray[float] = None,
         quotient_poly_down: np.ndarray[float] = None,
-    ) -> tuple[
-        np.ndarray[float], np.ndarray[float], np.ndarray[float], np.ndarray[float]
-    ]:
+    ) -> tuple[np.ndarray[float], np.ndarray[float], np.ndarray[float], np.ndarray[float]]:
         """Retrieves the polynomials for a given interaction order. It initializes the polynomials
             for the first call of the recursive explanation function.
 
@@ -452,14 +434,10 @@ class TreeSHAPIQ:
                 down, and the quotient polynomial down.
         """
         if summary_poly_down is None:
-            summary_poly_down = np.zeros(
-                (self._edge_tree.max_depth + 1, self.n_interpolation_size)
-            )
+            summary_poly_down = np.zeros((self._edge_tree.max_depth + 1, self.n_interpolation_size))
             summary_poly_down[0, :] = 1
         if summary_poly_up is None:
-            summary_poly_up = np.zeros(
-                (self._edge_tree.max_depth + 1, self.n_interpolation_size)
-            )
+            summary_poly_up = np.zeros((self._edge_tree.max_depth + 1, self.n_interpolation_size))
         if interaction_poly_down is None:
             interaction_poly_down = np.zeros(
                 (
@@ -550,18 +528,14 @@ class TreeSHAPIQ:
             interaction_updates[feature_i] = []
 
         # fill the interaction updates and positions
-        position_counter = np.zeros(
-            n_features, dtype=int
-        )  # used to keep track of the position
+        position_counter = np.zeros(n_features, dtype=int)  # used to keep track of the position
         for interaction in powerset(
             range(n_features), min_size=interaction_order, max_size=interaction_order
         ):
             for i in interaction:
                 interaction_updates[i].append(interaction)
                 position = position_counter[i]
-                interaction_update_positions[i][position] = order_interactions_lookup[
-                    interaction
-                ]
+                interaction_update_positions[i][position] = order_interactions_lookup[interaction]
                 position_counter[i] += 1
 
         return interaction_updates, interaction_update_positions
@@ -632,8 +606,7 @@ class TreeSHAPIQ:
         # TODO: add docstring
         if self._index == "STII":
             return self._max_order / (
-                self._n_features_in_tree
-                * sp.special.binom(self._n_features_in_tree - 1, t)
+                self._n_features_in_tree * sp.special.binom(self._n_features_in_tree - 1, t)
             )
         if self._index == "FSII":
             return (
@@ -652,9 +625,7 @@ class TreeSHAPIQ:
         depth = D.shape[0]
         Ns_id = np.zeros((depth + 1, depth))
         for i in range(1, depth + 1):
-            Ns_id[i, :i] = np.linalg.inv(np.vander(D[:i]).T).dot(
-                np.ones(i)
-            )  # TODO remove ()
+            Ns_id[i, :i] = np.linalg.inv(np.vander(D[:i]).T).dot(np.ones(i))  # TODO remove ()
         return Ns_id
 
     @staticmethod

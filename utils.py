@@ -80,7 +80,7 @@ def setup_game(
     game_type: str,
     benchmark_name: str,
     metric: str = "acc",
-    instance: Optional[int] = None,
+    instance_index: Optional[int] = None,
     random_state: Optional[int] = 42,
     n_configs: int = 1000,
     pre_compute: bool = False,
@@ -99,7 +99,7 @@ def setup_game(
         game_type: The type of game to set up.
         benchmark_name: The name of the benchmark.
         metric: The metric to optimize. Default is `"acc"`.
-        instance: The instance to use. If None, the first instance is used. Default is `None`.
+        instance_index: The instance to use. If None, the first instance is used. Default is `None`.
         random_state: The random state. Default is `42`.
         n_configs: The number of configurations to sample. Default is `1000`.
         pre_compute: Whether to pre-compute and store the game values. Default is `False`.
@@ -110,8 +110,10 @@ def setup_game(
         The hyperparameter importance game, the name of the game, and the player names.
     """
     benchmark = benchmark_set.BenchmarkSet(benchmark_name)
-    if instance is None:
-        instance = benchmark.instances[0]
+    if instance_index is None:
+        instance_index = benchmark.instances[0]
+    else:
+        instance_index = benchmark.instances[instance_index]
 
     # get game_name
     if game_type == "universal":
@@ -123,7 +125,7 @@ def setup_game(
             game_type,
             benchmark_name,
             metric=metric,
-            instance=instance,
+            instance=instance_index,
             n_configs=n_configs,
             random_state=random_state,
         )
@@ -146,7 +148,7 @@ def setup_game(
             verbose=verbose,
         )
     elif game_type == "global":
-        benchmark.set_instance(instance)
+        benchmark.set_instance(instance_index)
         game = GlobalHyperparameterImportanceGame(
             benchmark,
             metric=metric,
@@ -155,15 +157,15 @@ def setup_game(
             verbose=verbose,
         )
     elif game_type == "local":
-        benchmark.set_instance(instance)
+        benchmark.set_instance(instance_index)
         optimal_cfg, _ = _find_optimal_configuration(
             benchmark, metric=metric, random_state=random_state, n_configs=n_configs
         )
         game = LocalHyperparameterImportanceGame(benchmark, metric, optimal_cfg, verbose=verbose)
     elif game_type == "universal-local":
         optimal_cfg_list = []
-        for instance in tqdm(benchmark.instances):
-            benchmark.set_instance(instance)
+        for instance_index in tqdm(benchmark.instances):
+            benchmark.set_instance(instance_index)
             optimal_cfg, _ = _find_optimal_configuration(
                 benchmark, metric=metric, random_state=random_state, n_configs=n_configs
             )

@@ -181,9 +181,7 @@ class GameBenchmarkSetup:
 
         # check if the model is loaded
         if self.model is None and model_name is not None:
-            raise ValueError(
-                f"Invalid model name {model_name} for the {dataset_name} dataset."
-            )
+            raise ValueError(f"Invalid model name {model_name} for the {dataset_name} dataset.")
 
         # set up the functions
         if self.dataset_type == "classification" and model_name is not None:
@@ -221,9 +219,7 @@ class GameBenchmarkSetup:
     def print_train_performance(self):
         """Prints the performance of the model on the test data."""
         print(f"Trained model {self.model_name} for the {self.dataset_name} dataset.")
-        print(
-            f"Score on training data: {self.score_function(self.x_test, self.y_test)}"
-        )
+        print(f"Score on training data: {self.score_function(self.x_test, self.y_test)}")
 
     def init_decision_tree_classifier(self):
         """Initializes and trains a decision tree model for a classification dataset."""
@@ -252,9 +248,7 @@ class GameBenchmarkSetup:
 
     def init_random_forest_regressor(self):
         """Initializes and trains a random forest model for a regression dataset."""
-        self.model = RandomForestRegressor(
-            n_estimators=10, random_state=self.random_state
-        )
+        self.model = RandomForestRegressor(n_estimators=10, random_state=self.random_state)
         self.model.fit(self.x_train, self.y_train)
 
     def init_gradient_boosting_regressor(self):

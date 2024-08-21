@@ -32,9 +32,7 @@ def _remove_empty_value(interaction: InteractionValues) -> InteractionValues:
         return interaction
 
 
-def compute_diff_metrics(
-    ground_truth: InteractionValues, estimated: InteractionValues
-) -> dict:
+def compute_diff_metrics(ground_truth: InteractionValues, estimated: InteractionValues) -> dict:
     """Computes metrics via the difference between the ground truth and estimated interaction
     values.
 
@@ -57,12 +55,8 @@ def compute_diff_metrics(
         if ground_truth.index != estimated.index:
             if {ground_truth.index, estimated.index} == {"SV", "kADD-SHAP"}:
                 sv_values = ground_truth if ground_truth.index == "SV" else estimated
-                kadd_values = (
-                    ground_truth if ground_truth.index == "kADD-SHAP" else estimated
-                )
-                kadd_values = kadd_values.get_n_order(
-                    order=1
-                )  # make kADD-SHAP same order as SV
+                kadd_values = ground_truth if ground_truth.index == "kADD-SHAP" else estimated
+                kadd_values = kadd_values.get_n_order(order=1)  # make kADD-SHAP same order as SV
                 difference = sv_values - kadd_values
             else:
                 if ground_truth.index == "SV":
@@ -144,9 +138,7 @@ def compute_precision_at_k(
     estimated_values = _remove_empty_value(estimated)
     top_k, _ = ground_truth_values.get_top_k(k=k, as_interaction_values=False)
     top_k_estimated, _ = estimated_values.get_top_k(k=k, as_interaction_values=False)
-    precision_at_k = (
-        len(set(top_k.keys()).intersection(set(top_k_estimated.keys()))) / k
-    )
+    precision_at_k = len(set(top_k.keys()).intersection(set(top_k_estimated.keys()))) / k
     return precision_at_k
 
 
@@ -171,23 +163,17 @@ def get_all_metrics(
         order_indicator += "_"
 
     metrics = {
-        order_indicator
-        + "Precision@10": compute_precision_at_k(ground_truth, estimated, k=10),
-        order_indicator
-        + "Precision@5": compute_precision_at_k(ground_truth, estimated, k=5),
+        order_indicator + "Precision@10": compute_precision_at_k(ground_truth, estimated, k=10),
+        order_indicator + "Precision@5": compute_precision_at_k(ground_truth, estimated, k=5),
         order_indicator + "KendallTau": compute_kendall_tau(ground_truth, estimated),
-        order_indicator
-        + "KendallTau@10": compute_kendall_tau(ground_truth, estimated, k=10),
-        order_indicator
-        + "KendallTau@50": compute_kendall_tau(ground_truth, estimated, k=50),
+        order_indicator + "KendallTau@10": compute_kendall_tau(ground_truth, estimated, k=10),
+        order_indicator + "KendallTau@50": compute_kendall_tau(ground_truth, estimated, k=50),
     }
 
     # get diff metrics
     metrics_diff = compute_diff_metrics(ground_truth, estimated)
     if order_indicator != "":  # add the order indicator to the diff metrics
-        metrics_diff = {
-            order_indicator + key: value for key, value in metrics_diff.items()
-        }
+        metrics_diff = {order_indicator + key: value for key, value in metrics_diff.items()}
 
     metrics.update(metrics_diff)
     return metrics

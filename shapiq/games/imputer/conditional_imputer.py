@@ -56,9 +56,7 @@ class ConditionalImputer(Imputer):
     ) -> None:
         super().__init__(model, data, categorical_features, random_state)
         if method != "generative":
-            raise ValueError(
-                "Currently only a generative conditional imputer is implemented."
-            )
+            raise ValueError("Currently only a generative conditional imputer is implemented.")
         self.method = method
         self.sample_size = sample_size
         self.conditional_budget = conditional_budget
@@ -160,9 +158,7 @@ class ConditionalImputer(Imputer):
             distances <= np.quantile(distances, self.conditional_threshold)
         ]
         if self.sample_size < conditional_data.shape[0]:
-            idc = self._rng.choice(
-                conditional_data.shape[0], size=self.sample_size, replace=False
-            )
+            idc = self._rng.choice(conditional_data.shape[0], size=self.sample_size, replace=False)
             background_data = conditional_data[idc, :]
         else:
             background_data = conditional_data

@@ -99,9 +99,7 @@ def run_benchmark(
         os.makedirs("results", exist_ok=True)
 
     if not rerun_if_exists and os.path.exists(save_path):
-        print(
-            f"Results for the benchmark {benchmark_name} already exist. Skipping the benchmark."
-        )
+        print(f"Results for the benchmark {benchmark_name} already exist. Skipping the benchmark.")
         return pd.read_json(save_path)
 
     # check that all games have the same number of players
@@ -122,19 +120,13 @@ def run_benchmark(
         )
 
     # transform the budget steps to integers if float is provided
-    if (
-        n_players > 16
-    ):  # sets the budget to 10k for synthetic games with more than 16 players
+    if n_players > 16:  # sets the budget to 10k for synthetic games with more than 16 players
         max_budget = 10_000
-    max_budget = (
-        max_budget or 2**n_players
-    )  # set budget to 2**n_players if not provided
+    max_budget = max_budget or 2**n_players  # set budget to 2**n_players if not provided
     if budget_steps is None:
         budget_steps = [
             int(round(budget_step, 2) * max_budget)
-            for budget_step in np.arange(
-                budget_step, 1.0 + budget_step + budget_step, budget_step
-            )
+            for budget_step in np.arange(budget_step, 1.0 + budget_step + budget_step, budget_step)
         ]
         print("Created budget steps: ", budget_steps)
 
@@ -143,11 +135,7 @@ def run_benchmark(
         approximators = APPROXIMATION_CONFIGURATIONS[index]
     # get approx classes if strings are provided
     approximators = [
-        (
-            APPROXIMATION_NAME_TO_CLASS_MAPPING[approx]
-            if isinstance(approx, str)
-            else approx
-        )
+        (APPROXIMATION_NAME_TO_CLASS_MAPPING[approx] if isinstance(approx, str) else approx)
         for approx in approximators
     ]
     approximators_per_iteration = {}
@@ -157,9 +145,7 @@ def run_benchmark(
                 _init_approximator_from_class(
                     approximator_class, n_players, index, order, random_state=iteration
                 )
-                if isinstance(
-                    approximator_class, type
-                )  # check if the approximator is a class
+                if isinstance(approximator_class, type)  # check if the approximator is a class
                 else approximator_class
             )
             for approximator_class in approximators
@@ -341,9 +327,7 @@ def load_benchmark_results(
             or index is None
             or order is None
         ):
-            raise ValueError(
-                "The game configuration must be provided if the save path is not."
-            )
+            raise ValueError("The game configuration must be provided if the save path is not.")
 
         if isinstance(game_class, str):
             game_class = get_game_class_from_name(game_class)
@@ -415,11 +399,7 @@ def run_benchmark_from_configuration(
     )
     from .load import load_games_from_configuration
 
-    game_class = (
-        get_game_class_from_name(game_class)
-        if isinstance(game_class, str)
-        else game_class
-    )
+    game_class = get_game_class_from_name(game_class) if isinstance(game_class, str) else game_class
     game_name = get_name_from_game_class(game_class)
     print(f"Running benchmark for the game: {game_name}.")
 
@@ -442,22 +422,14 @@ def run_benchmark_from_configuration(
     )
     if game_n_games is not None:
         games = games[:game_n_games]
-    print(
-        f"Loaded {len(games)} games for the benchmark. Configuration ID: {config_id}."
-    )
+    print(f"Loaded {len(games)} games for the benchmark. Configuration ID: {config_id}.")
     if not all(game.precomputed for game in games):
-        warnings.warn(
-            "Not all games are pre-computed. The benchmark might take longer to run."
-        )
+        warnings.warn("Not all games are pre-computed. The benchmark might take longer to run.")
     if not all(game.is_normalized for game in games):
-        warnings.warn(
-            "Not all games are normalized. The benchmark might not be accurate."
-        )
+        warnings.warn("Not all games are normalized. The benchmark might not be accurate.")
 
     # get the benchmark name for saving the results
-    benchmark_name = _make_benchmark_name(
-        config_id, game_class, len(games), index, order
-    )
+    benchmark_name = _make_benchmark_name(config_id, game_class, len(games), index, order)
     save_path = os.path.join("results", f"{benchmark_name}.json")
     os.makedirs("results", exist_ok=True)
     print(
@@ -465,23 +437,16 @@ def run_benchmark_from_configuration(
         f"save path: {save_path}."
     )
     if not rerun_if_exists and os.path.exists(save_path):
-        print(
-            f"Results for the benchmark {benchmark_name} already exist. Skipping the benchmark."
-        )
+        print(f"Results for the benchmark {benchmark_name} already exist. Skipping the benchmark.")
         return
     elif rerun_if_exists:
         print(f"Rerunning the benchmark {benchmark_name}.")
     else:
-        print(
-            f"Results for the benchmark {benchmark_name} do not exist. Running the benchmark."
-        )
+        print(f"Results for the benchmark {benchmark_name} do not exist. Running the benchmark.")
 
     # get the exact values
     print("Computing the exact values for the games.")
-    gt_values = [
-        game.exact_values(index=index, order=order)
-        for game in tqdm(games, unit=" games")
-    ]
+    gt_values = [game.exact_values(index=index, order=order) for game in tqdm(games, unit=" games")]
 
     # run the benchmark
     run_benchmark(

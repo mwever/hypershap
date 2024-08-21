@@ -45,9 +45,7 @@ class Explainer:
                 else:
                     raise ValueError()
             except Exception as e:
-                print(
-                    f"Error: The `data` provided is not compatible with the model. {e}"
-                )
+                print(f"Error: The `data` provided is not compatible with the model. {e}")
                 pass
         self.data = data
 
@@ -83,16 +81,13 @@ class Explainer:
             if hasattr(self, "_approximator"):
                 self._approximator._rng = np.random.default_rng(random_state)
                 if hasattr(self._approximator, "_sampler"):
-                    self._approximator._sampler._rng = np.random.default_rng(
-                        random_state
-                    )
+                    self._approximator._sampler._rng = np.random.default_rng(random_state)
         if n_jobs:
             import joblib
 
             parallel = joblib.Parallel(n_jobs=n_jobs)
             ivs = parallel(
-                joblib.delayed(self.explain)(X[i, :], **kwargs)
-                for i in range(X.shape[0])
+                joblib.delayed(self.explain)(X[i, :], **kwargs) for i in range(X.shape[0])
             )
         else:
             ivs = []

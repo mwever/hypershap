@@ -36,9 +36,7 @@ class OwenSamplingSV(Approximator):
         n_anchor_points: int = 10,
         random_state: Optional[int] = None,
     ) -> None:
-        super().__init__(
-            n, max_order=1, index="SV", top_order=False, random_state=random_state
-        )
+        super().__init__(n, max_order=1, index="SV", top_order=False, random_state=random_state)
         self.iteration_cost: int = 2
         self.n_anchor_points = n_anchor_points
 

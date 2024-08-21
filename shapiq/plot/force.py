@@ -39,9 +39,7 @@ def force_plot(
 
     if interaction_values.max_order == 1:
         return shap.plots.force(
-            base_value=np.array(
-                [interaction_values.baseline_value], dtype=float
-            ),  # must be array
+            base_value=np.array([interaction_values.baseline_value], dtype=float),  # must be array
             shap_values=interaction_values.get_n_order_values(1),
             features=feature_values,
             feature_names=feature_names,
@@ -55,9 +53,7 @@ def force_plot(
         )
 
         return shap.plots.force(
-            base_value=np.array(
-                [interaction_values.baseline_value], dtype=float
-            ),  # must be array
+            base_value=np.array([interaction_values.baseline_value], dtype=float),  # must be array
             shap_values=np.array(_shap_values),
             feature_names=_labels,
             matplotlib=matplotlib,

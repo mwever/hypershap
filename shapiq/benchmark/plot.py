@@ -222,9 +222,7 @@ def plot_approximation_quality(
     sorted_budget = list(data["budget"].sort_values(ascending=False).unique())
 
     try:
-        y_lim_min_budget = (
-            sorted_budget[3] if sorted_budget[0] >= 2**17 else sorted_budget[2]
-        )
+        y_lim_min_budget = sorted_budget[3] if sorted_budget[0] >= 2**17 else sorted_budget[2]
     except IndexError:
         y_lim_min_budget = sorted_budget[0]
     # get min metric_value for y_lim
@@ -262,8 +260,7 @@ def plot_approximation_quality(
             if orders is not None and order not in orders:
                 continue
             data_order = metric_data[
-                (metric_data["approximator"] == approximator)
-                & (metric_data["order"] == order)
+                (metric_data["approximator"] == approximator) & (metric_data["order"] == order)
             ].copy()
 
             if log_scale_y:
@@ -299,9 +296,7 @@ def plot_approximation_quality(
                     alpha=0.1,
                     color=color,
                 )
-            approx_max_budget = max(
-                approx_max_budget, int(data_order["used_budget"].max())
-            )
+            approx_max_budget = max(approx_max_budget, int(data_order["used_budget"].max()))
 
     # add x/y labels
     ax.set_ylabel(metric)
@@ -341,9 +336,7 @@ def plot_approximation_quality(
 
 def _set_x_axis_ticks(ax: plt.Axes, n_players: int, max_budget: int) -> None:
     """Sets the x-axis ticks in 25% intervals."""
-    if (
-        n_players <= 16
-    ):  # only for small number of players set the ticks as 25% intervals
+    if n_players <= 16:  # only for small number of players set the ticks as 25% intervals
         budgets_relative = np.arange(0, 1.25, 0.25)
         budgets = budgets_relative * (2**n_players)
     else:
@@ -368,9 +361,7 @@ def _set_x_axis_ticks(ax: plt.Axes, n_players: int, max_budget: int) -> None:
     ax.set_xticklabels(xtick_labels)
 
 
-def _set_y_axis_log_scale(
-    ax: plt.Axes, log_scale_min: float, log_scale_max: float
-) -> None:
+def _set_y_axis_log_scale(ax: plt.Axes, log_scale_min: float, log_scale_max: float) -> None:
     """Sets the y-axis to a log scale and adjusts the limits."""
     # adjust the top limit to be one order of magnitude higher than the current top limit
     top_lim = ax.get_ylim()[1]
@@ -421,13 +412,10 @@ def get_metric_data(results_df: pd.DataFrame, metric: str = "MSE") -> pd.DataFra
             )
             .reset_index()
         )
-        data_order["order"] = (
-            "all" if "_" not in metric_col else int(metric_col.split("_")[0])
-        )
+        data_order["order"] = "all" if "_" not in metric_col else int(metric_col.split("_")[0])
         # rename the columns of grouped data
         new_columns = [
-            "_".join(col).strip() if col[1] != "" else col[0]
-            for col in data_order.columns
+            "_".join(col).strip() if col[1] != "" else col[0] for col in data_order.columns
         ]
         new_columns = [col.replace(f"{metric_col}_", "") for col in new_columns]
 
@@ -438,9 +426,7 @@ def get_metric_data(results_df: pd.DataFrame, metric: str = "MSE") -> pd.DataFra
     metric_df = pd.concat(metric_dfs)
 
     # compute the standard error
-    metric_df["sem"] = (
-        metric_df["std"] / metric_df["count"] ** 0.5
-    )  # compute standard error
+    metric_df["sem"] = metric_df["std"] / metric_df["count"] ** 0.5  # compute standard error
 
     return metric_df
 

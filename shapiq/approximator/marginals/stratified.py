@@ -31,9 +31,7 @@ class StratifiedSamplingSV(Approximator):
         n: int,
         random_state: Optional[int] = None,
     ) -> None:
-        super().__init__(
-            n, max_order=1, index="SV", top_order=False, random_state=random_state
-        )
+        super().__init__(n, max_order=1, index="SV", top_order=False, random_state=random_state)
         self.iteration_cost: int = 2
 
     def approximate(

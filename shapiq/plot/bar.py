@@ -52,9 +52,7 @@ def bar_plot(
             _values = _values_dict[_order]
             _shap_values.append(_values[interaction])
             if feature_names is not None and _first_iv:
-                _name = " x ".join(
-                    f"{feature_names[i]}".strip()[0:4] + "." for i in interaction
-                )
+                _name = " x ".join(f"{feature_names[i]}".strip()[0:4] + "." for i in interaction)
                 _labels.append(_name)
         _global_values.append(_shap_values)
         _base_values.append(iv.baseline_value)

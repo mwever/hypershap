@@ -1,6 +1,7 @@
 """This example script showcases the different games."""
 
 import time
+from typing import Optional
 
 from yahpo_gym import local_config
 
@@ -23,6 +24,7 @@ def inspect_games(
     metric: str = "acc",
     pre_compute: bool = False,
     verbose: bool = False,
+    instance_index: Optional[int] = None,
 ) -> None:
     """Inspect the different games.
 
@@ -32,6 +34,7 @@ def inspect_games(
         metric: The metric to optimize. Default is `"acc"`.
         pre_compute: Whether to pre-compute the game. Default is `False`.
         verbose: Whether to print additional information. Default is `False`.
+        instance_index: The instance index to use. Default is `None`.
     """
 
     if game_types is None:
@@ -53,7 +56,12 @@ def inspect_games(
         if "global" in game_types:
             setup_time = time.time()
             game_global, _, _ = setup_game(
-                "global", benchmark_name, metric=metric, pre_compute=pre_compute, verbose=verbose
+                "global",
+                benchmark_name,
+                metric=metric,
+                pre_compute=pre_compute,
+                verbose=verbose,
+                instance_index=instance_index,
             )
             setup_time = time.time() - setup_time
             _print_game_info(game_global, setup_time)
@@ -62,7 +70,12 @@ def inspect_games(
         if "local" in game_types:
             setup_time = time.time()
             game_local, _, _ = setup_game(
-                "local", benchmark_name, metric=metric, pre_compute=pre_compute, verbose=verbose
+                "local",
+                benchmark_name,
+                metric=metric,
+                pre_compute=pre_compute,
+                verbose=verbose,
+                instance_index=instance_index,
             )
             setup_time = time.time() - setup_time
             _print_game_info(game_local, setup_time)
@@ -76,6 +89,7 @@ def inspect_games(
                 metric=metric,
                 pre_compute=pre_compute,
                 verbose=verbose,
+                instance_index=instance_index,
             )
             setup_time = time.time() - setup_time
             _print_game_info(game_universal_local, setup_time)
@@ -87,21 +101,31 @@ if __name__ == "__main__":
 
     # "rbv2_super" is excluded due to its long run-time
     benchmark_list = [
-        "rbv2_svm",
-        "rbv2_rpart",
-        "rbv2_aknn",
-        "rbv2_glmnet",
-        "rbv2_ranger",
-        "rbv2_xgboost",
+        # "rbv2_svm",
+        # "rbv2_rpart",
+        # "rbv2_aknn",
+        # "rbv2_glmnet",
+        # "rbv2_ranger",
+        # "rbv2_xgboost",
+        "lcbench",
     ]
 
     hpo_settings = [
         "local",
         "global",
-        # "universal",
+        "universal",
         "universal-local",
     ]
 
-    inspect_games(
-        benchmark_list, game_types=hpo_settings, metric="acc", pre_compute=True, verbose=True
-    )
+    instances_list = list(range(0, 34))
+
+    for inst_index in instances_list:
+        print(f"Instance Index: {inst_index}")
+        inspect_games(
+            benchmark_list,
+            game_types=hpo_settings,
+            metric="val_accuracy",
+            pre_compute=True,
+            verbose=True,
+            instance_index=inst_index,
+        )

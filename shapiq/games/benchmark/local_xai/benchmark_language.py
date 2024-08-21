@@ -71,9 +71,7 @@ class SentimentAnalysis(Game):
         self.mask_strategy = mask_strategy
 
         # get the model
-        self._classifier = pipeline(
-            model="lvwerra/distilbert-imdb", task="sentiment-analysis"
-        )
+        self._classifier = pipeline(model="lvwerra/distilbert-imdb", task="sentiment-analysis")
         self._tokenizer = self._classifier.tokenizer
         self._mask_toke_id = self._tokenizer.mask_token_id
         # for this model: {0: [PAD], 100: [UNK], 101: [CLS], 102: [SEP], 103: [MASK]}
@@ -89,13 +87,9 @@ class SentimentAnalysis(Game):
         n_players = len(self._tokenized_input)
 
         # get original sentiment
-        self.original_model_output = self._classifier(self.original_input_text)[0][
-            "score"
-        ]
+        self.original_model_output = self._classifier(self.original_input_text)[0]["score"]
         self._full_output = self.value_function(np.ones((1, n_players), dtype=bool))[0]
-        self._empty_output = self.value_function(np.zeros((1, n_players), dtype=bool))[
-            0
-        ]
+        self._empty_output = self.value_function(np.zeros((1, n_players), dtype=bool))[0]
 
         # setup game object
         super().__init__(
@@ -144,11 +138,7 @@ class SentimentAnalysis(Game):
         # get the sentiment of the input texts
         outputs = self._classifier(input_texts)
         outputs = [
-            (
-                output["score"] * 1
-                if output["label"] == "POSITIVE"
-                else output["score"] * -1
-            )
+            (output["score"] * 1 if output["label"] == "POSITIVE" else output["score"] * -1)
             for output in outputs
         ]
         sentiments = np.array(outputs, dtype=float)

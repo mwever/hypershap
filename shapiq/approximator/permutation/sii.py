@@ -121,9 +121,7 @@ class PermutationSamplingSII(Approximator):
                         subset = permutations[permutation_id, k : k + order]
                         previous_subset = permutations[permutation_id, :k]
                         for subset_ in powerset(subset, min_size=0):
-                            subset_eval = np.concatenate(
-                                (previous_subset, subset_)
-                            ).astype(int)
+                            subset_eval = np.concatenate((previous_subset, subset_)).astype(int)
                             subsets[subset_index, subset_eval] = True
                             subset_index += 1
 

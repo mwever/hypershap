@@ -92,9 +92,7 @@ def aggregate_interaction_values(
             except KeyError:
                 transformed_dict[interaction] = update_interaction
 
-    lookup: dict[tuple[int, ...], int] = (
-        {}
-    )  # maps interactions to their index in the values vector
+    lookup: dict[tuple[int, ...], int] = {}  # maps interactions to their index in the values vector
     aggregated_values = np.zeros(len(transformed_dict), dtype=float)
     for pos, (interaction, interaction_value) in enumerate(transformed_dict.items()):
         lookup[interaction] = pos
@@ -137,9 +135,7 @@ def aggregate_to_one_dimension(
     neg_values = np.zeros(shape=(n,), dtype=float)
 
     for interaction in powerset(set(range(n)), min_size=min_order, max_size=max_order):
-        interaction_value = interactions[interaction] / len(
-            interaction
-        )  # distribute uniformly
+        interaction_value = interactions[interaction] / len(interaction)  # distribute uniformly
         for player in interaction:
             if interaction_value >= 0:
                 pos_values[player] += interaction_value

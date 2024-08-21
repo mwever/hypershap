@@ -44,9 +44,7 @@ def convert_lightgbm_booster(
             class_label = 0
         idc = booster_df["tree_index"] % n_class == class_label
         booster_df = booster_df[idc]
-    convert_feature_str_to_int = {
-        k: v for v, k in enumerate(tree_booster.feature_name())
-    }
+    convert_feature_str_to_int = {k: v for v, k in enumerate(tree_booster.feature_name())}
     # pandas can't chill https://stackoverflow.com/q/77900971
     with pd.option_context("future.no_silent_downcasting", True):
         booster_df["split_feature"] = (
@@ -55,9 +53,7 @@ def convert_lightgbm_booster(
             .infer_objects(copy=False)
         )
     return [
-        _convert_lightgbm_tree_as_df(
-            tree_df=tree_df, output_type=output_type, scaling=scaling
-        )
+        _convert_lightgbm_tree_as_df(tree_df=tree_df, output_type=output_type, scaling=scaling)
         for _, tree_df in booster_df.groupby("tree_index")
     ]
 

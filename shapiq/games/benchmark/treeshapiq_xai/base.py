@@ -135,9 +135,7 @@ def _get_tree_prediction(
     Returns:
          The tree prediction given partial feature information.
     """
-    if tree.leaf_mask[
-        node_id
-    ]:  # end of recursion (base case, return the leaf prediction)
+    if tree.leaf_mask[node_id]:  # end of recursion (base case, return the leaf prediction)
         tree_prediction = tree.values[node_id]
         return tree_prediction
     else:  # not a leaf we have to go deeper
@@ -148,19 +146,11 @@ def _get_tree_prediction(
             tree.children_right[node_id],
         )
         if is_present:
-            next_node = (
-                left_child if x_explain[feature_id] <= threshold else right_child
-            )
-            tree_prediction = _get_tree_prediction(
-                next_node, tree, coalition, x_explain
-            )
+            next_node = left_child if x_explain[feature_id] <= threshold else right_child
+            tree_prediction = _get_tree_prediction(next_node, tree, coalition, x_explain)
         else:  # feature is out of coalition we have to go both ways and average the predictions
-            prediction_left = _get_tree_prediction(
-                left_child, tree, coalition, x_explain
-            )
-            prediction_right = _get_tree_prediction(
-                right_child, tree, coalition, x_explain
-            )
+            prediction_left = _get_tree_prediction(left_child, tree, coalition, x_explain)
+            prediction_right = _get_tree_prediction(right_child, tree, coalition, x_explain)
             # get weights (tree probabilities of going left or right)
             left_weight = tree.node_sample_weight[left_child]
             right_weight = tree.node_sample_weight[right_child]

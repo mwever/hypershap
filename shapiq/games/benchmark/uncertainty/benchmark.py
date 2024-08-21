@@ -32,9 +32,7 @@ class AdultCensus(UncertaintyExplanation):
 
         # train a model with limited depth such that we get non-degenerate distributions
         if model_name == "random_forest":
-            model = RandomForestClassifier(
-                n_estimators=10, max_depth=5, random_state=random_state
-            )
+            model = RandomForestClassifier(n_estimators=10, max_depth=5, random_state=random_state)
             model.fit(self.setup.x_train, self.setup.y_train)
         else:
             raise ValueError(
@@ -42,9 +40,7 @@ class AdultCensus(UncertaintyExplanation):
             )
 
         print(f"Trained model {model_name} for the adult_census dataset.")
-        print(
-            f"Score on training data: {model.score(self.setup.x_test, self.setup.y_test)}"
-        )
+        print(f"Score on training data: {model.score(self.setup.x_test, self.setup.y_test)}")
 
         # get x_explain
         x = get_x_explain(x, self.setup.x_test)

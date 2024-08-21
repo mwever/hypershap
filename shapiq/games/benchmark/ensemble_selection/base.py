@@ -99,9 +99,7 @@ class EnsembleSelection(Game):
             ensemble_members = []
             for i in range(n_members):
                 # sample a random ensemble member
-                ensemble_member = str(
-                    self._rng.choice(self.available_members, size=1)[0]
-                )
+                ensemble_member = str(self._rng.choice(self.available_members, size=1)[0])
                 ensemble_members.append(ensemble_member)
 
         # get the ensemble member models
@@ -113,9 +111,7 @@ class EnsembleSelection(Game):
                         f"{self.available_members}."
                     )
             self.player_names: list[str] = ensemble_members
-            self.ensemble_members = (
-                self._init_ensemble_members()
-            )  # initialize the ensemble members
+            self.ensemble_members = self._init_ensemble_members()  # initialize the ensemble members
             for (
                 member_id,
                 member,
@@ -125,9 +121,7 @@ class EnsembleSelection(Game):
                 member.fit(x_train, y_train)
         else:
             self.player_names: list[str] = [str(member) for member in ensemble_members]
-            self.ensemble_members = {
-                i: member for i, member in enumerate(ensemble_members)
-            }
+            self.ensemble_members = {i: member for i, member in enumerate(ensemble_members)}
 
         # setup base game and attributes
         self.player_names: list[str] = ensemble_members
@@ -178,20 +172,14 @@ class EnsembleSelection(Game):
         for member_id, member in enumerate(self.player_names):
             if member == "regression":
                 if self.dataset_type == "classification":
-                    model = LogisticRegression(
-                        random_state=self.random_state + member_id, n_jobs=1
-                    )
+                    model = LogisticRegression(random_state=self.random_state + member_id, n_jobs=1)
                 else:
                     model = LinearRegression()
             elif member == "decision_tree":
                 if self.dataset_type == "classification":
-                    model = DecisionTreeClassifier(
-                        random_state=self.random_state + member_id
-                    )
+                    model = DecisionTreeClassifier(random_state=self.random_state + member_id)
                 else:
-                    model = DecisionTreeRegressor(
-                        random_state=self.random_state + member_id
-                    )
+                    model = DecisionTreeRegressor(random_state=self.random_state + member_id)
             elif member == "random_forest":
                 if self.dataset_type == "classification":
                     model = RandomForestClassifier(
@@ -215,13 +203,9 @@ class EnsembleSelection(Game):
                 from xgboost import XGBClassifier, XGBRegressor
 
                 if self.dataset_type == "classification":
-                    model = XGBClassifier(
-                        random_state=self.random_state + member_id, n_jobs=1
-                    )
+                    model = XGBClassifier(random_state=self.random_state + member_id, n_jobs=1)
                 else:
-                    model = XGBRegressor(
-                        random_state=self.random_state + member_id, n_jobs=1
-                    )
+                    model = XGBRegressor(random_state=self.random_state + member_id, n_jobs=1)
             else:
                 raise ValueError(
                     f"Invalid ensemble member provided. Got {member} but expected one of "

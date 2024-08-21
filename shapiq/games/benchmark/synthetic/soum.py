@@ -34,12 +34,8 @@ class UnanimityGame(Game):
     def __init__(self, interaction_binary: np.ndarray):
         n = len(interaction_binary)
         self.interaction_binary: np.ndarray = interaction_binary
-        self.interaction: tuple[int, ...] = tuple(
-            np.where(self.interaction_binary == 1)[0]
-        )
-        super().__init__(
-            n_players=n, normalize=False
-        )  # call super class which handles calls
+        self.interaction: tuple[int, ...] = tuple(np.where(self.interaction_binary == 1)[0])
+        super().__init__(n_players=n, normalize=False)  # call super class which handles calls
 
     def value_function(self, coalitions: np.ndarray) -> np.ndarray[float]:
         """Returns 1, if the coalition contains the UnanimityGame's interaction, and zero otherwise.
@@ -103,12 +99,8 @@ class SOUM(Game):
         self._rng = np.random.default_rng(random_state)
 
         # set min_interaction_size and max_interaction_size to 0 and n if not specified
-        self.min_interaction_size = (
-            min_interaction_size if min_interaction_size is not None else 0
-        )
-        self.max_interaction_size = (
-            max_interaction_size if max_interaction_size is not None else n
-        )
+        self.min_interaction_size = min_interaction_size if min_interaction_size is not None else 0
+        self.max_interaction_size = max_interaction_size if max_interaction_size is not None else n
 
         # setup basis games
         self.n_basis_games: int = n_basis_games
@@ -191,13 +183,9 @@ class SOUM(Game):
         moebius_coefficients_dict = {}
         for i, game in self.unanimity_games.items():
             try:
-                moebius_coefficients_dict[game.interaction] += self.linear_coefficients[
-                    i
-                ]
+                moebius_coefficients_dict[game.interaction] += self.linear_coefficients[i]
             except KeyError:
-                moebius_coefficients_dict[game.interaction] = self.linear_coefficients[
-                    i
-                ]
+                moebius_coefficients_dict[game.interaction] = self.linear_coefficients[i]
 
         # generate the lookup for the moebius values
         moebius_coefficients_values = np.zeros(len(moebius_coefficients_dict))

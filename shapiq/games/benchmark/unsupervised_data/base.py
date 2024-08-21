@@ -20,9 +20,7 @@ class UnsupervisedData(Game):
         verbose: Whether to print additional information. Defaults to False.
     """
 
-    def __init__(
-        self, data: np.ndarray, verbose: bool = False, *args, **kwargs
-    ) -> None:
+    def __init__(self, data: np.ndarray, verbose: bool = False, *args, **kwargs) -> None:
         self.data = data
         self._n_features = data.shape[1]
         self.empty_coalition_value = 0.0
@@ -35,9 +33,7 @@ class UnsupervisedData(Game):
         )
         self.data_discrete = np.zeros_like(data)
         for i in range(self._n_features):
-            self.data_discrete[:, i] = discretizer.fit_transform(
-                data[:, i].reshape(-1, 1)
-            ).ravel()
+            self.data_discrete[:, i] = discretizer.fit_transform(data[:, i].reshape(-1, 1)).ravel()
         self.data_discrete = self.data_discrete.astype(int).astype(str)
 
         super().__init__(
@@ -60,14 +56,10 @@ class UnsupervisedData(Game):
         values = np.zeros(coalitions.shape[0])
         for i, coalition in enumerate(coalitions):
             if sum(coalition) == 0:
-                values[i] = (
-                    0.0  # total correlation of the empty set is always 0 (not defined)
-                )
+                values[i] = 0.0  # total correlation of the empty set is always 0 (not defined)
                 continue
             data_subset = self.data_discrete[:, np.where(coalition)[0]]
-            values[i] = total_correlation(
-                data_subset
-            )  # compute total correlation of the subset
+            values[i] = total_correlation(data_subset)  # compute total correlation of the subset
         return values
 
 

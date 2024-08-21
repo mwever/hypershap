@@ -48,14 +48,10 @@ def powerset(
     """
     s = sorted(list(iterable))
     max_size = len(s) if max_size is None else min(max_size, len(s))
-    return chain.from_iterable(
-        combinations(s, r) for r in range(max(min_size, 0), max_size + 1)
-    )
+    return chain.from_iterable(combinations(s, r) for r in range(max(min_size, 0), max_size + 1))
 
 
-def pair_subset_sizes(
-    order: int, n: int
-) -> tuple[list[tuple[int, int]], Optional[int]]:
+def pair_subset_sizes(order: int, n: int) -> tuple[list[tuple[int, int]], Optional[int]]:
     """Determines what subset sizes are paired together.
 
     Given an interaction order and the number of players, determines the paired subsets. Paired
@@ -82,12 +78,9 @@ def pair_subset_sizes(
     subset_sizes = list(range(order, n - order + 1))
     n_paired_subsets = len(subset_sizes) // 2
     paired_subsets = [
-        (subset_sizes[size - 1], subset_sizes[-size])
-        for size in range(1, n_paired_subsets + 1)
+        (subset_sizes[size - 1], subset_sizes[-size]) for size in range(1, n_paired_subsets + 1)
     ]
-    unpaired_subset = (
-        None if len(subset_sizes) % 2 == 0 else subset_sizes[n_paired_subsets]
-    )
+    unpaired_subset = None if len(subset_sizes) % 2 == 0 else subset_sizes[n_paired_subsets]
     return paired_subsets, unpaired_subset
 
 
@@ -138,14 +131,9 @@ def split_subsets_budget(
     # check if the budget is sufficient to compute all paired subset sizes explicitly
     allowed_budget = weight_vector * budget  # allowed budget for each subset size
     for subset_size_1, subset_size_2 in paired_subsets:
-        subset_budget = int(
-            binom(n, subset_size_1)
-        )  # required budget for full computation
+        subset_budget = int(binom(n, subset_size_1))  # required budget for full computation
         # check if the budget is sufficient to compute the paired subset sizes explicitly
-        if (
-            allowed_budget[subset_size_1] >= subset_budget
-            and allowed_budget[subset_size_1] > 0
-        ):
+        if allowed_budget[subset_size_1] >= subset_budget and allowed_budget[subset_size_1] > 0:
             complete_subsets.extend((subset_size_1, subset_size_2))
             incomplete_subsets.remove(subset_size_1)
             incomplete_subsets.remove(subset_size_2)
@@ -154,15 +142,11 @@ def split_subsets_budget(
                 0,
             )  # zero used sizes
             if not np.sum(weight_vector) == 0:
-                weight_vector /= np.sum(
-                    weight_vector
-                )  # re-normalize into probability vector
+                weight_vector /= np.sum(weight_vector)  # re-normalize into probability vector
             budget -= subset_budget * 2
         else:  # if the budget is not sufficient, return the current state
             return complete_subsets, incomplete_subsets, budget
-        allowed_budget = (
-            weight_vector * budget
-        )  # update allowed budget for each subset size
+        allowed_budget = weight_vector * budget  # update allowed budget for each subset size
 
     # check if the budget is sufficient to compute the unpaired subset size explicitly
     if unpaired_subset is not None:
@@ -234,9 +218,7 @@ def generate_interaction_lookup(
         players = set(sorted(players))
     interaction_lookup = {
         interaction: i
-        for i, interaction in enumerate(
-            powerset(players, min_size=min_order, max_size=max_order)
-        )
+        for i, interaction in enumerate(powerset(players, min_size=min_order, max_size=max_order))
     }
     return interaction_lookup
 
@@ -297,9 +279,7 @@ def transform_array_to_coalitions(coalitions: np.ndarray) -> list[tuple[int]]:
     return [tuple(np.where(coalition)[0]) for coalition in coalitions]
 
 
-def count_interactions(
-    n: int, max_order: Optional[int] = None, min_order: int = 0
-) -> int:
+def count_interactions(n: int, max_order: Optional[int] = None, min_order: int = 0) -> int:
     """Counts the number of interactions for a given number of players and maximum order.
 
     Args:

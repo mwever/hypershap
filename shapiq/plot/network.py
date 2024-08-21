@@ -117,9 +117,7 @@ def network_plot(
 
     # arrange the nodes in a circle
     pos = nx.circular_layout(graph)
-    nx.draw_networkx_edges(
-        graph, pos, width=edge_widths, edge_color=edge_colors, alpha=edge_alphas
-    )
+    nx.draw_networkx_edges(graph, pos, width=edge_widths, edge_color=edge_colors, alpha=edge_alphas)
     nx.draw_networkx_nodes(
         graph,
         pos,
@@ -145,9 +143,7 @@ def network_plot(
         y = radius * np.sin(theta)
 
         if feature_image_patches is None:
-            axis.text(
-                x, y, label, horizontalalignment="center", verticalalignment="center"
-            )
+            axis.text(x, y, label, horizontalalignment="center", verticalalignment="center")
         else:  # draw the image instead of the text
             image = feature_image_patches[i]
             patch_size = feature_image_patches_size
@@ -170,9 +166,7 @@ def network_plot(
             center_text,
             horizontalalignment="center",
             verticalalignment="center",
-            bbox=dict(
-                facecolor=background_color, alpha=0.5, edgecolor=line_color, pad=7
-            ),
+            bbox=dict(facecolor=background_color, alpha=0.5, edgecolor=line_color, pad=7),
             color="black",
             fontsize=plt.rcParams["font.size"] + 3,
         )
@@ -207,16 +201,10 @@ def _add_weight_to_edges_in_graph(
     """
 
     # get min and max value for n_shapley_values
-    min_node_value, max_node_value = np.min(first_order_values), np.max(
-        first_order_values
-    )
-    min_edge_value, max_edge_value = np.min(second_order_values), np.max(
-        second_order_values
-    )
+    min_node_value, max_node_value = np.min(first_order_values), np.max(first_order_values)
+    min_edge_value, max_edge_value = np.min(second_order_values), np.max(second_order_values)
 
-    all_range = abs(
-        max(max_node_value, max_edge_value) - min(min_node_value, min_edge_value)
-    )
+    all_range = abs(max(max_node_value, max_edge_value) - min(min_node_value, min_edge_value))
 
     size_scaler = 30
 
@@ -265,9 +253,7 @@ def _add_legend_to_axis(axis: plt.Axes) -> None:
             color = RED.hex
         else:
             color = BLUE.hex
-        circle = axis.plot(
-            [], [], c=color, marker="o", markersize=size * 8, linestyle="None"
-        )
+        circle = axis.plot([], [], c=color, marker="o", markersize=size * 8, linestyle="None")
         plot_circles.append(circle[0])
 
     font_size = plt.rcParams["legend.fontsize"]
@@ -342,12 +328,8 @@ def _add_center_image(
     # add grids with vlines and hlines to the image
     x = np.linspace(-extend, extend, int(math.sqrt(n_features) + 1))
     y = np.linspace(-extend, extend, int(math.sqrt(n_features) + 1))
-    axis.vlines(
-        x=x, ymin=-extend, ymax=extend, colors="white", linewidths=2, linestyles="solid"
-    )
-    axis.hlines(
-        y=y, xmin=-extend, xmax=extend, colors="white", linewidths=2, linestyles="solid"
-    )
+    axis.vlines(x=x, ymin=-extend, ymax=extend, colors="white", linewidths=2, linestyles="solid")
+    axis.hlines(y=y, xmin=-extend, xmax=extend, colors="white", linewidths=2, linestyles="solid")
 
     # move image to the foreground and edges to the background
     axis.set_zorder(1)
