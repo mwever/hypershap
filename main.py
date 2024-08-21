@@ -1,14 +1,14 @@
+import matplotlib
 from tqdm import tqdm
 from yahpo_gym import benchmark_set, local_config
-import matplotlib
-from shapiq import SHAPIQ, SVARMIQ, KernelSHAPIQ, ExactComputer, network_plot
 
 from hpo_games import (
-    UniversalHyperparameterImportanceGame,
     GlobalHyperparameterImportanceGame,
     LocalHyperparameterImportanceGame,
+    UniversalHyperparameterImportanceGame,
     UniversalLocalHyperparameterImportanceGame,
 )
+from shapiq import SHAPIQ, SVARMIQ, ExactComputer, KernelSHAPIQ, network_plot
 
 
 def evaluate_scenario(benchmark, game_type, metric, approx, precis, instance=None):
@@ -19,21 +19,17 @@ def evaluate_scenario(benchmark, game_type, metric, approx, precis, instance=Non
     print("num datasets", len(bench.instances))
 
     if game_type == "universal":
-        game = UniversalHyperparameterImportanceGame(
-            bench, metric, n_configs=1000, random_state=42
-        )
+        game = UniversalHyperparameterImportanceGame(bench, metric, n_configs=1000, random_state=42)
     elif game_type == "global":
         bench.set_instance(instance)
-        game = GlobalHyperparameterImportanceGame(
-            bench, metric, n_configs=1000, random_state=42
-        )
+        game = GlobalHyperparameterImportanceGame(bench, metric, n_configs=1000, random_state=42)
     elif game_type == "local":
         bench.set_instance(instance)
         opt_cfg = None
         opt_cfg_value = None
-        for cfg in bench.get_opt_space(
-            drop_fidelity_params=False, seed=1337
-        ).sample_configuration(10000):
+        for cfg in bench.get_opt_space(drop_fidelity_params=False, seed=1337).sample_configuration(
+            10000
+        ):
             cfg_dict = cfg.get_dictionary()
             cfg_value = bench.objective_function(cfg_dict)[0][metric]
             if opt_cfg_value is None or cfg_value > opt_cfg_value:
@@ -93,15 +89,11 @@ def evaluate_scenario(benchmark, game_type, metric, approx, precis, instance=Non
         feature_names=game.tunable_hyperparameter_names,
     )
     plot[0].savefig(
-        "hp_importance_"
-        + "_".join([benchmark, game_type, metric, approx, str(precis)])
-        + ".png"
+        "hp_importance_" + "_".join([benchmark, game_type, metric, approx, str(precis)]) + ".png"
     )
     print(
         "stored to file ",
-        "hp_importance_"
-        + "_".join([benchmark, game_type, metric, approx, str(precis)])
-        + ".png",
+        "hp_importance_" + "_".join([benchmark, game_type, metric, approx, str(precis)]) + ".png",
     )
 
 
@@ -109,9 +101,8 @@ if __name__ == "__main__":
     local_config.init_config()
     local_config.set_data_path("yahpodata")
 
-    game_types = ["local", "global", "universal", "universallocal"]
+    game_types = ["local"]  # , "global", "universal", "universallocal"]
     # ["rbv2_svm", "rbv2_rpart", "rbv2_aknn", "rbv2_glmnet", "rbv2_ranger", "rbv2_xgboost", "rbv2_super"]
-    game_types = ["universallocal"]
     benchmark_list = ["rbv2_svm"]
     metrics = ["acc"]  # , "bac", "auc", "brier", "f1", "logloss"]
     approx = ["exact"]  # , "svarmiq", "exact"]
