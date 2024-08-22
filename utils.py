@@ -132,7 +132,7 @@ def setup_game(
 
     # check if the game is already stored
     game_path = os.path.join(GAME_STORAGE_DIR, f"{game_name}.npz")
-    name_file = os.path.join(GAME_STORAGE_DIR, f"names_{benchmark_name}.txt")
+    name_file = os.path.join(GAME_STORAGE_DIR, f"{benchmark_name}.names")
     if os.path.exists(game_path) and os.path.exists(name_file):
         game = shapiq.Game(path_to_values=game_path, verbose=verbose, normalize=normalize_loaded)
         player_names = open(name_file).read().splitlines()
