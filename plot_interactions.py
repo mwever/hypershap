@@ -141,13 +141,14 @@ def plot_interactions(
 if __name__ == "__main__":
 
     hpo_game, hpo_game_name, parameter_names = setup_game(
-        game_type="universal-local",  # "universal", "global", "local", "universal-local"
+        game_type="universal",  # "universal", "global", "local", "universal-local"
         benchmark_name="lcbench",
         metric="val_accuracy",
         pre_compute=False,
         verbose=False,
-        n_configs=10_000,
+        n_configs=1_000,
         instance_index=0,
+        only_load=True,
     )
     plot_interactions(
         game=hpo_game, player_names=parameter_names, game_name=hpo_game_name, save=True, show=True

@@ -86,6 +86,7 @@ def setup_game(
     pre_compute: bool = False,
     verbose: bool = False,
     normalize_loaded: bool = True,
+    only_load: bool = False,
 ) -> tuple[shapiq.Game, str, list[str]]:
     """Sets up the hyperparameter importance game.
 
@@ -105,9 +106,14 @@ def setup_game(
         pre_compute: Whether to pre-compute and store the game values. Default is `False`.
         verbose: Whether to print additional information. Default is `False`.
         normalize_loaded: Whether to normalize the loaded game values. Default is `True`.
+        only_load: Whether to only load games from disk (`True`) or also to initialize them from
+            scratch (`False`). Default is `False`.
 
     Returns:
         The hyperparameter importance game, the name of the game, and the player names.
+
+    Raises:
+        ValueError: If the game is not found and `only_load` is set to `True`.
     """
     benchmark = benchmark_set.BenchmarkSet(benchmark_name)
     if instance_index is None:
@@ -138,6 +144,13 @@ def setup_game(
         player_names = open(name_file).read().splitlines()
         print(f"Loaded game from {game_path}.")
         return game, game_name, player_names
+
+    if only_load:
+        raise ValueError(
+            f"Game {game_name} not found. Check the parameters if the game is already stored.\n"
+            f"Parmaters: game_type={game_type}, benchmark_name={benchmark_name}, metric={metric},"
+            f"instance_index={instance_index}, n_configs={n_configs}, random_state={random_state}"
+        )
 
     # set up the game from parameters
     if game_type == "universal":
