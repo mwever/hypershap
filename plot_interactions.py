@@ -2,6 +2,7 @@
 
 import copy
 import os
+from typing import Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -60,6 +61,58 @@ def _plot_si_graph(interaction_values: shapiq.InteractionValues, player_names: l
     plt.tight_layout()
 
 
+def _convert_si_to_one_dimension(
+    interactions: shapiq.InteractionValues, summary_order: Optional[int] = None
+) -> tuple[dict[int, np.array], dict[int, np.array]]:
+    """Converts the n-Shapley values to one dimension
+
+    Args:
+        interactions: The n-Shapley values
+        summary_order: The order of the Shapley values. Defaults to the maximum order.
+
+    Returns:
+        The positive and negative one-dimensional Shapley values.
+    """
+    if summary_order is None:
+        summary_order = interactions.max_order
+    n_players = interactions.n_players
+
+    result_pos = {order: np.zeros(n_players) for order in range(1, summary_order + 1)}
+    result_neg = {order: np.zeros(n_players) for order in range(1, summary_order + 1)}
+
+    for S in shapiq.powerset(set(range(n_players)), min_size=1, max_size=summary_order):
+        interaction_score = interactions[tuple(S)]
+        for player in S:
+            if interaction_score > 0:
+                result_pos[len(S)][player] += interaction_score / len(S)
+            if interaction_score < 0:
+                result_neg[len(S)][player] += interaction_score / len(S)
+    return result_pos, result_neg
+
+
+def plot_stacked_bars(
+    interactions: shapiq.InteractionValues, feature_names: Optional[list[str]] = None
+) -> None:
+    """Plots the stacked bar plot for the interactions.
+
+    Args:
+        interactions: The interaction values to plot.
+        feature_names: The names of the features. Default is `None`.
+    """
+    pos_values, neg_values = _convert_si_to_one_dimension(interactions)
+
+    title = f"{interactions.index} values up to order {interactions.max_order}"
+
+    _ = shapiq.stacked_bar_plot(
+        n_shapley_values_pos=pos_values,
+        n_shapley_values_neg=neg_values,
+        title=title,
+        feature_names=feature_names,
+        xlabel="parameters",
+        ylabel=f"{interactions.index} values per order",
+    )
+
+
 def plot_interactions(
     game: shapiq.Game,
     player_names: list[str],
@@ -87,6 +140,14 @@ def plot_interactions(
     sv: shapiq.InteractionValues = computer(index="SV", order=1)
     two_sii: shapiq.InteractionValues = computer(index="k-SII", order=2)
     mi: shapiq.InteractionValues = computer(index="Moebius", order=game.n_players)
+
+    # plot the MI as a stacked bar plot
+    plot_stacked_bars(mi, feature_names=player_names)
+    if save:
+        plt.savefig(os.path.join(PLOT_DIR, f"Stacked_MI_{game_name}.pdf"))
+    if show:
+        plt.show()
+    plt.close()
 
     # plot the SV as a Force Plot
     sv.plot_force(
