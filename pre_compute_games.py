@@ -18,15 +18,16 @@ def _print_game_info(game: shapiq.Game, setup_time: float) -> None:
     )
 
 
-def inspect_games(
+def pre_compute_games(
     benchmark_names: list[str],
     game_types: list[str] = None,
     metric: str = "acc",
     pre_compute: bool = False,
     verbose: bool = False,
     instance_index: Optional[int] = None,
+    n_configs: int = 1000,
 ) -> None:
-    """Inspect the different games.
+    """Loads and pre-computes the games.
 
     Args:
         benchmark_names: The benchmark names to inspect.
@@ -35,6 +36,7 @@ def inspect_games(
         pre_compute: Whether to pre-compute the game. Default is `False`.
         verbose: Whether to print additional information. Default is `False`.
         instance_index: The instance index to use. Default is `None`.
+        n_configs: The number of configurations to sample. Default is `1000`.
     """
 
     if game_types is None:
@@ -47,7 +49,12 @@ def inspect_games(
         if "universal" in game_types:
             setup_time = time.time()
             game_universal, _, _ = setup_game(
-                "universal", benchmark_name, metric=metric, pre_compute=pre_compute, verbose=verbose
+                "universal",
+                benchmark_name,
+                metric=metric,
+                pre_compute=pre_compute,
+                verbose=verbose,
+                n_configs=n_configs,
             )
             setup_time = time.time() - setup_time
             _print_game_info(game_universal, setup_time)
@@ -62,6 +69,7 @@ def inspect_games(
                 pre_compute=pre_compute,
                 verbose=verbose,
                 instance_index=instance_index,
+                n_configs=n_configs,
             )
             setup_time = time.time() - setup_time
             _print_game_info(game_global, setup_time)
@@ -76,6 +84,7 @@ def inspect_games(
                 pre_compute=pre_compute,
                 verbose=verbose,
                 instance_index=instance_index,
+                n_configs=n_configs,
             )
             setup_time = time.time() - setup_time
             _print_game_info(game_local, setup_time)
@@ -90,6 +99,7 @@ def inspect_games(
                 pre_compute=pre_compute,
                 verbose=verbose,
                 instance_index=instance_index,
+                n_configs=n_configs,
             )
             setup_time = time.time() - setup_time
             _print_game_info(game_universal_local, setup_time)
@@ -113,7 +123,7 @@ if __name__ == "__main__":
     hpo_settings = [
         "local",
         "global",
-        "universal",
+        # "universal",
         "universal-local",
     ]
 
@@ -121,11 +131,12 @@ if __name__ == "__main__":
 
     for inst_index in instances_list:
         print(f"Instance Index: {inst_index}")
-        inspect_games(
+        pre_compute_games(
             benchmark_list,
             game_types=hpo_settings,
             metric="val_accuracy",
             pre_compute=True,
             verbose=True,
             instance_index=inst_index,
+            n_configs=10_000,
         )

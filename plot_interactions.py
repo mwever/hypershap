@@ -50,9 +50,12 @@ def _plot_si_graph(interaction_values: shapiq.InteractionValues, player_names: l
         si_graph_interaction,
         graph=si_graph_nodes,
         size_factor=3,
-        node_size_scaling=3,
+        node_size_scaling=1.75,
         compactness=1000,
         label_mapping=label_mapping,
+        circular_layout=True,
+        draw_original_edges=False,
+        node_area_scaling=True,
     )
     plt.tight_layout()
 
@@ -78,6 +81,7 @@ def plot_interactions(
 
     # set up the computer and compute the SI values
     computer = shapiq.ExactComputer(n_players=game.n_players, game_fun=game)
+    computer.baseline_value = float(game.normalization_value)
 
     # compute the interactions
     sv: shapiq.InteractionValues = computer(index="SV", order=1)
@@ -91,6 +95,17 @@ def plot_interactions(
     plt.tight_layout()
     if save:
         plt.savefig(os.path.join(PLOT_DIR, f"Force_SV_{game_name}.pdf"))
+    if show:
+        plt.show()
+    plt.close()
+
+    # plot the two_sii as a Force Plot
+    two_sii.plot_force(
+        feature_names=np.array(player_names),
+    )
+    plt.tight_layout()
+    if save:
+        plt.savefig(os.path.join(PLOT_DIR, f"Force_2SII_{game_name}.pdf"))
     if show:
         plt.show()
     plt.close()
@@ -125,20 +140,15 @@ def plot_interactions(
 
 if __name__ == "__main__":
 
-    game_type = "local"  # "universal", "global", "local", "universal-local"
-    metric = "acc"
-    benchmark_list = [
-        "rbv2_svm",
-        # "rbv2_rpart",
-        # "rbv2_aknn",
-        # "rbv2_glmnet",
-        # "rbv2_ranger",
-        # "rbv2_xgboost",
-        # "rbv2_super"
-    ]
-
-    for benchmark_name in benchmark_list:
-        hpo_game, hpo_game_name, parameter_names = setup_game(
-            game_type, benchmark_name, metric=metric, pre_compute=False, verbose=False
-        )
-        plot_interactions(game=hpo_game, player_names=parameter_names, game_name=hpo_game_name)
+    hpo_game, hpo_game_name, parameter_names = setup_game(
+        game_type="universal-local",  # "universal", "global", "local", "universal-local"
+        benchmark_name="lcbench",
+        metric="val_accuracy",
+        pre_compute=False,
+        verbose=False,
+        n_configs=10_000,
+        instance_index=0,
+    )
+    plot_interactions(
+        game=hpo_game, player_names=parameter_names, game_name=hpo_game_name, save=True, show=True
+    )

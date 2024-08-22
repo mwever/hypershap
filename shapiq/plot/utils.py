@@ -45,6 +45,7 @@ def get_interaction_values_and_feature_names(
         if feature_values is not None:
             _name += "\n"
             _name += " x ".join(f"{feature_values[i]}".strip()[0:4] for i in interaction)
+        _name = _name.replace("..", ".")
         _labels.append(_name)
     _shap_values = np.array(_shap_values)
     _labels = np.array(_labels)

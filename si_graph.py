@@ -230,6 +230,7 @@ def _draw_graph_edges(
     graph: nx.Graph,
     edges: Optional[list[tuple]] = None,
     normal_node_size: float = NORMAL_NODE_SIZE,
+    edge_color: str = "black",
 ) -> None:
     """Draws black lines between the nodes.
 
@@ -258,7 +259,7 @@ def _draw_graph_edges(
             [mpath.Path.MOVETO, mpath.Path.LINETO],
         )
 
-        patch = mpatches.PathPatch(connection, facecolor="none", lw=1, edgecolor="black")
+        patch = mpatches.PathPatch(connection, facecolor="none", lw=1, edgecolor=edge_color)
         ax.add_patch(patch)
 
 
@@ -326,6 +327,8 @@ def si_graph_plot(
     spring_k: Optional[float] = None,
     interaction_direction: Optional[str] = None,
     node_area_scaling: bool = False,
+    circular_layout: bool = False,
+    draw_original_edges: bool = True,
 ) -> tuple[plt.figure, plt.axis]:
     """Plots the interaction values as an explanation graph.
 
@@ -371,7 +374,11 @@ def si_graph_plot(
         interaction_direction: The sign of the interaction values to plot. If ``None``, all
             interactions are plotted. Possible values are ``"positive"`` and
             ``"negative"``. Defaults to ``None``.
-        node_area_scaling: TODO add docstring.
+        node_area_scaling: Whether to scale the node sizes based on the area of the node. Defaults
+            to ``False``, which scales TODO
+        circular_layout: Whether to use a circular layout for the graph. Defaults to ``False`` which
+            uses a spring layout.
+        draw_original_edges: Whether to draw the original edges of the graph. Defaults to ``True``.
 
     Returns:
         The figure and axis of the plot.
@@ -461,8 +468,11 @@ def si_graph_plot(
 
     # position first the original graph structure
     if pos is None:
-        pos = nx.spring_layout(original_graph, seed=random_seed, k=spring_k)
-        pos = nx.kamada_kawai_layout(original_graph, scale=1.0, pos=pos)
+        if circular_layout:
+            pos = nx.circular_layout(original_graph)
+        else:
+            pos = nx.spring_layout(original_graph, seed=random_seed, k=spring_k)
+            pos = nx.kamada_kawai_layout(original_graph, scale=1.0, pos=pos)
     else:
         # pos is given but we need to scale the positions potentially
         min_pos = np.min(list(pos.values()), axis=0)
@@ -493,7 +503,10 @@ def si_graph_plot(
 
     # add the original graph structure on top
     _draw_graph_nodes(ax, pos, original_graph, normal_node_size=normal_node_size)
-    _draw_graph_edges(ax, pos, original_graph, normal_node_size=normal_node_size)
+    if draw_original_edges:
+        _draw_graph_edges(
+            ax, pos, original_graph, normal_node_size=normal_node_size, edge_color="#808080"
+        )
     _draw_graph_labels(ax, pos, original_graph)
 
     # tidy up the plot

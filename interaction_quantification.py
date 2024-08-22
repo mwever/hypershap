@@ -150,6 +150,7 @@ def evaluate_game(
             (Shapley kernel).
     """
     computer = shapiq.ExactComputer(n_players=game.n_players, game_fun=game)
+    computer.baseline_value = float(game.normalization_value)
     game_values = _convert_game_to_interaction(computer)
     approximations = approximate_game_with_interactions(game, indices=indices)
     approximation_errors = get_approximation_error(approximations, game_values, uniform_weights)
@@ -159,7 +160,11 @@ def evaluate_game(
 if __name__ == "__main__":
 
     hpo_game, _, names = setup_game(
-        game_type="local", benchmark_name="rbv2_ranger", normalize_loaded=True
+        game_type="global",
+        benchmark_name="lcbench",
+        normalize_loaded=True,
+        instance_index=1,
+        n_configs=10_000,
     )
     assert len(names) == hpo_game.n_players
 

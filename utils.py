@@ -79,7 +79,7 @@ def _get_game_name(
 def setup_game(
     game_type: str,
     benchmark_name: str,
-    metric: str = "acc",
+    metric: str = "val_accuracy",
     instance_index: Optional[int] = None,
     random_state: Optional[int] = 42,
     n_configs: int = 1000,
@@ -136,6 +136,7 @@ def setup_game(
     if os.path.exists(game_path) and os.path.exists(name_file):
         game = shapiq.Game(path_to_values=game_path, verbose=verbose, normalize=normalize_loaded)
         player_names = open(name_file).read().splitlines()
+        print(f"Loaded game from {game_path}.")
         return game, game_name, player_names
 
     # set up the game from parameters
