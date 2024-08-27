@@ -47,6 +47,7 @@ def _draw_fancy_hyper_edges(
     pos: dict,
     graph: nx.Graph,
     hyper_edges: list[tuple],
+    orders_to_plot: Optional[list[int]] = None,
 ) -> None:
     """Draws a collection of hyper-edges as a fancy hyper-edge on the graph.
 
@@ -58,8 +59,12 @@ def _draw_fancy_hyper_edges(
         pos: The positions of the nodes.
         graph: The graph to draw the hyper-edges on.
         hyper_edges: The hyper-edges to draw.
+        orders_to_plot: The orders of the interactions to plot. If ``None``, all orders are plotted.
     """
     for hyper_edge in hyper_edges:
+
+        if orders_to_plot is not None and len(hyper_edge) not in orders_to_plot:
+            continue
 
         # store all paths for the hyper-edge to combine them later
         all_paths = []
@@ -329,6 +334,7 @@ def si_graph_plot(
     node_area_scaling: bool = False,
     circular_layout: bool = False,
     draw_original_edges: bool = True,
+    orders_to_plot: Optional[list[int]] = None,
 ) -> tuple[plt.figure, plt.axis]:
     """Plots the interaction values as an explanation graph.
 
@@ -379,6 +385,9 @@ def si_graph_plot(
         circular_layout: Whether to use a circular layout for the graph. Defaults to ``False`` which
             uses a spring layout.
         draw_original_edges: Whether to draw the original edges of the graph. Defaults to ``True``.
+        orders_to_plot: The orders of the interactions to plot. If ``None``, all orders are plotted.
+            Defaults to ``None``. Note that this will only remove the interactions from the plot,
+            all scaling and layouting will still be done for all interactions.
 
     Returns:
         The figure and axis of the plot.
@@ -491,15 +500,18 @@ def si_graph_plot(
             explanation_graph, weight="weight", seed=random_seed, pos=pos, fixed=graph_nodes
         )
         pos.update(pos_explain)
-        _draw_fancy_hyper_edges(ax, pos, explanation_graph, hyper_edges=explanation_edges)
-        _draw_explanation_nodes(
-            ax,
-            pos,
-            explanation_graph,
-            nodes=explanation_nodes,
-            normal_node_size=normal_node_size,
-            node_area_scaling=node_area_scaling,
+        _draw_fancy_hyper_edges(
+            ax, pos, explanation_graph, hyper_edges=explanation_edges, orders_to_plot=orders_to_plot
         )
+        if orders_to_plot is None or (orders_to_plot is not None and 1 in orders_to_plot):
+            _draw_explanation_nodes(
+                ax,
+                pos,
+                explanation_graph,
+                nodes=explanation_nodes,
+                normal_node_size=normal_node_size,
+                node_area_scaling=node_area_scaling,
+            )
 
     # add the original graph structure on top
     _draw_graph_nodes(ax, pos, original_graph, normal_node_size=normal_node_size)

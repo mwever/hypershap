@@ -121,8 +121,8 @@ if __name__ == "__main__":
     ]
 
     hpo_settings = [
-        "local",
-        "global",
+        # "local",
+        # "global",
         # "universal",
         "universal-local",
     ]
@@ -138,5 +138,5 @@ if __name__ == "__main__":
             pre_compute=True,
             verbose=True,
             instance_index=inst_index,
-            n_configs=10_000,
+            n_configs=100_000,
         )

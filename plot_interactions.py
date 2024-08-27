@@ -37,7 +37,25 @@ def _abbreviate_player_names(player_names: list[str]) -> list[str]:
     return abbreviated_player_names
 
 
-def _plot_si_graph(interaction_values: shapiq.InteractionValues, player_names: list[str]) -> None:
+def plot_si_graph(
+    interaction_values: shapiq.InteractionValues,
+    player_names: list[str],
+    min_max_interactions: Optional[tuple[float, float]] = None,
+    orders_to_plot: Optional[list[int]] = None,
+) -> None:
+    """Draws a SI-Graph for the given interaction values.
+
+    Args:
+        interaction_values: The interaction values to plot.
+        player_names: The names of the players.
+        min_max_interactions: The minimum and maximum interaction values. Default is `None`. If this
+            parameter is not `None`, the plot will be adjusted to these bounds. I.e., all
+            interactions will be scaled as if these bounds were the minimum and maximum values. This
+            makes it possible to compare different plots more easily.
+        orders_to_plot: The orders to plot. Default is `None`. If not `None`, only the specified
+            orders will be plotted. Note that the interactions are only removed from the plot, all
+            scaling and layouting is still done with the full set of interactions.
+    """
     label_mapping = {i: f"{player_names[i]}" for i in range(interaction_values.n_players)}
     si_graph_nodes = list(
         shapiq.powerset(range(interaction_values.n_players), min_size=2, max_size=2)
@@ -51,12 +69,14 @@ def _plot_si_graph(interaction_values: shapiq.InteractionValues, player_names: l
         si_graph_interaction,
         graph=si_graph_nodes,
         size_factor=3,
-        node_size_scaling=1.75,
-        compactness=1000,
+        node_size_scaling=1.75,  # how big the nodes of the graph are
+        compactness=1000,  # para. for layouting the "explanations" -> higher values more centered
         label_mapping=label_mapping,
         circular_layout=True,
         draw_original_edges=False,
         node_area_scaling=True,
+        min_max_interactions=min_max_interactions,  # scales the plot to these upper/lower bounds
+        orders_to_plot=orders_to_plot,
     )
     plt.tight_layout()
 
@@ -183,7 +203,8 @@ def plot_interactions(
     plt.close()
 
     # plot the mi as a si-graph
-    _plot_si_graph(mi, player_names)
+    # TODO: If you want to scale the plots to some min/max values use the min_max_interactions
+    plot_si_graph(mi, player_names, min_max_interactions=None)
     if save:
         plt.savefig(os.path.join(PLOT_DIR, f"SI-Graph_MI_{game_name}.pdf"))
     if show:
@@ -191,7 +212,7 @@ def plot_interactions(
     plt.close()
 
     # plot the two_sii a si-graph
-    _plot_si_graph(two_sii, player_names)
+    plot_si_graph(two_sii, player_names)
     if save:
         plt.savefig(os.path.join(PLOT_DIR, f"SI-Graph_2SII_{game_name}.pdf"))
     if show:
