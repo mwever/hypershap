@@ -123,20 +123,20 @@ if __name__ == "__main__":
     hpo_settings = [
         # "local",
         # "global",
-        # "universal",
-        "universal-local",
+        "universal",
+        # "universal-local",
     ]
 
-    instances_list = list(range(0, 34))
+    # instances_list = list(range(0, 34))
 
-    for inst_index in instances_list:
-        print(f"Instance Index: {inst_index}")
-        pre_compute_games(
-            benchmark_list,
-            game_types=hpo_settings,
-            metric="val_accuracy",
-            pre_compute=True,
-            verbose=True,
-            instance_index=inst_index,
-            n_configs=100_000,
-        )
+    # for inst_index in instances_list:
+    # print(f"Instance Index: {inst_index}")
+    pre_compute_games(
+        benchmark_list,
+        game_types=hpo_settings,
+        metric="val_accuracy",
+        pre_compute=True,
+        verbose=True,
+        instance_index=None,
+        n_configs=10_000,
+    )
