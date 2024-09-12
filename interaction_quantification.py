@@ -9,6 +9,7 @@ import scipy
 import shapiq
 from utils import setup_game
 
+import pandas as pd
 import matplotlib.pyplot as plt
 
 from shapiq.interaction_values import InteractionValues
@@ -156,15 +157,18 @@ def evaluate_game(
     #computer.baseline_value = float(game.normalization_value)
     game_values = _convert_game_to_interaction(computer)
 
+    moebius = {}
     approximations = {}
     for index in indices:
         approximations[index] = {}
         for order in range(1, game.n_players + 1):
             interactions = computer.shapley_interaction(index=index, order=order)
             approximations[index][order] = approximated_game(interactions)
+        # For highest order Shapley interactions are Möbius transform
+        moebius[index] = interactions
     approximation_errors = get_approximation_error(approximations, game_values)
     print("R2 Scores per Order:", approximation_errors)
-    return approximation_errors
+    return approximation_errors, moebius
 
 
 def plot_r2(results,game_id):
@@ -181,6 +185,27 @@ def plot_r2(results,game_id):
     plt.xlabel("Explanation Order")
     plt.ylabel("Shapley-weighted R2")
     plt.savefig("plots/r2/r2_"+game_id+".png")
+    plt.show()
+
+
+def plot_violin(moebius,game_id):
+    x_vals = [len(elem) for elem in list(moebius.dict_values.keys()) if len(elem)>0 and len(elem)<moebius.n_players]
+    y_vals = [elem for key,elem in moebius.dict_values.items() if len(key)>0 and len(key)<moebius.n_players]
+    df = pd.DataFrame({"size":x_vals,"interaction":y_vals})
+    df["interaction_abs"] = np.abs(df["interaction"])
+    # Group the data by the x categories
+    unique_x_vals = df['size'].unique()
+    grouped_data = [df[df['size'] == cat]['interaction_abs'].values for cat in unique_x_vals]
+    plt.figure(figsize=(8,5))
+    plt.violinplot(grouped_data,showmeans=True)
+    plt.ylim(0, 15)
+    # Add custom labels for the x-axis
+    plt.xticks(ticks=range(1, len(unique_x_vals) + 1), labels=unique_x_vals)
+    plt.legend()
+    plt.title(game_id)
+    plt.xlabel("Interaction Order")
+    plt.ylabel("Interaction Effect")
+    plt.savefig("plots/moebius/moebius_"+game_id+".png")
     plt.show()
 
 
@@ -212,9 +237,9 @@ if __name__ == "__main__":
 
 
     r2_scores = {}
+    moebius_interactions = {}
 
     for game in GAME_LIST:
-        r2_scores[game.game_id] = evaluate_game(game=game, indices=["FSII"])
+        r2_scores[game.game_id], moebius_interactions[game.game_id] = evaluate_game(game=game, indices=["FSII"])
         plot_r2(results=r2_scores[game.game_id]["FSII"],game_id=game.game_id)
-
-
+        plot_violin(moebius=moebius_interactions[game.game_id]["FSII"],game_id=game.game_id)
