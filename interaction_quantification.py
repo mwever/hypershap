@@ -9,30 +9,35 @@ import scipy
 import shapiq
 from utils import setup_game
 
+import matplotlib.pyplot as plt
 
-def approximate_game_with_interactions(
-    game: shapiq.Game,
-    indices: Optional[list[str]] = None,
-) -> dict[str, dict[int, shapiq.InteractionValues]]:
-    """Approximates the game with different interaction indices and orders.
+from shapiq.interaction_values import InteractionValues
 
-    Args:
-        game: The game to approximate.
-        indices: The indices to approximate the game with. Default is `None`.
 
-    Returns:
-        A dictionary containing the approximated interaction values with the indices and orders as
-        keys.
-    """
-    if indices is None:
-        indices = ["k-SII", "FSII", "FBII", "STII"]
-    computer = shapiq.ExactComputer(n_players=game.n_players, game_fun=game)
-    approximations = {}
-    for index in indices:
-        approximations[index] = {}
-        for order in range(1, game.n_players + 1):
-            approximations[index][order] = computer(index=index, order=order)
-    return approximations
+from shapiq.utils import powerset
+
+
+def approximated_game(interaction_index):
+    n_players = interaction_index.n_players
+    grand_coalition_set = set(range(n_players))
+    approximation_lookup = {}
+    approximation_values = np.zeros(2**n_players)
+    for coalition_pos, coalition in enumerate(powerset(grand_coalition_set)):
+        approximation_lookup[coalition] = coalition_pos
+        for interaction in powerset(coalition):
+            approximation_values[coalition_pos] += interaction_index[interaction]
+
+    baseline_value = approximation_values[approximation_lookup[tuple()]]
+    approximation = InteractionValues(
+        index=interaction_index.index,
+        max_order=n_players,
+        n_players=n_players,
+        min_order=0,
+        baseline_value=baseline_value,
+        interaction_lookup=approximation_lookup,
+        values=approximation_values,
+    )
+    return approximation
 
 
 def _convert_game_to_interaction(exact_computer: shapiq.ExactComputer) -> shapiq.InteractionValues:
@@ -72,7 +77,7 @@ def _get_weight(n: int, coalition_size: int, uniform_weights: bool = False) -> f
     if uniform_weights:
         return (1 / 2) ** n
     if coalition_size == n or coalition_size == 0:
-        sv_weight = 1
+        sv_weight = 0
     else:
         sv_weight = scipy.special.binom(n, coalition_size) * coalition_size * (n - coalition_size)
         sv_weight = (n - 1) / sv_weight
@@ -139,33 +144,77 @@ def get_approximation_error(
 
 
 def evaluate_game(
-    game: shapiq.Game, indices: Optional[list[str]] = None, uniform_weights: bool = False
+    game: shapiq.Game, indices: Optional[list[str]] = None
 ) -> None:
     """Evaluates the game.
 
     Args:
         game: The game to evaluate.
         indices: The indices to approximate the game with. Default is `None`.
-        uniform_weights: Whether to use uniform weights or a Shapley kernel. Default is `False`
-            (Shapley kernel).
     """
     computer = shapiq.ExactComputer(n_players=game.n_players, game_fun=game)
-    computer.baseline_value = float(game.normalization_value)
+    #computer.baseline_value = float(game.normalization_value)
     game_values = _convert_game_to_interaction(computer)
-    approximations = approximate_game_with_interactions(game, indices=indices)
-    approximation_errors = get_approximation_error(approximations, game_values, uniform_weights)
+
+    approximations = {}
+    for index in indices:
+        approximations[index] = {}
+        for order in range(1, game.n_players + 1):
+            interactions = computer.shapley_interaction(index=index, order=order)
+            approximations[index][order] = approximated_game(interactions)
+    approximation_errors = get_approximation_error(approximations, game_values)
     print("R2 Scores per Order:", approximation_errors)
+    return approximation_errors
+
+
+def plot_r2(results,game_id):
+    x_vals = list(results.keys())
+    y_vals = list(results.values())
+    plt.figure()
+    plt.plot(
+        x_vals,
+        y_vals,
+    )
+    plt.ylim(0, 1.05)
+    plt.legend()
+    plt.title(game_id)
+    plt.xlabel("Explanation Order")
+    plt.ylabel("Shapley-weighted R2")
+    plt.savefig("plots/r2/r2_"+game_id+".png")
+    plt.show()
+
 
 
 if __name__ == "__main__":
 
-    hpo_game, _, names = setup_game(
-        game_type="global",
+    # UNIVERSAL
+    hpo_game_universal, _, names = setup_game(
+        game_type="universal",
         benchmark_name="lcbench",
         normalize_loaded=True,
         instance_index=1,
         n_configs=10_000,
     )
-    assert len(names) == hpo_game.n_players
 
-    evaluate_game(hpo_game, indices=["FSII"], uniform_weights=False)
+    GAME_LIST = [hpo_game_universal]
+
+
+    # GLOBAL
+    for instance_index in range(34):
+        hpo_game_global, _, names = setup_game(
+            game_type="global",
+            benchmark_name="lcbench",
+            normalize_loaded=True,
+            instance_index=instance_index,
+            n_configs=10_000,
+        )
+        GAME_LIST.append(hpo_game_global)
+
+
+    r2_scores = {}
+
+    for game in GAME_LIST:
+        r2_scores[game.game_id] = evaluate_game(game=game, indices=["FSII"])
+        plot_r2(results=r2_scores[game.game_id]["FSII"],game_id=game.game_id)
+
+
