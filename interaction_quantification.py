@@ -204,7 +204,7 @@ def plot_violin(moebius,game_id):
     plt.legend()
     plt.title(game_id)
     plt.xlabel("Interaction Order")
-    plt.ylabel("Interaction Effect")
+    plt.ylabel("Absolute Interaction Effect")
     plt.savefig("plots/moebius/moebius_"+game_id+".png")
     plt.show()
 
