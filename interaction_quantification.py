@@ -189,8 +189,8 @@ def plot_r2(results,game_id):
 
 
 def plot_violin(moebius,game_id):
-    x_vals = [len(elem) for elem in list(moebius.dict_values.keys()) if len(elem)>0 and len(elem)<moebius.n_players]
-    y_vals = [elem for key,elem in moebius.dict_values.items() if len(key)>0 and len(key)<moebius.n_players]
+    x_vals = [len(elem) for elem in list(moebius.dict_values.keys()) if len(elem)>0]
+    y_vals = [elem for key,elem in moebius.dict_values.items() if len(key)>0]
     df = pd.DataFrame({"size":x_vals,"interaction":y_vals})
     df["interaction_abs"] = np.abs(df["interaction"])
     # Group the data by the x categories
