@@ -3,19 +3,15 @@
 import copy
 from typing import Optional
 
+import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import scipy
 
 import shapiq
-from utils import setup_game
-
-import pandas as pd
-import matplotlib.pyplot as plt
-
 from shapiq.interaction_values import InteractionValues
-
-
 from shapiq.utils import powerset
+from utils import setup_game
 
 
 def approximated_game(interaction_index):
@@ -144,9 +140,7 @@ def get_approximation_error(
     return approximation_errors
 
 
-def evaluate_game(
-    game: shapiq.Game, indices: Optional[list[str]] = None
-) -> None:
+def evaluate_game(game: shapiq.Game, indices: Optional[list[str]] = None) -> None:
     """Evaluates the game.
 
     Args:
@@ -154,7 +148,7 @@ def evaluate_game(
         indices: The indices to approximate the game with. Default is `None`.
     """
     computer = shapiq.ExactComputer(n_players=game.n_players, game_fun=game)
-    #computer.baseline_value = float(game.normalization_value)
+    # computer.baseline_value = float(game.normalization_value)
     game_values = _convert_game_to_interaction(computer)
 
     moebius = {}
@@ -171,7 +165,7 @@ def evaluate_game(
     return approximation_errors, moebius
 
 
-def plot_r2(results,game_id):
+def plot_r2(results, game_id):
     x_vals = list(results.keys())
     y_vals = list(results.values())
     plt.figure()
@@ -184,20 +178,20 @@ def plot_r2(results,game_id):
     plt.title(game_id)
     plt.xlabel("Explanation Order")
     plt.ylabel("Shapley-weighted R2")
-    plt.savefig("plots/r2/r2_"+game_id+".png")
+    plt.savefig("plots/r2/r2_" + game_id + ".png")
     plt.show()
 
 
-def plot_violin(moebius,game_id):
-    x_vals = [len(elem) for elem in list(moebius.dict_values.keys()) if len(elem)>0]
-    y_vals = [elem for key,elem in moebius.dict_values.items() if len(key)>0]
-    df = pd.DataFrame({"size":x_vals,"interaction":y_vals})
+def plot_violin(moebius, game_id):
+    x_vals = [len(elem) for elem in list(moebius.dict_values.keys()) if len(elem) > 0]
+    y_vals = [elem for key, elem in moebius.dict_values.items() if len(key) > 0]
+    df = pd.DataFrame({"size": x_vals, "interaction": y_vals})
     df["interaction_abs"] = np.abs(df["interaction"])
     # Group the data by the x categories
-    unique_x_vals = df['size'].unique()
-    grouped_data = [df[df['size'] == cat]['interaction_abs'].values for cat in unique_x_vals]
-    plt.figure(figsize=(8,5))
-    plt.violinplot(grouped_data,showmeans=True)
+    unique_x_vals = df["size"].unique()
+    grouped_data = [df[df["size"] == cat]["interaction_abs"].values for cat in unique_x_vals]
+    plt.figure(figsize=(8, 5))
+    plt.violinplot(grouped_data, showmeans=True)
     plt.ylim(0, 15)
     # Add custom labels for the x-axis
     plt.xticks(ticks=range(1, len(unique_x_vals) + 1), labels=unique_x_vals)
@@ -205,9 +199,8 @@ def plot_violin(moebius,game_id):
     plt.title(game_id)
     plt.xlabel("Interaction Order")
     plt.ylabel("Absolute Interaction Effect")
-    plt.savefig("plots/moebius/moebius_"+game_id+".png")
+    plt.savefig("plots/moebius/moebius_" + game_id + ".png")
     plt.show()
-
 
 
 if __name__ == "__main__":
@@ -223,7 +216,6 @@ if __name__ == "__main__":
 
     GAME_LIST = [hpo_game_universal]
 
-
     # GLOBAL
     for instance_index in range(34):
         hpo_game_global, _, names = setup_game(
@@ -235,11 +227,12 @@ if __name__ == "__main__":
         )
         GAME_LIST.append(hpo_game_global)
 
-
     r2_scores = {}
     moebius_interactions = {}
 
     for game in GAME_LIST:
-        r2_scores[game.game_id], moebius_interactions[game.game_id] = evaluate_game(game=game, indices=["FSII"])
-        plot_r2(results=r2_scores[game.game_id]["FSII"],game_id=game.game_id)
-        plot_violin(moebius=moebius_interactions[game.game_id]["FSII"],game_id=game.game_id)
+        r2_scores[game.game_id], moebius_interactions[game.game_id] = evaluate_game(
+            game=game, indices=["FSII"]
+        )
+        plot_r2(results=r2_scores[game.game_id]["FSII"], game_id=game.game_id)
+        plot_violin(moebius=moebius_interactions[game.game_id]["FSII"], game_id=game.game_id)
