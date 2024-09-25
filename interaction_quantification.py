@@ -1,6 +1,7 @@
 """This module contains function to quantify the level of interactions in the games."""
 
 import copy
+import os
 from typing import Optional
 
 import matplotlib.pyplot as plt
@@ -12,6 +13,9 @@ import shapiq
 from shapiq.interaction_values import InteractionValues
 from shapiq.utils import powerset
 from utils import setup_game
+
+# create paper_plots directory
+os.makedirs("paper_plots", exist_ok=True)
 
 
 def approximated_game(interaction_index):
@@ -140,7 +144,7 @@ def get_approximation_error(
     return approximation_errors
 
 
-def evaluate_game(game: shapiq.Game, indices: Optional[list[str]] = None) -> None:
+def evaluate_game(game: shapiq.Game, indices: Optional[list[str]] = None) -> tuple[dict, dict]:
     """Evaluates the game.
 
     Args:
@@ -203,36 +207,248 @@ def plot_violin(moebius, game_id):
     plt.show()
 
 
+def _aggregate_r2(r2_scores: dict[str, dict[int, float]], game_ids: list[str]):
+    import pandas as pd
+
+    r2_scores_filtered = {game_id: r2_scores[game_id] for game_id in game_ids}
+    r2_scores_df = pd.DataFrame(r2_scores_filtered).T
+    scores_mean = r2_scores_df.mean(axis=0).to_dict()
+    scores_std = r2_scores_df.std(axis=0).to_dict()
+    scores_sem = r2_scores_df.sem(axis=0).to_dict()
+    return {"mean": scores_mean, "std": scores_std, "sem": scores_sem}
+
+
+COLORS = {
+    "universal": "#00b4d8",
+    "global": "#ef27a6",
+    "local": "#ff6f00",
+}
+
+COLORS_LIGHTER = {
+    "universal": "#d8f9ff",
+    "global": "#fddef1",
+    "local": "#ffe9d8",
+}
+
+MARKERS = {
+    "universal": "D",
+    "global": "s",
+    "local": "o",
+}
+
+LABELS = {
+    "universal": "Tunability",
+    "global": "Data-Specific Tunability",
+    "local": "Ablation",
+}
+
+
+def plot_r2_agg(
+    scores: dict[str, dict[str, dict[int, float]]], figsize: tuple = (5, 4)
+) -> tuple[plt.Figure, plt.Axes]:
+    fig, axis = plt.subplots(1, 1, figsize=figsize)
+
+    for game_type in ["local", "global", "universal"]:
+        scores_agg = scores[game_type]
+        color = COLORS[game_type]
+        label_name = LABELS[game_type]
+        marker = MARKERS[game_type]
+
+        orders = list(sorted(scores_agg["mean"].keys()))
+        scores_mean = np.array([scores_agg["mean"][order] for order in orders])
+        axis.plot(
+            orders,
+            scores_mean,
+            label=label_name,
+            color=color,
+            marker=marker,
+        )
+        if "sem" in scores_agg:
+            scores_std = np.array([scores_agg["sem"][order] for order in orders])
+            axis.fill_between(
+                orders,
+                scores_mean - scores_std,
+                scores_mean + scores_std,
+                color=color,
+                alpha=0.15,
+            )
+
+    axis.set_xlabel("Interaction Order")
+    axis.set_ylabel("Shapley-weighted R2")
+    axis.set_ylim(-0.025, 1.05)
+    axis.legend(loc="lower right")
+    axis.set_title("Faithfulness of Interactions")
+    axis.grid(True, which="both", linestyle="--", linewidth=0.5)
+    axis.tick_params(axis="both", which="both", length=0)
+    plt.tight_layout()
+    return fig, axis
+
+
+def plot_violine_agg(
+    moebius: dict[str, dict[str, shapiq.InteractionValues]],
+    figsize: tuple = (5, 4),
+    violin: bool = True,
+    colorful: bool = True,
+) -> tuple[plt.Figure, plt.Axes]:
+    fig, axis = plt.subplots(1, 1, figsize=figsize)
+
+    width = 0.25
+    x_offsets = [-0.3, 0, 0.3]
+
+    for len_id, game_type in enumerate(["local", "global", "universal"]):
+
+        x_offset = x_offsets[len_id]
+        color = COLORS[game_type]
+
+        if not colorful:
+            edge_color = "#000000"
+            face_color = "#eeeeee"
+        else:
+            edge_color = color
+            face_color = color + "10"
+
+        moebius_vals = list(moebius[game_type].values())
+        x_vals, y_vals = [], []
+        for moebius_val in moebius_vals:
+            for key, val in moebius_val.dict_values.items():
+                x_vals.append(len(key)), y_vals.append(val)
+        df = pd.DataFrame({"size": x_vals, "interaction": y_vals})
+        df = df[df["size"] > 0]
+        df["interaction_abs"] = np.abs(df["interaction"])
+        unique_x_vals = df["size"].unique()
+        positions = sorted(df["size"].unique() + x_offset)
+        grouped_data = [df[df["size"] == cat]["interaction_abs"].values for cat in unique_x_vals]
+        if violin:
+            violin_parts = axis.violinplot(
+                grouped_data, positions=positions, showmeans=True, showextrema=False, widths=width
+            )
+            for i, pc in enumerate(violin_parts["bodies"]):
+                pc.set_facecolor(COLORS_LIGHTER[game_type])
+                pc.set_edgecolor(edge_color)
+                pc.set_linewidth(1)
+                pc.set_alpha(1)
+            vp = violin_parts["cmeans"]
+            vp.set_edgecolor(edge_color)
+            vp.set_linewidth(1)
+            axis.plot([], [], color=color, label=LABELS[game_type])
+        else:  # boxplot
+            axis.boxplot(
+                grouped_data,
+                positions=positions,
+                widths=width,
+                patch_artist=True,
+                boxprops=dict(facecolor=face_color, color=edge_color),
+                whiskerprops=dict(color=edge_color),
+                capprops=dict(color=edge_color),
+                medianprops=dict(color=color),
+                showfliers=False,
+                showmeans=True,
+                meanprops=dict(
+                    marker=MARKERS[game_type], markerfacecolor=color, markeredgecolor=color
+                ),
+            )
+            axis.plot([], [], color=color, label=LABELS[game_type], marker=MARKERS[game_type])
+
+    axis.set_xticks(range(1, len(unique_x_vals) + 1))
+    axis.set_xticklabels(unique_x_vals)
+
+    # add a grey rectangles for each interaction order
+    for i in range(1, len(unique_x_vals) + 1):
+        if i % 2 == 0:
+            continue
+        axis.add_patch(plt.Rectangle((i - 0.5, -0.5), 1, 100, color="#eeeeee", alpha=0.5, zorder=0))
+
+    axis.set_ylim(-0.5, 15.5)
+    axis.set_xlim(0.5, len(unique_x_vals) + 0.5)
+    axis.set_yticks([0, 5, 10, 15])
+    axis.legend(loc="upper right")
+    axis.set_xlabel("Interaction Order")
+    axis.set_ylabel("Absolute Interaction Effect")
+    axis.set_title("Magnitude of Interactions")
+    # add only horizontal grid lines
+    axis.grid(True, which="both", axis="y", linestyle="--", linewidth=0.5)
+    axis.tick_params(axis="both", which="both", length=0)
+    plt.tight_layout()
+
+    return fig, axis
+
+
 if __name__ == "__main__":
+
+    n_instances = 34
 
     # UNIVERSAL
     hpo_game_universal, _, names = setup_game(
         game_type="universal",
         benchmark_name="lcbench",
         normalize_loaded=True,
-        instance_index=1,
         n_configs=10_000,
+        only_load=True,
     )
 
-    GAME_LIST = [hpo_game_universal]
+    universal_game = hpo_game_universal
+    universal_game_id = universal_game.game_id
 
     # GLOBAL
-    for instance_index in range(34):
+    global_games = []
+    for instance_index in range(n_instances):
         hpo_game_global, _, names = setup_game(
             game_type="global",
             benchmark_name="lcbench",
             normalize_loaded=True,
             instance_index=instance_index,
             n_configs=10_000,
+            only_load=True,
         )
-        GAME_LIST.append(hpo_game_global)
+        global_games.append(hpo_game_global)
 
-    r2_scores = {}
-    moebius_interactions = {}
-
-    for game in GAME_LIST:
-        r2_scores[game.game_id], moebius_interactions[game.game_id] = evaluate_game(
-            game=game, indices=["FSII"]
+    # LOCAL
+    local_games = []
+    for instance_index in range(n_instances):
+        hpo_game_local, _, names = setup_game(
+            game_type="local",
+            benchmark_name="lcbench",
+            normalize_loaded=True,
+            instance_index=instance_index,
+            n_configs=100_000,
+            only_load=True,
         )
-        plot_r2(results=r2_scores[game.game_id]["FSII"], game_id=game.game_id)
-        plot_violin(moebius=moebius_interactions[game.game_id]["FSII"], game_id=game.game_id)
+        local_games.append(hpo_game_local)
+
+    # evaluate games
+    r2_scores, moebius_interactions = {}, {}
+    for game in [universal_game] + global_games + local_games:
+        r2_score, moebius_interaction = evaluate_game(game=game, indices=["FSII"])
+        r2_scores[game.game_id] = r2_score["FSII"]
+        moebius_interactions[game.game_id] = moebius_interaction["FSII"]
+
+    # create aggregate r2 scores
+    global_agg = _aggregate_r2(r2_scores, [game.game_id for game in global_games])
+    local_agg = _aggregate_r2(r2_scores, [game.game_id for game in local_games])
+    r2_scores_agg = {
+        "universal": {"mean": r2_scores[universal_game_id]},
+        "global": global_agg,
+        "local": local_agg,
+    }
+
+    # combine moebius interactions
+    moebius_interactions_agg = {
+        "universal": {universal_game_id: moebius_interactions[universal_game_id]},
+        "global": {game.game_id: moebius_interactions[game.game_id] for game in global_games},
+        "local": {game.game_id: moebius_interactions[game.game_id] for game in local_games},
+    }
+
+    # plot the line plot
+    fig_line, ax_line = plot_r2_agg(r2_scores_agg, figsize=(4, 3))
+    plt.savefig("paper_plots/r2.pdf")
+    plt.show()
+
+    # plot the violin plot
+    fig_violin, ax_violin = plot_violine_agg(moebius_interactions_agg, figsize=(5, 3), violin=False)
+    plt.savefig("paper_plots/moebius.pdf")
+    plt.show()
+
+    # plot the violin plot
+    fig_violin, ax_violin = plot_violine_agg(moebius_interactions_agg, figsize=(5, 3), violin=True)
+    plt.savefig("paper_plots/moebius_violin.pdf")
+    plt.show()
