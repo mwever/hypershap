@@ -209,3 +209,40 @@ class UniversalLocalHyperparameterImportanceGame(AbstractHyperparameterImportanc
             agg_value = np.array(obj).min()
 
         return agg_value
+
+
+# class OptimizerBiasGame(AbstractHyperparameterImportanceGame):
+#     def __init__(self, bench, metric, n_configs_per_opt=100, list_of_opts, inv_opt_idx, random_state=None, verbose: bool = False):
+#         self.n_configs_per_opt = n_configs_per_opt
+#         self.list_of_opts = list_of_opts
+#         self.inv_opt_idx = inv_opt_idx
+#         super().__init__(bench, metric, random_state, verbose=verbose)
+#
+#     def evaluate_single_coalition(self, coalition: np.ndarray):
+#
+#
+#         cfgs = self.blind_parameters_according_to_coalition(self.cfgs, coalition)
+#         obj = [self.try_error_active_parameters_objective_eval(cfg) for cfg in cfgs]
+#         return np.array(obj).max()
+
+# class Optimizer:
+#     def __init__(self, config_space, n_configs=100):
+#         self.config_space = config_space
+#         self.n_configs = n_configs
+#
+# class RandomOptimizer(Optimizer):
+#     def __init__(self, config_space, n_configs=100):
+#         super().__init__(config_space, n_configs)
+#         self.cfgs = list()
+#         for i in range(self.n_configs):
+#             self.cfgs.append(self.config_space.sample_configuration().get_dictionary())
+
+# class RandomSubsetOptimizer:
+#     def __init__(self, config_space, subset):
+#         self.subset = subset
+#         red_config_space = config_space
+#         super().__init__(self.config_space)
+#
+#         self.cfgs = list()
+#         for i in range(self.n_configs):
+#             self.config

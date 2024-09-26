@@ -3,6 +3,7 @@
 import os
 from typing import Optional
 
+import numpy as np
 from tqdm import tqdm
 from yahpo_gym import benchmark_set
 
@@ -17,15 +18,14 @@ from hpo_games import (
 GAME_STORAGE_DIR = "game_storage"
 os.makedirs(GAME_STORAGE_DIR, exist_ok=True)
 
-
 __all__ = ["setup_game"]
 
 
 def _find_optimal_configuration(
-    benchmark: benchmark_set.BenchmarkSet,
-    metric: str = "acc",
-    random_state: Optional[int] = 42,
-    n_configs: int = 1000,
+        benchmark: benchmark_set.BenchmarkSet,
+        metric: str = "acc",
+        random_state: Optional[int] = 42,
+        n_configs: int = 1000,
 ) -> tuple[dict, float]:
     """Find the optimal configuration for the given benchmark.
 
@@ -51,9 +51,9 @@ def _find_optimal_configuration(
 
 
 def _get_game_name(
-    game_type: str,
-    benchmark: str,
-    **kwargs,
+        game_type: str,
+        benchmark: str,
+        **kwargs,
 ) -> str:
     """Get the name of the game.
 
@@ -77,16 +77,16 @@ def _get_game_name(
 
 
 def setup_game(
-    game_type: str,
-    benchmark_name: str,
-    metric: str = "val_accuracy",
-    instance_index: Optional[int] = None,
-    random_state: Optional[int] = 42,
-    n_configs: int = 1000,
-    pre_compute: bool = False,
-    verbose: bool = False,
-    normalize_loaded: bool = True,
-    only_load: bool = False,
+        game_type: str,
+        benchmark_name: str,
+        metric: str = "val_accuracy",
+        instance_index: Optional[int] = None,
+        random_state: Optional[int] = 42,
+        n_configs: int = 1000,
+        pre_compute: bool = False,
+        verbose: bool = False,
+        normalize_loaded: bool = True,
+        only_load: bool = False,
 ) -> tuple[shapiq.Game, str, list[str]]:
     """Sets up the hyperparameter importance game.
 
@@ -201,3 +201,32 @@ def setup_game(
     player_names = game.tunable_hyperparameter_names
 
     return game, game_name, player_names
+
+
+def compute_avg_anytime_performance_lines(traces):
+    max_length = None
+    for t in traces:
+        if max_length is None or len(t) > max_length:
+            max_length = len(t)
+
+    best_performance_profiles = list()
+    for eval_trace in traces:
+        best_value = None
+        max_profile = list()
+        for val in eval_trace:
+            if best_value is None or val > best_value:
+                best_value = val
+            max_profile.append(best_value)
+
+        while len(max_profile) < max_length:
+            max_profile.append(best_value)
+
+        best_performance_profiles.append(max_profile)
+
+    best_perf_matrix = np.array(best_performance_profiles)
+    avg_best_perf_list = list()
+    std_best_perf_list = list()
+    for i in range(best_perf_matrix.shape[1]):
+        avg_best_perf_list.append(best_perf_matrix[:, i].mean())
+        std_best_perf_list.append(best_perf_matrix[:, i].std())
+    return np.array(avg_best_perf_list), np.array(std_best_perf_list)
