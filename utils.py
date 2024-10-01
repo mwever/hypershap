@@ -12,7 +12,7 @@ from hpo_games import (
     GlobalHyperparameterImportanceGame,
     LocalHyperparameterImportanceGame,
     UniversalHyperparameterImportanceGame,
-    UniversalLocalHyperparameterImportanceGame,
+    UniversalLocalHyperparameterImportanceGame, OptimizerBiasGame, LocalOptimizer, SubspaceRandomOptimizer,
 )
 
 GAME_STORAGE_DIR = "game_storage"
@@ -186,6 +186,36 @@ def setup_game(
             optimal_cfg_list.append(optimal_cfg)
         game = UniversalLocalHyperparameterImportanceGame(
             benchmark, metric, optimal_cfg_list, verbose=verbose
+        )
+    elif game_type == "optbias":
+        benchmark.set_instance(instance_index)
+        optimizer = LocalOptimizer(benchmark, metric, random_state)
+        game = OptimizerBiasGame(
+            benchmark,
+            metric=metric,
+            optimizer=optimizer,
+            n_configs=n_configs,
+            random_state=random_state,
+            verbose=verbose,
+        )
+    elif game_type == "optbias-seta" or game_type == "optbias-setb":
+        param_set = list()
+        if game_type == "optbias-setb":
+            for hyperparam in benchmark.get_opt_space().get_hyperparameters():
+                if hyperparam.name not in  ["OpenML_task_id", "epoch", "weight_decay"]:
+                    param_set += [hyperparam.name]
+        elif game_type == "optbias-seta":
+            param_set = ["learning_rate", "max_dropout", "max_units"]
+
+        benchmark.set_instance(instance_index)
+        optimizer = SubspaceRandomOptimizer(benchmark, metric, random_state, param_set)
+        game = OptimizerBiasGame(
+            benchmark,
+            metric=metric,
+            optimizer=optimizer,
+            n_configs=n_configs,
+            random_state=random_state,
+            verbose=verbose,
         )
     else:
         raise ValueError(f"Invalid game type: {game_type}")

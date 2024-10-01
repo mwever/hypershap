@@ -6,8 +6,37 @@ from tqdm import tqdm
 from ConfigSpace import ConfigurationSpace
 import numpy as np
 
-from utils import compute_avg_anytime_performance_lines
 from smac import HyperparameterOptimizationFacade, Scenario
+
+
+def compute_avg_anytime_performance_lines(traces):
+    max_length = None
+    for t in traces:
+        if max_length is None or len(t) > max_length:
+            max_length = len(t)
+
+    best_performance_profiles = list()
+    for eval_trace in traces:
+        best_value = None
+        max_profile = list()
+        for val in eval_trace:
+            if best_value is None or val > best_value:
+                best_value = val
+            max_profile.append(best_value)
+
+        while len(max_profile) < max_length:
+            max_profile.append(best_value)
+
+        best_performance_profiles.append(max_profile)
+
+    best_perf_matrix = np.array(best_performance_profiles)
+    avg_best_perf_list = list()
+    std_best_perf_list = list()
+    for i in range(best_perf_matrix.shape[1]):
+        avg_best_perf_list.append(best_perf_matrix[:, i].mean())
+        std_best_perf_list.append(best_perf_matrix[:, i].std())
+    return np.array(avg_best_perf_list), np.array(std_best_perf_list)
+
 
 class LoggingEval:
 
@@ -91,8 +120,16 @@ class RSSimulation(HPOSimulation):
         eval_fun = LoggingEval(self.original_cfg_space, self.parameter_selection, self.benchmark.objective_function,
                                self.metric)
 
-        for i in range(self.hpo_budget):
+        # incumbent = self.benchmark
+        incumbent_perf = None
+
+        for i in range(self.hpo_budget-1):
             cfg = self.original_cfg_space.sample_configuration()
-            eval_fun.train(cfg)
+            res = (-1) * eval_fun.train(cfg)
+            if incumbent_perf is None or res > incumbent_perf:
+                incumbent_perf = res
+                incumbent = cfg
 
         self.cached_traces[self.current_trace_ix] = eval_fun.trace
+
+        return incumbent, incumbent_perf
