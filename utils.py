@@ -11,8 +11,11 @@ import shapiq
 from hpo_games import (
     GlobalHyperparameterImportanceGame,
     LocalHyperparameterImportanceGame,
+    LocalOptimizer,
+    OptimizerBiasGame,
+    SubspaceRandomOptimizer,
     UniversalHyperparameterImportanceGame,
-    UniversalLocalHyperparameterImportanceGame, OptimizerBiasGame, LocalOptimizer, SubspaceRandomOptimizer,
+    UniversalLocalHyperparameterImportanceGame,
 )
 
 GAME_STORAGE_DIR = "game_storage"
@@ -22,10 +25,10 @@ __all__ = ["setup_game"]
 
 
 def _find_optimal_configuration(
-        benchmark: benchmark_set.BenchmarkSet,
-        metric: str = "acc",
-        random_state: Optional[int] = 42,
-        n_configs: int = 1000,
+    benchmark: benchmark_set.BenchmarkSet,
+    metric: str = "acc",
+    random_state: Optional[int] = 42,
+    n_configs: int = 1000,
 ) -> tuple[dict, float]:
     """Find the optimal configuration for the given benchmark.
 
@@ -51,9 +54,9 @@ def _find_optimal_configuration(
 
 
 def _get_game_name(
-        game_type: str,
-        benchmark: str,
-        **kwargs,
+    game_type: str,
+    benchmark: str,
+    **kwargs,
 ) -> str:
     """Get the name of the game.
 
@@ -77,16 +80,17 @@ def _get_game_name(
 
 
 def setup_game(
-        game_type: str,
-        benchmark_name: str,
-        metric: str = "val_accuracy",
-        instance_index: Optional[int] = None,
-        random_state: Optional[int] = 42,
-        n_configs: int = 1000,
-        pre_compute: bool = False,
-        verbose: bool = False,
-        normalize_loaded: bool = True,
-        only_load: bool = False,
+    game_type: str,
+    benchmark_name: str,
+    metric: str = "val_accuracy",
+    instance_index: Optional[int] = None,
+    random_state: Optional[int] = 42,
+    n_configs: int = 1000,
+    pre_compute: bool = False,
+    verbose: bool = False,
+    normalize_loaded: bool = True,
+    only_load: bool = False,
+    n_instances_universal: Optional[int] = None,
 ) -> tuple[shapiq.Game, str, list[str]]:
     """Sets up the hyperparameter importance game.
 
@@ -108,6 +112,8 @@ def setup_game(
         normalize_loaded: Whether to normalize the loaded game values. Default is `True`.
         only_load: Whether to only load games from disk (`True`) or also to initialize them from
             scratch (`False`). Default is `False`.
+        n_instances_universal: The number of instances to use for the universal game. Default is
+            `None`.
 
     Returns:
         The hyperparameter importance game, the name of the game, and the player names.
@@ -160,6 +166,7 @@ def setup_game(
             n_configs=n_configs,
             random_state=random_state,
             verbose=verbose,
+            n_instances=n_instances_universal,
         )
     elif game_type == "global":
         benchmark.set_instance(instance_index)
@@ -202,7 +209,7 @@ def setup_game(
         param_set = list()
         if game_type == "optbias-setb":
             for hyperparam in benchmark.get_opt_space().get_hyperparameters():
-                if hyperparam.name not in  ["OpenML_task_id", "epoch", "weight_decay"]:
+                if hyperparam.name not in ["OpenML_task_id", "epoch", "weight_decay"]:
                     param_set += [hyperparam.name]
         elif game_type == "optbias-seta":
             param_set = ["learning_rate", "max_dropout", "max_units"]

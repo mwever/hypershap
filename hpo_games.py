@@ -3,9 +3,8 @@ from abc import ABC, abstractmethod
 from typing import Optional
 
 import numpy as np
-from ConfigSpace import ConfigurationSpace
 
-from downstream_hpo import RSSimulation, HPOSimulation
+from downstream_hpo import RSSimulation
 from shapiq import Game
 
 
@@ -109,10 +108,12 @@ class UniversalHyperparameterImportanceGame(AbstractHyperparameterImportanceGame
         n_configs=1000,
         random_state=None,
         verbose: bool = False,
+        n_instances: Optional[int] = None,
     ):
         self.n_configs = n_configs
         self.aggregate_instances = aggregate_instances
         self.cfgs = list()
+        self.n_instances = n_instances
 
         super().__init__(bench, metric, random_state, verbose=verbose)
 
@@ -127,7 +128,9 @@ class UniversalHyperparameterImportanceGame(AbstractHyperparameterImportanceGame
         cfgs = self.blind_parameters_according_to_coalition(self.cfgs, coalition)
         obj = list()
 
-        for instance in self.bench.instances:
+        for i, instance in enumerate(self.bench.instances):
+            if self.n_instances is not None and i >= self.n_instances:
+                break
             self.bench.set_instance(instance)
             obj += [
                 np.array(
@@ -215,15 +218,18 @@ class UniversalLocalHyperparameterImportanceGame(AbstractHyperparameterImportanc
 
 class OptimizerBiasGame(GlobalHyperparameterImportanceGame):
 
-    def __init__(self, bench, metric, optimizer, n_configs=10000, random_state=None, verbose: bool = False):
+    def __init__(
+        self, bench, metric, optimizer, n_configs=10000, random_state=None, verbose: bool = False
+    ):
         self.optimizer = optimizer
         super().__init__(bench, metric, n_configs, random_state, verbose)
 
     def evaluate_single_coalition(self, coalition: np.ndarray):
         opt_res = self.optimizer.optimize(coalition)
-        gt_res = max(super().evaluate_single_coalition(coalition),opt_res)
-        #print(coalition, (opt_res - gt_res), "gt", gt_res, "opt", opt_res)
+        gt_res = max(super().evaluate_single_coalition(coalition), opt_res)
+        # print(coalition, (opt_res - gt_res), "gt", gt_res, "opt", opt_res)
         return opt_res - gt_res
+
 
 class SubspaceRandomOptimizer:
     def __init__(self, bench, metric, random_state, param_selection):
@@ -232,10 +238,12 @@ class SubspaceRandomOptimizer:
         self.random_state = random_state
         self.param_set = list()
         for hyperparam in bench.get_opt_space().get_hyperparameters():
-            if hyperparam.name not in  ["OpenML_task_id", "epoch"]:
+            if hyperparam.name not in ["OpenML_task_id", "epoch"]:
                 self.param_set += [hyperparam.name]
         self.param_selection = param_selection
-        self.default_perf = self.bench.objective_function(self.bench.get_opt_space().get_default_configuration().get_dictionary())[0][self.metric]
+        self.default_perf = self.bench.objective_function(
+            self.bench.get_opt_space().get_default_configuration().get_dictionary()
+        )[0][self.metric]
 
     def optimize(self, coalition):
         param_sel = list()
@@ -248,9 +256,12 @@ class SubspaceRandomOptimizer:
             if x in param_sel:
                 coal_param_sel += [x]
 
-        rssim = RSSimulation(self.bench, self.metric, coal_param_sel, 50000, self.bench.get_opt_space())
+        rssim = RSSimulation(
+            self.bench, self.metric, coal_param_sel, 50000, self.bench.get_opt_space()
+        )
         res_cand, res_perf = rssim.simulate_hpo_run(0)
         return max(self.default_perf, res_perf)
+
 
 class LocalOptimizer:
     def __init__(self, bench, metric, random_state, budget_per_param=50):
@@ -259,10 +270,12 @@ class LocalOptimizer:
         self.random_state = random_state
         self.param_set = list()
         for hyperparam in bench.get_opt_space().get_hyperparameters():
-            if hyperparam.name not in  ["OpenML_task_id", "epoch"]:
+            if hyperparam.name not in ["OpenML_task_id", "epoch"]:
                 self.param_set += [hyperparam.name]
         self.budget_per_param = budget_per_param
-        self.default_perf = self.bench.objective_function(self.bench.get_opt_space().get_default_configuration().get_dictionary())[0][self.metric]
+        self.default_perf = self.bench.objective_function(
+            self.bench.get_opt_space().get_default_configuration().get_dictionary()
+        )[0][self.metric]
 
     def optimize(self, coalition):
         final_config = dict()
@@ -272,7 +285,9 @@ class LocalOptimizer:
             if incl == 1:
                 param_sel += [self.param_set[i]]
         for param in param_sel:
-            idx_cand, idx_res = RSSimulation(self.bench, self.metric, [param], self.budget_per_param, self.bench.get_opt_space()).simulate_hpo_run(0)
+            idx_cand, idx_res = RSSimulation(
+                self.bench, self.metric, [param], self.budget_per_param, self.bench.get_opt_space()
+            ).simulate_hpo_run(0)
             final_config[param] = idx_cand[param]
 
         def_cfg = self.bench.get_opt_space().get_default_configuration().get_dictionary()

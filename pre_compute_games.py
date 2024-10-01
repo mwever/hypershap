@@ -26,6 +26,7 @@ def pre_compute_games(
     verbose: bool = False,
     instance_index: Optional[int] = None,
     n_configs: int = 1000,
+    n_instances_universal: Optional[int] = None,
 ) -> None:
     """Loads and pre-computes the games.
 
@@ -37,6 +38,8 @@ def pre_compute_games(
         verbose: Whether to print additional information. Default is `False`.
         instance_index: The instance index to use. Default is `None`.
         n_configs: The number of configurations to sample. Default is `1000`.
+        n_instances_universal: The number of instances to use for the universal game.
+            Default is `None`.
     """
 
     if game_types is None:
@@ -100,6 +103,7 @@ def pre_compute_games(
                 pre_compute=pre_compute,
                 verbose=verbose,
                 n_configs=n_configs,
+                n_instances_universal=n_instances_universal,
             )
             setup_time = time.time() - setup_time
             _print_game_info(game_universal, setup_time)
@@ -166,13 +170,13 @@ if __name__ == "__main__":
     ]
 
     hpo_settings = [
-        # "local",
-        "global",
+        "local",
+        # "global",
         # "universal",
         # "universal-local",
     ]
 
-    instances_list = list(range(1, 34))
+    instances_list = list(range(0, 10))
 
     for inst_index in instances_list:
         print(f"Instance Index: {inst_index}")
@@ -183,5 +187,6 @@ if __name__ == "__main__":
             pre_compute=True,
             verbose=True,
             instance_index=inst_index,
-            n_configs=10_000,
+            n_configs=100_000,
+            n_instances_universal=10,
         )
