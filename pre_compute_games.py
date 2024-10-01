@@ -40,10 +40,55 @@ def pre_compute_games(
     """
 
     if game_types is None:
-        game_types = ["universal", "global", "local", "universal-local"]
+        game_types = ["optbias"]  # "universal", "global", "local", "universal-local"]
 
     for benchmark_name in benchmark_names:
         print(f"\nInspecting benchmark: {benchmark_name}.")
+
+        # Optimizer Behavior Marginal Search
+        if "optbias" in game_types:
+            setup_time = time.time()
+            game_optbias, _, _ = setup_game(
+                "optbias",
+                benchmark_name,
+                metric=metric,
+                pre_compute=pre_compute,
+                verbose=verbose,
+                instance_index=instance_index,
+                n_configs=n_configs,
+            )
+            setup_time = time.time() - setup_time
+            _print_game_info(game_optbias, setup_time)
+
+        # Optimizer Behavior Subset A
+        if "optbias-seta" in game_types:
+            setup_time = time.time()
+            game_optbias, _, _ = setup_game(
+                "optbias-seta",
+                benchmark_name,
+                metric=metric,
+                pre_compute=pre_compute,
+                verbose=verbose,
+                instance_index=instance_index,
+                n_configs=n_configs,
+            )
+            setup_time = time.time() - setup_time
+            _print_game_info(game_optbias, setup_time)
+
+        # Optimizer Behavior Subset B
+        if "optbias-setb" in game_types:
+            setup_time = time.time()
+            game_optbias, _, _ = setup_game(
+                "optbias-setb",
+                benchmark_name,
+                metric=metric,
+                pre_compute=pre_compute,
+                verbose=verbose,
+                instance_index=instance_index,
+                n_configs=n_configs,
+            )
+            setup_time = time.time() - setup_time
+            _print_game_info(game_optbias, setup_time)
 
         # Universal game
         if "universal" in game_types:
@@ -115,19 +160,20 @@ if __name__ == "__main__":
         # "rbv2_rpart",
         # "rbv2_aknn",
         # "rbv2_glmnet",
-        "rbv2_ranger",
+        # "rbv2_ranger",
         # "rbv2_xgboost",
         # "lcbench",
     ]
 
     hpo_settings = [
         # "local",
-        "global",
+        # "global",
         # "universal",
         # "universal-local",
     ]
 
-    instances_list = list(range(0, 10))
+    instances_list = list(range(1, 34))
+
     for inst_index in instances_list:
         print(f"Instance Index: {inst_index}")
         pre_compute_games(
@@ -136,6 +182,6 @@ if __name__ == "__main__":
             metric="val_accuracy",
             pre_compute=True,
             verbose=True,
-            instance_index=None,
+            instance_index=inst_index,
             n_configs=10_000,
         )

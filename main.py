@@ -7,6 +7,8 @@ from hpo_games import (
     LocalHyperparameterImportanceGame,
     UniversalHyperparameterImportanceGame,
     UniversalLocalHyperparameterImportanceGame,
+    OptimizerBiasGame,
+    LocalOptimizer, SubspaceRandomOptimizer,
 )
 from shapiq import SHAPIQ, SVARMIQ, ExactComputer, KernelSHAPIQ, network_plot
 
@@ -23,6 +25,20 @@ def evaluate_scenario(benchmark, game_type, metric, approx, precis, instance=Non
     elif game_type == "global":
         bench.set_instance(instance)
         game = GlobalHyperparameterImportanceGame(bench, metric, n_configs=1000, random_state=42)
+    elif game_type == "optbias":
+        bench.set_instance(instance)
+        optimizer = LocalOptimizer(bench, metric, random_state=42)
+        game = OptimizerBiasGame(bench, metric, optimizer=optimizer, n_configs=50000, random_state=42)
+    elif game_type == "optbias-seta":
+        bench.set_instance(instance)
+        param_set = ["learning_rate", "max_dropout", "max_units"]
+        optimizer = SubspaceRandomOptimizer(bench, metric, random_state=42, param_selection=param_set)
+        game = OptimizerBiasGame(bench, metric, optimizer=optimizer, n_configs=50000, random_state=42)
+    elif game_type == "optbias-setb":
+        bench.set_instance(instance)
+        param_set = ["learning_rate", "max_dropout", "max_units", "num_layers", "momentum", "batch_size"]
+        optimizer = SubspaceRandomOptimizer(bench, metric, random_state=42, param_selection=param_set)
+        game = OptimizerBiasGame(bench, metric, optimizer=optimizer, n_configs=50000, random_state=42)
     elif game_type == "local":
         bench.set_instance(instance)
         opt_cfg = None
@@ -101,7 +117,7 @@ if __name__ == "__main__":
     local_config.init_config()
     local_config.set_data_path("yahpodata")
 
-    game_types = ["local"]  # , "global", "universal", "universallocal"]
+    game_types = ["optbias-setb"]  # , "local", "global", "universal", "universallocal"]
     # ["rbv2_svm", "rbv2_rpart", "rbv2_aknn", "rbv2_glmnet", "rbv2_ranger", "rbv2_xgboost", "rbv2_super"]
     benchmark_list = ["rbv2_svm"]
     metrics = ["acc"]  # , "bac", "auc", "brier", "f1", "logloss"]
