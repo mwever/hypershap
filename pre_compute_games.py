@@ -40,7 +40,7 @@ def pre_compute_games(
     """
 
     if game_types is None:
-        game_types = ["optbias"]  # "universal", "global", "local", "universal-local"]
+        game_types = ["optbias", "universal", "global", "local", "universal-local"]
 
     for benchmark_name in benchmark_names:
         print(f"\nInspecting benchmark: {benchmark_name}.")
@@ -160,14 +160,14 @@ if __name__ == "__main__":
         # "rbv2_rpart",
         # "rbv2_aknn",
         # "rbv2_glmnet",
-        # "rbv2_ranger",
+        "rbv2_ranger",
         # "rbv2_xgboost",
         # "lcbench",
     ]
 
     hpo_settings = [
         # "local",
-        # "global",
+        "global",
         # "universal",
         # "universal-local",
     ]
@@ -179,7 +179,7 @@ if __name__ == "__main__":
         pre_compute_games(
             benchmark_list,
             game_types=hpo_settings,
-            metric="val_accuracy",
+            metric="acc",
             pre_compute=True,
             verbose=True,
             instance_index=inst_index,
