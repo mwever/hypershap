@@ -273,11 +273,11 @@ def plot_r2_agg(
                 alpha=0.15,
             )
 
-    axis.set_xlabel("Interaction Order")
+    axis.set_xlabel("Explanation Order")
     axis.set_ylabel("Shapley-weighted R2")
     axis.set_ylim(-0.025, 1.05)
     axis.legend(loc="lower right")
-    axis.set_title("Faithfulness of Interactions")
+    axis.set_title("Faithfulness of Explanations")
     axis.grid(True, which="both", linestyle="--", linewidth=0.5)
     axis.tick_params(axis="both", which="both", length=0)
     plt.tight_layout()

@@ -26,13 +26,12 @@ def _abbreviate_player_names(player_names: list[str]) -> list[str]:
     """
     abbreviated_player_names = []
     for player_name in player_names:
-        if "." not in player_name:
-            abbreviated_player_names.append(player_name[:3] + ".")
+        if "_" in player_name:
+            abbreviated_player_names.append(
+                ("-".join([x[0] for x in player_name.split("_")])).upper()
+            )
         else:
-            name_parts = player_name.split(".")
-            name = name_parts[0][:1] + "."
-            name += name_parts[-1][:3] + "."
-            abbreviated_player_names.append(name)
+            abbreviated_player_names.append(player_name[0].upper())
 
     return abbreviated_player_names
 
@@ -202,8 +201,9 @@ def plot_interactions(
         plt.show()
     plt.close()
 
+    plt.rcParams["font.size"] = 18
+
     # plot the mi as a si-graph
-    # TODO: If you want to scale the plots to some min/max values use the min_max_interactions
     plot_si_graph(mi, player_names, min_max_interactions=None)
     if save:
         plt.savefig(os.path.join(PLOT_DIR, f"SI-Graph_MI_{game_name}.pdf"))
@@ -223,13 +223,13 @@ def plot_interactions(
 if __name__ == "__main__":
 
     hpo_game, hpo_game_name, parameter_names = setup_game(
-        game_type="universal",  # "universal", "global", "local", "universal-local"
+        game_type="global",  # "universal", "global", "local", "universal-local"
         benchmark_name="lcbench",
         metric="val_accuracy",
         pre_compute=False,
         verbose=False,
-        n_configs=1_000,
-        instance_index=0,
+        n_configs=10_000,
+        instance_index=1,
         only_load=True,
     )
     plot_interactions(
