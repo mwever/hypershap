@@ -148,8 +148,8 @@ class RSSimulation(HPOSimulation):
             self.metric,
         )
 
-        # incumbent = self.benchmark
-        incumbent_perf = None
+        incumbent = self.benchmark.get_opt_space().get_default_configuration()
+        incumbent_perf = (-1) * eval_fun.train(incumbent)
 
         for i in range(self.hpo_budget - 1):
             cfg = self.original_cfg_space.sample_configuration()
