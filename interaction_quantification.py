@@ -144,7 +144,9 @@ def get_approximation_error(
     return approximation_errors
 
 
-def evaluate_game(game: shapiq.Game, indices: Optional[list[str]] = None) -> tuple[dict, dict]:
+def evaluate_game(
+    game: shapiq.Game, indices: Optional[list[str]] = None, multiplier: float = 1.0
+) -> tuple[dict, dict]:
     """Evaluates the game.
 
     Args:
@@ -154,6 +156,8 @@ def evaluate_game(game: shapiq.Game, indices: Optional[list[str]] = None) -> tup
     computer = shapiq.ExactComputer(n_players=game.n_players, game_fun=game)
     # computer.baseline_value = float(game.normalization_value)
     game_values = _convert_game_to_interaction(computer)
+    # multiply the game values with a factor
+    game_values.values *= multiplier
 
     moebius = {}
     approximations = {}
@@ -273,6 +277,7 @@ def plot_r2_agg(
                 alpha=0.15,
             )
 
+    axis.set_xticks(range(1, len(orders) + 1))
     axis.set_xlabel("Explanation Order")
     axis.set_ylabel("Shapley-weighted R2")
     axis.set_ylim(-0.025, 1.05)
@@ -289,6 +294,8 @@ def plot_violine_agg(
     figsize: tuple = (5, 4),
     violin: bool = True,
     colorful: bool = True,
+    ylim: tuple = None,
+    y_ticks: list = None,
 ) -> tuple[plt.Figure, plt.Axes]:
     fig, axis = plt.subplots(1, 1, figsize=figsize)
 
@@ -358,9 +365,11 @@ def plot_violine_agg(
             continue
         axis.add_patch(plt.Rectangle((i - 0.5, -0.5), 1, 100, color="#eeeeee", alpha=0.5, zorder=0))
 
-    axis.set_ylim(-0.5, 15.5)
+    if ylim is not None:
+        axis.set_ylim(ylim)
     axis.set_xlim(0.5, len(unique_x_vals) + 0.5)
-    axis.set_yticks([0, 5, 10, 15])
+    if y_ticks is not None:
+        axis.set_yticks(y_ticks)
     axis.legend(loc="upper right")
     axis.set_xlabel("Interaction Order")
     axis.set_ylabel("Absolute Interaction Effect")
@@ -375,80 +384,178 @@ def plot_violine_agg(
 
 if __name__ == "__main__":
 
-    n_instances = 34
+    LCBENCH = True
+    RANGER = True
 
-    # UNIVERSAL
-    hpo_game_universal, _, names = setup_game(
-        game_type="universal",
-        benchmark_name="lcbench",
-        normalize_loaded=True,
-        n_configs=10_000,
-        only_load=True,
-    )
+    if LCBENCH:
+        n_instances = 34
 
-    universal_game = hpo_game_universal
-    universal_game_id = universal_game.game_id
-
-    # GLOBAL
-    global_games = []
-    for instance_index in range(n_instances):
-        hpo_game_global, _, names = setup_game(
-            game_type="global",
+        # UNIVERSAL
+        hpo_game_universal, _, names = setup_game(
+            game_type="universal",
             benchmark_name="lcbench",
             normalize_loaded=True,
-            instance_index=instance_index,
             n_configs=10_000,
             only_load=True,
         )
-        global_games.append(hpo_game_global)
 
-    # LOCAL
-    local_games = []
-    for instance_index in range(n_instances):
-        hpo_game_local, _, names = setup_game(
-            game_type="local",
-            benchmark_name="lcbench",
-            normalize_loaded=True,
-            instance_index=instance_index,
-            n_configs=100_000,
-            only_load=True,
+        universal_game = hpo_game_universal
+        universal_game_id = universal_game.game_id
+
+        # GLOBAL
+        global_games = []
+        for instance_index in range(n_instances):
+            hpo_game_global, _, names = setup_game(
+                game_type="global",
+                benchmark_name="lcbench",
+                normalize_loaded=True,
+                instance_index=instance_index,
+                n_configs=10_000,
+                only_load=True,
+            )
+            global_games.append(hpo_game_global)
+
+        # LOCAL
+        local_games = []
+        for instance_index in range(n_instances):
+            hpo_game_local, _, names = setup_game(
+                game_type="local",
+                benchmark_name="lcbench",
+                normalize_loaded=True,
+                instance_index=instance_index,
+                n_configs=100_000,
+                only_load=True,
+            )
+            local_games.append(hpo_game_local)
+
+        # evaluate games
+        r2_scores, moebius_interactions = {}, {}
+        for game in [universal_game] + global_games + local_games:
+            r2_score, moebius_interaction = evaluate_game(game=game, indices=["FSII"])
+            r2_scores[game.game_id] = r2_score["FSII"]
+            moebius_interactions[game.game_id] = moebius_interaction["FSII"]
+
+        # create aggregate r2 scores
+        global_agg = _aggregate_r2(r2_scores, [game.game_id for game in global_games])
+        local_agg = _aggregate_r2(r2_scores, [game.game_id for game in local_games])
+        r2_scores_agg = {
+            "universal": {"mean": r2_scores[universal_game_id]},
+            "global": global_agg,
+            "local": local_agg,
+        }
+
+        # combine moebius interactions
+        moebius_interactions_agg = {
+            "universal": {universal_game_id: moebius_interactions[universal_game_id]},
+            "global": {game.game_id: moebius_interactions[game.game_id] for game in global_games},
+            "local": {game.game_id: moebius_interactions[game.game_id] for game in local_games},
+        }
+
+        # plot the line plot
+        fig_line, ax_line = plot_r2_agg(r2_scores_agg, figsize=(4, 3))
+        plt.savefig("paper_plots/lcbench_r2.pdf")
+        plt.show()
+
+        # plot the violin plot
+        fig_violin, ax_violin = plot_violine_agg(
+            moebius_interactions_agg,
+            figsize=(5, 3),
+            violin=False,
+            ylim=(-0.5, 15.5),
+            y_ticks=[0, 5, 10, 15],
         )
-        local_games.append(hpo_game_local)
+        plt.savefig("paper_plots/lcbench_moebius.pdf")
+        plt.show()
 
-    # evaluate games
-    r2_scores, moebius_interactions = {}, {}
-    for game in [universal_game] + global_games + local_games:
-        r2_score, moebius_interaction = evaluate_game(game=game, indices=["FSII"])
-        r2_scores[game.game_id] = r2_score["FSII"]
-        moebius_interactions[game.game_id] = moebius_interaction["FSII"]
+        # plot the violin plot
+        fig_violin, ax_violin = plot_violine_agg(
+            moebius_interactions_agg, figsize=(5, 3), violin=True
+        )
+        plt.savefig("paper_plots/lcbench_moebius_violin.pdf")
+        plt.show()
 
-    # create aggregate r2 scores
-    global_agg = _aggregate_r2(r2_scores, [game.game_id for game in global_games])
-    local_agg = _aggregate_r2(r2_scores, [game.game_id for game in local_games])
-    r2_scores_agg = {
-        "universal": {"mean": r2_scores[universal_game_id]},
-        "global": global_agg,
-        "local": local_agg,
-    }
+    if RANGER:
+        n_instances = 6
 
-    # combine moebius interactions
-    moebius_interactions_agg = {
-        "universal": {universal_game_id: moebius_interactions[universal_game_id]},
-        "global": {game.game_id: moebius_interactions[game.game_id] for game in global_games},
-        "local": {game.game_id: moebius_interactions[game.game_id] for game in local_games},
-    }
+        # UNIVERSAL
+        hpo_game_universal, _, names = setup_game(
+            game_type="universal",
+            benchmark_name="rbv2_ranger",
+            normalize_loaded=True,
+            n_configs=100,
+            only_load=True,
+            metric="acc",
+        )
 
-    # plot the line plot
-    fig_line, ax_line = plot_r2_agg(r2_scores_agg, figsize=(4, 3))
-    plt.savefig("paper_plots/r2.pdf")
-    plt.show()
+        universal_game = hpo_game_universal
+        universal_game_id = universal_game.game_id
 
-    # plot the violin plot
-    fig_violin, ax_violin = plot_violine_agg(moebius_interactions_agg, figsize=(5, 3), violin=False)
-    plt.savefig("paper_plots/moebius.pdf")
-    plt.show()
+        # GLOBAL
+        global_games = []
+        for instance_index in range(n_instances):
+            hpo_game_global, _, names = setup_game(
+                game_type="global",
+                benchmark_name="rbv2_ranger",
+                normalize_loaded=True,
+                instance_index=instance_index,
+                n_configs=10_000,
+                only_load=True,
+                metric="acc",
+            )
+            global_games.append(hpo_game_global)
 
-    # plot the violin plot
-    fig_violin, ax_violin = plot_violine_agg(moebius_interactions_agg, figsize=(5, 3), violin=True)
-    plt.savefig("paper_plots/moebius_violin.pdf")
-    plt.show()
+        # LOCAL
+        local_games = []
+        for instance_index in range(n_instances):
+            hpo_game_local, _, names = setup_game(
+                game_type="local",
+                benchmark_name="rbv2_ranger",
+                normalize_loaded=True,
+                instance_index=instance_index,
+                n_configs=100_000,
+                only_load=True,
+                metric="acc",
+            )
+            local_games.append(hpo_game_local)
+
+        # evaluate games
+        r2_scores, moebius_interactions = {}, {}
+        for game in [universal_game] + global_games + local_games:
+            r2_score, moebius_interaction = evaluate_game(game=game, indices=["FSII"], multiplier=1)
+            r2_scores[game.game_id] = r2_score["FSII"]
+            moebius_interactions[game.game_id] = moebius_interaction["FSII"]
+
+        # create aggregate r2 scores
+        global_agg = _aggregate_r2(r2_scores, [game.game_id for game in global_games])
+        local_agg = _aggregate_r2(r2_scores, [game.game_id for game in local_games])
+        r2_scores_agg = {
+            "universal": {"mean": r2_scores[universal_game_id]},
+            "global": global_agg,
+            "local": local_agg,
+        }
+
+        # combine moebius interactions
+        moebius_interactions_agg = {
+            "universal": {universal_game_id: moebius_interactions[universal_game_id]},
+            "global": {game.game_id: moebius_interactions[game.game_id] for game in global_games},
+            "local": {game.game_id: moebius_interactions[game.game_id] for game in local_games},
+        }
+
+        # plot the line plot
+        fig_line, ax_line = plot_r2_agg(r2_scores_agg, figsize=(4, 3))
+        plt.savefig("paper_plots/ranger_r2.pdf")
+        plt.show()
+
+        # plot the violin plot
+        fig_violin, ax_violin = plot_violine_agg(
+            moebius_interactions_agg, figsize=(5, 3), violin=False
+        )
+        plt.savefig("paper_plots/ranger_moebius.pdf")
+        plt.show()
+
+        # plot the violin plot
+        fig_violin, ax_violin = plot_violine_agg(
+            moebius_interactions_agg, figsize=(5, 3), violin=True
+        )
+        plt.savefig("paper_plots/ranger_moebius_violin.pdf")
+        plt.show()
