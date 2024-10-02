@@ -85,7 +85,7 @@ class Game(ABC):
         >>> new_game.precomputed, new_game.n_values_stored
         True, 2
         >>> # save and load the game
-        >>> game.save("game.pkl")
+        >>> game.SAVE("game.pkl")
         >>> new_game = DummyGame.load("game.pkl")
         >>> new_game.precomputed, new_game.n_values_stored
         True, 2

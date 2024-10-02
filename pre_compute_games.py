@@ -169,20 +169,22 @@ if __name__ == "__main__":
         # "lcbench",
     ]
 
-    hpo_settings = [
-        "local",
-        # "global",
-        # "universal",
-        # "universal-local",
-    ]
+    pre_compute_games(
+        benchmark_list,
+        game_types=["universal"],
+        metric="acc",
+        pre_compute=True,
+        verbose=True,
+        instance_index=None,
+        n_configs=10_000,
+        n_instances_universal=10,
+    )
 
-    instances_list = list(range(0, 10))
-
-    for inst_index in instances_list:
+    for inst_index in list(range(0, 10)):
         print(f"Instance Index: {inst_index}")
         pre_compute_games(
             benchmark_list,
-            game_types=hpo_settings,
+            game_types=["global"],
             metric="acc",
             pre_compute=True,
             verbose=True,

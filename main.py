@@ -5,10 +5,11 @@ from yahpo_gym import benchmark_set, local_config
 from hpo_games import (
     GlobalHyperparameterImportanceGame,
     LocalHyperparameterImportanceGame,
+    LocalOptimizer,
+    OptimizerBiasGame,
+    SubspaceRandomOptimizer,
     UniversalHyperparameterImportanceGame,
     UniversalLocalHyperparameterImportanceGame,
-    OptimizerBiasGame,
-    LocalOptimizer, SubspaceRandomOptimizer,
 )
 from shapiq import SHAPIQ, SVARMIQ, ExactComputer, KernelSHAPIQ, network_plot
 
@@ -28,17 +29,34 @@ def evaluate_scenario(benchmark, game_type, metric, approx, precis, instance=Non
     elif game_type == "optbias":
         bench.set_instance(instance)
         optimizer = LocalOptimizer(bench, metric, random_state=42)
-        game = OptimizerBiasGame(bench, metric, optimizer=optimizer, n_configs=50000, random_state=42)
+        game = OptimizerBiasGame(
+            bench, metric, optimizer=optimizer, n_configs=50000, random_state=42
+        )
     elif game_type == "optbias-seta":
         bench.set_instance(instance)
         param_set = ["learning_rate", "max_dropout", "max_units"]
-        optimizer = SubspaceRandomOptimizer(bench, metric, random_state=42, param_selection=param_set)
-        game = OptimizerBiasGame(bench, metric, optimizer=optimizer, n_configs=50000, random_state=42)
+        optimizer = SubspaceRandomOptimizer(
+            bench, metric, random_state=42, param_selection=param_set
+        )
+        game = OptimizerBiasGame(
+            bench, metric, optimizer=optimizer, n_configs=50000, random_state=42
+        )
     elif game_type == "optbias-setb":
         bench.set_instance(instance)
-        param_set = ["learning_rate", "max_dropout", "max_units", "num_layers", "momentum", "batch_size"]
-        optimizer = SubspaceRandomOptimizer(bench, metric, random_state=42, param_selection=param_set)
-        game = OptimizerBiasGame(bench, metric, optimizer=optimizer, n_configs=50000, random_state=42)
+        param_set = [
+            "learning_rate",
+            "max_dropout",
+            "max_units",
+            "num_layers",
+            "momentum",
+            "batch_size",
+        ]
+        optimizer = SubspaceRandomOptimizer(
+            bench, metric, random_state=42, param_selection=param_set
+        )
+        game = OptimizerBiasGame(
+            bench, metric, optimizer=optimizer, n_configs=50000, random_state=42
+        )
     elif game_type == "local":
         bench.set_instance(instance)
         opt_cfg = None

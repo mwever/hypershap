@@ -56,7 +56,7 @@ class LocalExplanation(Game):
         >>> # precompute the game (if needed)
         >>> game.precompute()
         >>> # save and load the game
-        >>> game.save("game.pkl")
+        >>> game.SAVE("game.pkl")
         >>> new_game = LocalExplanation.load("game.pkl")
         >>> # save and load the game values
         >>> game.save_values("values.npz")

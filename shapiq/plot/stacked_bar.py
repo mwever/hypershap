@@ -70,7 +70,7 @@ def stacked_bar_plot(
         ...     n_shapley_values_pos=n_shapley_values_pos,
         ...     n_shapley_values_neg=n_shapley_values_neg,
         ... )
-        >>> plt.show()
+        >>> plt.SHOW()
     """
     # sanitize inputs
     if n_sii_max_order is None:
