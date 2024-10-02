@@ -1,16 +1,23 @@
 import matplotlib
 from matplotlib import pyplot as plt
-from tqdm import tqdm
 from yahpo_gym import benchmark_set, local_config
+
+from plot_interactions import plot_si_graph
 from shapiq import ExactComputer
 from utils import setup_game
-from plot_interactions import plot_si_graph
 
 
 def evaluate_scenario(benchmark, metric, instance_idx=1, hpo_budget=10_000):
     bench = benchmark_set.BenchmarkSet(benchmark)
     instance = bench.instances[instance_idx]
-    game, _ , param_names = setup_game("global", benchmark, metric, pre_compute=False, n_configs=hpo_budget, instance_index=instance_idx)
+    game, _, param_names = setup_game(
+        "global",
+        benchmark,
+        metric,
+        pre_compute=False,
+        n_configs=hpo_budget,
+        instance_index=instance_idx,
+    )
 
     shap = ExactComputer(n_players=game.n_players, game_fun=game)
     res = shap(index="k-SII", order=7)
@@ -29,10 +36,17 @@ def evaluate_scenario(benchmark, metric, instance_idx=1, hpo_budget=10_000):
 
     plt.rcParams["font.size"] = 18
     plot_si_graph(res, player_names=abbr_param_names)
-    plt.savefig("plots/interaction/" + ("_".join(["SI-Graph", "MI", "global", benchmark, str(instance), str(hpo_budget), metric])) + ".pdf")
+    plt.savefig(
+        "plots/interaction/"
+        + (
+            "_".join(
+                ["SI-Graph", "MI", "global", benchmark, str(instance), str(hpo_budget), metric]
+            )
+        )
+        + ".pdf"
+    )
     plt.show()
     plt.close()
-
 
 
 if __name__ == "__main__":

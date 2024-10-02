@@ -28,7 +28,11 @@ def _abbreviate_player_names(player_names: list[str]) -> list[str]:
     for player_name in player_names:
         if "_" in player_name:
             abbreviated_player_names.append(
-                ("-".join([x[0] for x in player_name.split("_")])).upper()
+                ("-".join([x[0] for x in player_name.split("_")])).upper()[:3]
+            )
+        elif "." in player_name:
+            abbreviated_player_names.append(
+                ("-".join([x[0] for x in player_name.split(".")])).upper()[:3]
             )
         else:
             abbreviated_player_names.append(player_name[0].upper())
@@ -69,7 +73,7 @@ def plot_si_graph(
         graph=si_graph_nodes,
         size_factor=3,
         node_size_scaling=1.75,  # how big the nodes of the graph are
-        compactness=1000,  # para. for layouting the "explanations" -> higher values more centered
+        compactness=100_000_000,  # para. for layouting the "explanations" -> higher values centered
         label_mapping=label_mapping,
         circular_layout=True,
         draw_original_edges=False,

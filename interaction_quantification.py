@@ -475,14 +475,14 @@ if __name__ == "__main__":
         plt.show()
 
     if RANGER:
-        n_instances = 6
+        n_instances = 10
 
         # UNIVERSAL
         hpo_game_universal, _, names = setup_game(
             game_type="universal",
             benchmark_name="rbv2_ranger",
             normalize_loaded=True,
-            n_configs=100,
+            n_configs=10_000,
             only_load=True,
             metric="acc",
         )
