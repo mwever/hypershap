@@ -9,13 +9,13 @@ from yahpo_gym import benchmark_set
 
 import shapiq
 from hpo_games import (
-    GlobalHyperparameterImportanceGame,
-    LocalHyperparameterImportanceGame,
+    DataSpecificTunabilityHPIGame,
+    AblationHPIGame,
     LocalOptimizer,
-    OptimizerBiasGame,
+    DataSpecificOptimizerBiasGame,
     SubspaceRandomOptimizer,
-    UniversalHyperparameterImportanceGame,
-    UniversalLocalHyperparameterImportanceGame,
+    TunabilityHPIGame,
+    AblationSetHPIGame,
 )
 
 GAME_STORAGE_DIR = "game_storage"
@@ -160,7 +160,7 @@ def setup_game(
 
     # set up the game from parameters
     if game_type == "universal":
-        game = UniversalHyperparameterImportanceGame(
+        game = TunabilityHPIGame(
             benchmark,
             metric=metric,
             n_configs=n_configs,
@@ -170,7 +170,7 @@ def setup_game(
         )
     elif game_type == "global":
         benchmark.set_instance(instance_index)
-        game = GlobalHyperparameterImportanceGame(
+        game = DataSpecificTunabilityHPIGame(
             benchmark,
             metric=metric,
             n_configs=n_configs,
@@ -182,7 +182,7 @@ def setup_game(
         optimal_cfg, _ = _find_optimal_configuration(
             benchmark, metric=metric, random_state=random_state, n_configs=n_configs
         )
-        game = LocalHyperparameterImportanceGame(benchmark, metric, optimal_cfg, verbose=verbose)
+        game = AblationHPIGame(benchmark, metric, optimal_cfg, verbose=verbose)
     elif game_type == "universal-local":
         optimal_cfg_list = []
         for instance_index in tqdm(benchmark.instances):
@@ -191,13 +191,13 @@ def setup_game(
                 benchmark, metric=metric, random_state=random_state, n_configs=n_configs
             )
             optimal_cfg_list.append(optimal_cfg)
-        game = UniversalLocalHyperparameterImportanceGame(
+        game = AblationSetHPIGame(
             benchmark, metric, optimal_cfg_list, verbose=verbose
         )
     elif game_type == "optbias":
         benchmark.set_instance(instance_index)
         optimizer = LocalOptimizer(benchmark, metric, random_state)
-        game = OptimizerBiasGame(
+        game = DataSpecificOptimizerBiasGame(
             benchmark,
             metric=metric,
             optimizer=optimizer,
@@ -216,7 +216,7 @@ def setup_game(
 
         benchmark.set_instance(instance_index)
         optimizer = SubspaceRandomOptimizer(benchmark, metric, random_state, param_set)
-        game = OptimizerBiasGame(
+        game = DataSpecificOptimizerBiasGame(
             benchmark,
             metric=metric,
             optimizer=optimizer,

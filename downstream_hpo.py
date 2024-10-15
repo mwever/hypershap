@@ -5,6 +5,8 @@ import numpy as np
 from ConfigSpace import ConfigurationSpace
 from tqdm import tqdm
 
+from hpo_benchmarks import HyperparameterOptimizationBenchmark
+
 
 def compute_avg_anytime_performance_lines(traces):
     max_length = None
@@ -37,15 +39,13 @@ def compute_avg_anytime_performance_lines(traces):
 
 class LoggingEval:
 
-    def __init__(self, original_cfg_space, parameter_selection, objective_function, metric):
-        self.trace = list()
-        self.original_cfg_space = original_cfg_space
+    def __init__(self, hpoBenchmark:HyperparameterOptimizationBenchmark, parameter_selection):
+        self.hpoBenchmark = hpoBenchmark
         self.parameter_selection = parameter_selection
-        self.objective_function = objective_function
-        self.metric = metric
+        self.trace = list()
 
     def train(self, config, seed: int = 0):
-        orig_config = self.original_cfg_space.get_default_configuration().get_dictionary()
+        orig_config = self.hpoBenchmark.get_default_config()
         req_config = config.get_dictionary()
         try:
             for param_name in self.parameter_selection:
@@ -54,7 +54,7 @@ class LoggingEval:
             print(orig_config)
             print(req_config)
             raise e
-        obj = self.objective_function(orig_config)[0][self.metric]
+        obj = self.hpoBenchmark.evaluate(orig_config)
         self.trace.append(obj)
         return (-1) * obj
 
@@ -62,16 +62,17 @@ class LoggingEval:
 class HPOSimulation:
 
     def __init__(
-        self, benchmark, metric, parameter_selection, hpo_budget, config_space: ConfigurationSpace
+        self, hpoBenchmark:HyperparameterOptimizationBenchmark, parameter_selection, hpo_budget, verbose=False
     ):
-        self.benchmark = benchmark
-        self.metric = metric
+        self.hpoBenchmark = hpoBenchmark
         self.parameter_selection = parameter_selection
         self.hpo_budget = hpo_budget
-        self.original_cfg_space = config_space
+        self.verbose = verbose
+
+        self.original_cfg_space = self.hpoBenchmark.get_opt_space()
         self.reduced_cfg_space = ConfigurationSpace()
         for param_name in self.parameter_selection:
-            self.reduced_cfg_space.add_hyperparameter(config_space.get_hyperparameter(param_name))
+            self.reduced_cfg_space.add_hyperparameter(self.original_cfg_space.get_hyperparameter(param_name))
         self.cached_traces = list()
         self.current_trace_ix = 0
 
@@ -91,9 +92,8 @@ class HPOSimulation:
 class BOSimulation(HPOSimulation):
 
     def __init__(
-        self, benchmark, metric, parameter_selection, hpo_budget, config_space: ConfigurationSpace
-    ):
-        super().__init__(benchmark, metric, parameter_selection, hpo_budget, config_space)
+        self, hpoBenchmark:HyperparameterOptimizationBenchmark, parameter_selection, hpo_budget, verbose=False):
+        super().__init__(hpoBenchmark, parameter_selection, hpo_budget, verbose)
 
     def inter_run_hook(self):
         time.sleep(1)
@@ -105,11 +105,10 @@ class BOSimulation(HPOSimulation):
         self.cached_traces += [list()]
 
         eval_fun = LoggingEval(
-            self.original_cfg_space,
-            self.parameter_selection,
-            self.benchmark.objective_function,
-            self.metric,
+            self.hpoBenchmark,
+            self.parameter_selection
         )
+
         scenario = Scenario(
             self.reduced_cfg_space,
             deterministic=True,
@@ -117,47 +116,45 @@ class BOSimulation(HPOSimulation):
             use_default_config=True,
             seed=seed,
         )
+
         while len(self.cached_traces[self.current_trace_ix]) == 0:
-            smac = HyperparameterOptimizationFacade(
-                scenario, eval_fun.train, logging_level=logging.WARN
-            )
+            smac = HyperparameterOptimizationFacade(scenario, eval_fun.train, logging_level=logging.WARN)
             smac.optimize()
             self.cached_traces[self.current_trace_ix] = eval_fun.trace
-        print(
-            self.current_trace_ix,
-            np.array(self.cached_traces[self.current_trace_ix]),
-            "Length",
-            len(self.cached_traces[self.current_trace_ix]),
-        )
+
+        if self.verbose:
+            print(
+                self.current_trace_ix,
+                np.array(self.cached_traces[self.current_trace_ix]),
+                "Length",
+                len(self.cached_traces[self.current_trace_ix]),
+            )
 
 
 class RSSimulation(HPOSimulation):
     def __init__(
-        self, benchmark, metric, parameter_selection, hpo_budget, config_space: ConfigurationSpace
+        self, hpoBenchmark:HyperparameterOptimizationBenchmark, parameter_selection, hpo_budget
     ):
-        super().__init__(benchmark, metric, parameter_selection, hpo_budget, config_space)
+        super().__init__(hpoBenchmark, parameter_selection, hpo_budget)
 
     def simulate_hpo_run(self, seed=0):
         self.current_trace_ix = len(self.cached_traces)
         self.cached_traces += [list()]
 
         eval_fun = LoggingEval(
-            self.original_cfg_space,
+            self.hpoBenchmark,
             self.parameter_selection,
-            self.benchmark.objective_function,
-            self.metric,
         )
 
-        incumbent = self.benchmark.get_opt_space().get_default_configuration()
-        incumbent_perf = (-1) * eval_fun.train(incumbent)
+        incumbent = self.hpoBenchmark.get_default_config()
+        incumbent_perf = self.hpoBenchmark.evaluate(incumbent)
 
         for i in range(self.hpo_budget - 1):
-            cfg = self.original_cfg_space.sample_configuration()
+            cfg = self.reduced_cfg_space.sample_configuration()
             res = (-1) * eval_fun.train(cfg)
             if incumbent_perf is None or res > incumbent_perf:
                 incumbent_perf = res
                 incumbent = cfg
 
         self.cached_traces[self.current_trace_ix] = eval_fun.trace
-
         return incumbent, incumbent_perf
