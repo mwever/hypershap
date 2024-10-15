@@ -1,93 +1,66 @@
 import matplotlib
 from tqdm import tqdm
-from yahpo_gym import benchmark_set, local_config
+from constants import ABLATION_GAME, SET_ABLATION_GAME, TUNABILITY_GAME, DS_TUNABILITY_GAME, OPTIMIZER_BIAS_GAME, DS_OPTIMIZER_BIAS_GAME
+from hpo_benchmarks import YahpoGymBenchmark
 
 from hpo_games import (
-    GlobalHyperparameterImportanceGame,
-    LocalHyperparameterImportanceGame,
-    LocalOptimizer,
+    AblationHPIGame,
+    AblationSetHPIGame,
+    DataSpecificTunabilityHPIGame,
+    TunabilityHPIGame,
+    DataSpecificOptimizerBiasGame,
     OptimizerBiasGame,
-    SubspaceRandomOptimizer,
-    UniversalHyperparameterImportanceGame,
-    UniversalLocalHyperparameterImportanceGame,
 )
+from hpo_optimizers import SubspaceRandomOptimizer, LocalOptimizer
 from shapiq import SHAPIQ, SVARMIQ, ExactComputer, KernelSHAPIQ, network_plot
 
 
-def evaluate_scenario(benchmark, game_type, metric, approx, precis, instance=None):
-    bench = benchmark_set.BenchmarkSet(benchmark)
-    if instance is None:
-        instance = bench.instances[0]
+def get_opt_cfg(hpoBenchmark, instance, n_configs=10_000, random_state=None):
+    opt_cfg, opt_cfg_value = None, None
+    for cfg in hpoBenchmark.sample_configurations(n=n_configs, random_state=random_state):
+        cfg_value = hpoBenchmark.evaluate(cfg, instance)
+        if opt_cfg_value is None or cfg_value > opt_cfg_value:
+            opt_cfg = cfg
+            opt_cfg_value = cfg_value
+    print("Optimized configuration ", opt_cfg, opt_cfg_value)
+    return opt_cfg, opt_cfg_value
 
-    print("num datasets", len(bench.instances))
 
-    if game_type == "universal":
-        game = UniversalHyperparameterImportanceGame(bench, metric, n_configs=1000, random_state=42)
-    elif game_type == "global":
-        bench.set_instance(instance)
-        game = GlobalHyperparameterImportanceGame(bench, metric, n_configs=1000, random_state=42)
-    elif game_type == "optbias":
-        bench.set_instance(instance)
-        optimizer = LocalOptimizer(bench, metric, random_state=42)
-        game = OptimizerBiasGame(
-            bench, metric, optimizer=optimizer, n_configs=50000, random_state=42
-        )
-    elif game_type == "optbias-seta":
-        bench.set_instance(instance)
-        param_set = ["learning_rate", "max_dropout", "max_units"]
-        optimizer = SubspaceRandomOptimizer(
-            bench, metric, random_state=42, param_selection=param_set
-        )
-        game = OptimizerBiasGame(
-            bench, metric, optimizer=optimizer, n_configs=50000, random_state=42
-        )
-    elif game_type == "optbias-setb":
-        bench.set_instance(instance)
-        param_set = [
-            "learning_rate",
-            "max_dropout",
-            "max_units",
-            "num_layers",
-            "momentum",
-            "batch_size",
-        ]
-        optimizer = SubspaceRandomOptimizer(
-            bench, metric, random_state=42, param_selection=param_set
-        )
-        game = OptimizerBiasGame(
-            bench, metric, optimizer=optimizer, n_configs=50000, random_state=42
-        )
-    elif game_type == "local":
-        bench.set_instance(instance)
-        opt_cfg = None
-        opt_cfg_value = None
-        for cfg in bench.get_opt_space(drop_fidelity_params=False, seed=1337).sample_configuration(
-            10000
-        ):
-            cfg_dict = cfg.get_dictionary()
-            cfg_value = bench.objective_function(cfg_dict)[0][metric]
-            if opt_cfg_value is None or cfg_value > opt_cfg_value:
-                opt_cfg = cfg_dict
-                opt_cfg_value = cfg_value
-        print("Optimized configuration ", opt_cfg, opt_cfg_value)
-        game = LocalHyperparameterImportanceGame(bench, metric, opt_cfg)
-    elif game_type == "universallocal":
+def evaluate_scenario(benchmark, game_type, metric, approx, precis, instance=None, param_set=None):
+    hpoBenchmark = YahpoGymBenchmark(benchmark, metric)
+
+    if game_type == ABLATION_GAME:
+        opt_cfg, _ = get_opt_cfg(hpoBenchmark, instance, random_state=1337)
+        game = AblationHPIGame(hpoBenchmark, instance=instance, optimized_cfg=opt_cfg)
+    elif game_type == SET_ABLATION_GAME:
         opt_cfg_list = list()
-        print("compile opt cfg list")
-        for instance in tqdm(bench.instances):
-            bench.set_instance(instance)
-            opt_cfg = None
-            opt_cfg_value = None
-            for cfg in bench.get_opt_space(
-                drop_fidelity_params=False, seed=1337
-            ).sample_configuration(10000):
-                cfg_dict = cfg.get_dictionary()
-                cfg_value = bench.objective_function(cfg_dict)[0][metric]
-                if opt_cfg_value is None or cfg_value > opt_cfg_value:
-                    opt_cfg = cfg_dict
-                    opt_cfg_value = cfg_value
-            opt_cfg_list += [opt_cfg]
-        game = UniversalLocalHyperparameterImportanceGame(bench, metric, opt_cfg_list)
+        for i in range(hpoBenchmark.get_num_instances()):
+            opt_cfg, _ = get_opt_cfg(hpoBenchmark, i, random_state=1337)
+            opt_cfg_list.append(opt_cfg)
+        game = AblationSetHPIGame(hpoBenchmark, opt_cfg_list)
+    elif game_type == DS_TUNABILITY_GAME:
+        game = DataSpecificTunabilityHPIGame(hpoBenchmark=hpoBenchmark, instance=instance)
+    elif game_type == TUNABILITY_GAME:
+        game = TunabilityHPIGame(hpoBenchmark=hpoBenchmark)
+    elif game_type == DS_OPTIMIZER_BIAS_GAME:
+        ensemble = [SubspaceRandomOptimizer(random_state=i,
+                                            param_selection=hpoBenchmark.get_list_of_tunable_hyperparameters()) for i in range(3)]
+        if param_set is None:
+            optimizer = LocalOptimizer(random_state=42)
+        else:
+            optimizer = SubspaceRandomOptimizer(random_state=42, param_selection=param_set)
+        game = DataSpecificOptimizerBiasGame(hpoBenchmark=hpoBenchmark, instance=instance, ensemble=ensemble, optimizer=optimizer)
+    elif game_type == OPTIMIZER_BIAS_GAME:
+        ensemble = [SubspaceRandomOptimizer(random_state=i,
+                                            param_selection=hpoBenchmark.get_list_of_tunable_hyperparameters()) for i in range(3)]
+        if param_set is None:
+            optimizer = LocalOptimizer(random_state=42)
+        else:
+            optimizer = SubspaceRandomOptimizer(random_state=42, param_selection=param_set)
+        game = OptimizerBiasGame(hpoBenchmark=hpoBenchmark, ensemble=ensemble, optimizer=optimizer)
+    else:
+        print("Requested game not implemented")
+        return
 
     approx_cfg = {"n": game.n_players, "random_state": 42}
 
@@ -109,7 +82,7 @@ def evaluate_scenario(benchmark, game_type, metric, approx, precis, instance=Non
     for k, v in res.interaction_lookup.items():
         param_list = list()
         for i in range(len(k)):
-            param_list += [game.tunable_hyperparameter_names[k[i]]]
+            param_list += [game.hpoBenchmark.get_list_of_tunable_hyperparameters()[k[i]]]
         value_list += [("+".join(param_list), res.values[v])]
     value_list = sorted(value_list, key=lambda x: x[1])
     for x in value_list:
@@ -120,7 +93,7 @@ def evaluate_scenario(benchmark, game_type, metric, approx, precis, instance=Non
     plot = network_plot(
         first_order_values=res.get_n_order_values(1),
         second_order_values=res.get_n_order_values(2),
-        feature_names=game.tunable_hyperparameter_names,
+        feature_names=game.hpoBenchmark.get_list_of_tunable_hyperparameters(),
     )
     plot[0].savefig(
         "hp_importance_" + "_".join([benchmark, game_type, metric, approx, str(precis)]) + ".png"
@@ -132,24 +105,24 @@ def evaluate_scenario(benchmark, game_type, metric, approx, precis, instance=Non
 
 
 if __name__ == "__main__":
-    local_config.init_config()
-    local_config.set_data_path("yahpodata")
-
-    game_types = ["optbias-setb"]  # , "local", "global", "universal", "universallocal"]
-    # ["rbv2_svm", "rbv2_rpart", "rbv2_aknn", "rbv2_glmnet", "rbv2_ranger", "rbv2_xgboost", "rbv2_super"]
-    benchmark_list = ["rbv2_svm"]
-    metrics = ["acc"]  # , "bac", "auc", "brier", "f1", "logloss"]
-    approx = ["exact"]  # , "svarmiq", "exact"]
+    game_types = [ABLATION_GAME]
+    benchmark_list = ["lcbench"]
+    metrics = ["val_accuracy"]  # , "bac", "auc", "brier", "f1", "logloss"]
+    approx = ["exact"]
     precis_list = [10]
 
-    benchmark_list = ["lcbench"]
-    metrics = ["val_accuracy"]
-    # game_type = "global"
+    param_se_a = ["learning_rate", "max_dropout", "max_units"]
+    param_set_b = ["learning_rate", "max_dropout", "max_units", "num_layers", "momentum", "batch_size"]
+    # benchmark_list = ["lcbench"]
+    # metrics = ["val_accuracy"]
 
     for game_type in game_types:
         for metric in metrics:
             for benchmark in benchmark_list:
                 for a in approx:
                     for precis in precis_list:
-                        print(benchmark, game_type, metric)
-                        evaluate_scenario(benchmark, game_type, metric, a, precis)
+                        print(benchmark, game_type, metric, a, precis)
+                        instance = None
+                        if game_type in [ABLATION_GAME, DS_TUNABILITY_GAME, DS_OPTIMIZER_BIAS_GAME]:
+                            instance = 0
+                        evaluate_scenario(benchmark, game_type, metric, a, precis, instance)

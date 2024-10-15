@@ -24,6 +24,9 @@ class AbstractHPIGame(Game, ABC):
         self.hpoBenchmark = hpoBenchmark
         self.random_state = random_state
         # determine empty coalition value for normalization
+
+        def_perf = self.hpoBenchmark.get_default_config_performance()
+        print(def_perf)
         super().__init__(
             n_players=self.hpoBenchmark.get_number_of_tunable_hyperparameters(),
             normalization_value=self.hpoBenchmark.get_default_config_performance(),
@@ -83,24 +86,19 @@ class AblationSetHPIGame(AbstractHPIGame):
         cfgs = self.blind_parameters_according_to_coalition(self.optimized_cfg_list, coalition)
         obj = list()
 
-        for i, instance in enumerate(self.bench.instances):
-            self.bench.set_instance(instance)
-            obj += [self.try_error_active_parameters_objective_eval(cfgs[i])]
-
+        for i in range(self.hpoBenchmark.get_num_instances()):
+            obj += [self.hpoBenchmark.evaluate(cfgs, instance=i)]
         agg_value = self.aggregator(obj)
         return agg_value
 
 
 class AblationHPIGame(AblationSetHPIGame):
-    def __init__(self, hpoBenchmark: HyperparameterOptimizationBenchmark, optimized_cfg, random_state=None,
+    def __init__(self, hpoBenchmark: HyperparameterOptimizationBenchmark, instance, optimized_cfg, random_state=None,
                  verbose: bool = False):
+        hpoBenchmark.set_instance(instance)
         super().__init__(hpoBenchmark, optimized_cfg_list=[optimized_cfg], random_state=random_state, verbose=verbose)
         self.optimized_cfg = optimized_cfg
         assert self.hpoBenchmark.get_num_instances() == 1, "Number of instances cannot exceed 1 for ablations."
-
-    def evaluate_single_coalition(self, coalition: np.ndarray):
-        cfg = self.blind_parameters_according_to_coalition([self.optimized_cfg], coalition)[0]
-        return self.hpoBenchmark.evaluate(cfg)
 
 
 class TunabilityHPIGame(AbstractHPIGame):
@@ -124,17 +122,20 @@ class TunabilityHPIGame(AbstractHPIGame):
 
 
 class DataSpecificTunabilityHPIGame(TunabilityHPIGame):
-    def __init__(self, hpoBenchmark, instance, metric, n_configs=1000, random_state=None, verbose: bool = False):
+    def __init__(self, hpoBenchmark, instance, n_configs=1000, random_state=None, verbose: bool = False):
         super().__init__(hpoBenchmark, n_configs=n_configs, random_state=random_state, verbose=verbose)
-        hpoBenchmark.instance = instance
+        self.instance = instance
+
+        # ensure the given instance is set in the hpo benchmark
+        hpoBenchmark.set_instance(instance)
         assert self.hpoBenchmark.get_num_instances() == 1, ("Number of instances cannot exceed 1 for data-specific "
                                                             "tunability.")
 
 
 class OptimizerBiasGame(AbstractHPIGame):
     def __init__(
-            self, hpoBenchmark: HyperparameterOptimizationBenchmark, ensemble, optimizer: AbstractOptimizer, aggregator,
-            random_state=None, verbose: bool = False):
+            self, hpoBenchmark: HyperparameterOptimizationBenchmark, ensemble, optimizer: AbstractOptimizer,
+            aggregator=lambda x: np.array(x).mean(), random_state=None, verbose: bool = False):
         super().__init__(hpoBenchmark, random_state, verbose)
         self.ensemble = ensemble
         self.optimizer = optimizer
@@ -153,9 +154,10 @@ class OptimizerBiasGame(AbstractHPIGame):
 
 class DataSpecificOptimizerBiasGame(OptimizerBiasGame):
     def __init__(
-            self, hpoBenchmark: HyperparameterOptimizationBenchmark, ensemble, optimizer, random_state=None,
+            self, hpoBenchmark: HyperparameterOptimizationBenchmark, instance, ensemble, optimizer, random_state=None,
             verbose: bool = False
     ):
         super().__init__(hpoBenchmark, ensemble, optimizer, lambda x: np.array(x).mean(), random_state, verbose)
+        self.instance = instance
         assert self.hpoBenchmark.get_num_instances() == 1, ("Number of instances cannot exceed 1 for data-specific "
                                                             "optimizer bias.")

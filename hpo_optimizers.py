@@ -1,3 +1,5 @@
+from abc import ABC, abstractmethod
+
 from downstream_hpo import RSSimulation
 from hpo_benchmarks import HyperparameterOptimizationBenchmark
 
