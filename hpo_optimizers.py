@@ -10,7 +10,7 @@ class AbstractOptimizer(ABC):
         self.verbose = verbose
 
     @abstractmethod
-    def optimizer(self, hpoBenchmark:HyperparameterOptimizationBenchmark, coalition):
+    def optimize(self, hpoBenchmark:HyperparameterOptimizationBenchmark, coalition):
         pass
 
 

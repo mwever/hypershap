@@ -26,14 +26,13 @@ class AbstractHPIGame(Game, ABC):
         # determine empty coalition value for normalization
         super().__init__(
             n_players=self.hpoBenchmark.get_number_of_tunable_hyperparameters(),
-            normalization_value=self.hpoBenchmark.get_default_config_performance(),
+            normalization_value=self.get_default_config_performance(),
             verbose=verbose,
             normalize=True,
         )
 
-    @abstractmethod
     def get_default_config_performance(self) -> float:
-        pass
+        return self.hpoBenchmark.get_default_config_performance()
 
     def _before_first_value_function_hook(self):
         pass
@@ -152,15 +151,29 @@ class OptimizerBiasGame(AbstractHPIGame):
 
         super().__init__(hpoBenchmark, random_state, verbose)
 
-    def evaluate_single_coalition(self, coalition: np.ndarray):
-        opt_res = self.optimizer.optimize(self.hpoBenchmark, coalition)
-        ensemble_res = opt_res
-        for member in self.ensemble(coalition):
-            member_res = member.optimize(self.hpoBenchmark, coalition)
-            for i in range(len(member_res)):
-                ensemble_res[i] = max(member_res[i], ensemble_res[i])
+    def get_default_config_performance(self) -> float:
+        return self.aggregator(self.hpoBenchmark.get_default_config_performance())
 
-        return self.aggregator((np.array(opt_res) - np.array(ensemble_res)).tolist())
+    def evaluate_single_coalition(self, coalition: np.ndarray):
+        opt_list = list()
+        ensemble_list= list()
+        instances = self.hpoBenchmark.get_instances()
+
+        for inst in instances:
+            self.hpoBenchmark.set_instance(inst)
+
+            opt_res = self.optimizer.optimize(self.hpoBenchmark, coalition)
+            ensemble_res = opt_res
+
+            for member in self.ensemble:
+                member_res = member.optimize(self.hpoBenchmark, coalition)
+                ensemble_res = max(member_res, ensemble_res)
+
+            opt_list.append(opt_res)
+            ensemble_list.append(ensemble_res)
+        self.hpoBenchmark.set_instance(instances)
+        agg = self.aggregator((np.array(opt_list) - np.array(ensemble_list)).tolist())
+        return agg
 
 
 class DataSpecificOptimizerBiasGame(OptimizerBiasGame):
@@ -170,9 +183,8 @@ class DataSpecificOptimizerBiasGame(OptimizerBiasGame):
     ):
         self.instance = instance
         hpoBenchmark.set_instance(instance)
-        assert self.hpoBenchmark.get_num_instances() == 1, ("Number of instances cannot exceed 1 for data-specific "
+        assert hpoBenchmark.get_num_instances() == 1, ("Number of instances cannot exceed 1 for data-specific "
                                                             "optimizer bias.")
-
         super().__init__(hpoBenchmark, ensemble, optimizer, lambda x: np.array(x).mean(), random_state, verbose)
 
 
