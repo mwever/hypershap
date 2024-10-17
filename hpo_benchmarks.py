@@ -1,5 +1,6 @@
 
 from abc import ABC, abstractmethod
+import numpy as np
 
 class HyperparameterOptimizationBenchmark(ABC):
 
@@ -13,6 +14,10 @@ class HyperparameterOptimizationBenchmark(ABC):
 
     def get_number_of_tunable_hyperparameters(self):
         return len(self.get_list_of_tunable_hyperparameters())
+
+    @abstractmethod
+    def set_instance(self, instance):
+        pass
 
     @abstractmethod
     def get_num_instances(self):
@@ -42,6 +47,7 @@ class HyperparameterOptimizationBenchmark(ABC):
 SKIP_PARAMS = ["OpenML_task_id", "task_id"]
 
 class YahpoGymBenchmark(HyperparameterOptimizationBenchmark):
+    minimize_metrics = ["time", "runtime_train", "runtime_test", "memory_train", "memory_test"]
 
     def __init__(self, benchmark_name, metric, instance_idx = None):
         from yahpo_gym import benchmark_set, local_config
@@ -82,7 +88,7 @@ class YahpoGymBenchmark(HyperparameterOptimizationBenchmark):
     def get_list_of_nontunable_hyperparameters(self):
         return self.non_tunable_hyperparameter_names
 
-    def evaluate(self, configuration, instance=None):
+    def evaluate(self, configuration, instance=None, metric=None, maximize=True):
         """
         Evaluate the objective function for the given configuration. This can be done for single instances or across a
         list of instances. In case no instance is given, by default the preset of the benchmark will be used, which if
@@ -110,13 +116,23 @@ class YahpoGymBenchmark(HyperparameterOptimizationBenchmark):
         if type(configuration) is dict:
             configuration = [configuration]
 
-        obj = 0
+        obj = None
         # iterate over the configurations in the list of configurations and find the maximum objective value
         for config in configuration:
             success = False
             while not success and len(config) > 0:
                 try:
-                    obj = max(self.benchmark.objective_function(config)[0][self.metric], obj)
+                    if metric is None:
+                        m = self.metric
+                    else:
+                        m = metric
+
+                    res = self.benchmark.objective_function(config)[0][m]
+                    if m in self.minimize_metrics:
+                        res = (-1) * res
+
+                    if obj is None or res > obj:
+                        obj = res
                     success = True
                 except ValueError as e:
                     string_error = repr(e)
@@ -162,3 +178,5 @@ class YahpoGymBenchmark(HyperparameterOptimizationBenchmark):
             return self.evaluate(self.get_default_config(), instance)
         else:
             return self.evaluate(self.get_default_config())
+
+

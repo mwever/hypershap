@@ -52,3 +52,4 @@ class LocalOptimizer(AbstractOptimizer):
             def_cfg[param] = final_config[param]
 
         return hpoBenchmark.evaluate(def_cfg)
+

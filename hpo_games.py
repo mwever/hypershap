@@ -1,5 +1,5 @@
 import copy
-from abc import ABC
+from abc import ABC, abstractmethod
 from typing import Optional
 
 import numpy as np
@@ -24,15 +24,16 @@ class AbstractHPIGame(Game, ABC):
         self.hpoBenchmark = hpoBenchmark
         self.random_state = random_state
         # determine empty coalition value for normalization
-
-        def_perf = self.hpoBenchmark.get_default_config_performance()
-        print(def_perf)
         super().__init__(
             n_players=self.hpoBenchmark.get_number_of_tunable_hyperparameters(),
             normalization_value=self.hpoBenchmark.get_default_config_performance(),
             verbose=verbose,
             normalize=True,
         )
+
+    @abstractmethod
+    def get_default_config_performance(self) -> float:
+        pass
 
     def _before_first_value_function_hook(self):
         pass
@@ -78,9 +79,12 @@ class AblationSetHPIGame(AbstractHPIGame):
             random_state=None,
             verbose: bool = False,
     ) -> None:
-        super().__init__(hpoBenchmark, random_state, verbose)
         self.optimized_cfg_list = optimized_cfg_list
         self.aggregator = aggregator
+        super().__init__(hpoBenchmark, random_state, verbose)
+
+    def get_default_config_performance(self) -> float:
+        return self.aggregator(self.hpoBenchmark.get_default_config_performance())
 
     def evaluate_single_coalition(self, coalition: np.ndarray):
         cfgs = self.blind_parameters_according_to_coalition(self.optimized_cfg_list, coalition)
@@ -95,10 +99,11 @@ class AblationSetHPIGame(AbstractHPIGame):
 class AblationHPIGame(AblationSetHPIGame):
     def __init__(self, hpoBenchmark: HyperparameterOptimizationBenchmark, instance, optimized_cfg, random_state=None,
                  verbose: bool = False):
-        hpoBenchmark.set_instance(instance)
-        super().__init__(hpoBenchmark, optimized_cfg_list=[optimized_cfg], random_state=random_state, verbose=verbose)
         self.optimized_cfg = optimized_cfg
-        assert self.hpoBenchmark.get_num_instances() == 1, "Number of instances cannot exceed 1 for ablations."
+        hpoBenchmark.set_instance(instance)
+        assert hpoBenchmark.get_num_instances() == 1, "Number of instances cannot exceed 1 for ablations."
+
+        super().__init__(hpoBenchmark, optimized_cfg_list=[optimized_cfg], random_state=random_state, verbose=verbose)
 
 
 class TunabilityHPIGame(AbstractHPIGame):
@@ -110,10 +115,15 @@ class TunabilityHPIGame(AbstractHPIGame):
             random_state=None,
             verbose: bool = False
     ):
-        super().__init__(hpoBenchmark, random_state, verbose)
         self.n_configs = n_configs
         self.aggregator = aggregator
+
+        super().__init__(hpoBenchmark, random_state, verbose)
+
         self.cfgs = self.hpoBenchmark.sample_configurations(n_configs, random_state)
+
+    def get_default_config_performance(self) -> float:
+        return self.aggregator(self.hpoBenchmark.get_default_config_performance())
 
     def evaluate_single_coalition(self, coalition: np.ndarray):
         cfgs = self.blind_parameters_according_to_coalition(self.cfgs, coalition)
@@ -122,24 +132,25 @@ class TunabilityHPIGame(AbstractHPIGame):
 
 
 class DataSpecificTunabilityHPIGame(TunabilityHPIGame):
-    def __init__(self, hpoBenchmark, instance, n_configs=1000, random_state=None, verbose: bool = False):
-        super().__init__(hpoBenchmark, n_configs=n_configs, random_state=random_state, verbose=verbose)
+    def __init__(self, hpoBenchmark, instance, n_configs=10000, random_state=None, verbose: bool = False):
         self.instance = instance
-
-        # ensure the given instance is set in the hpo benchmark
+        # ensure the given instance is set in the hpo benchmark before the super constructor is called
         hpoBenchmark.set_instance(instance)
-        assert self.hpoBenchmark.get_num_instances() == 1, ("Number of instances cannot exceed 1 for data-specific "
+        assert hpoBenchmark.get_num_instances() == 1, ("Number of instances cannot exceed 1 for data-specific "
                                                             "tunability.")
+
+        super().__init__(hpoBenchmark, n_configs=n_configs, random_state=random_state, verbose=verbose)
 
 
 class OptimizerBiasGame(AbstractHPIGame):
     def __init__(
             self, hpoBenchmark: HyperparameterOptimizationBenchmark, ensemble, optimizer: AbstractOptimizer,
             aggregator=lambda x: np.array(x).mean(), random_state=None, verbose: bool = False):
-        super().__init__(hpoBenchmark, random_state, verbose)
         self.ensemble = ensemble
         self.optimizer = optimizer
         self.aggregator = aggregator
+
+        super().__init__(hpoBenchmark, random_state, verbose)
 
     def evaluate_single_coalition(self, coalition: np.ndarray):
         opt_res = self.optimizer.optimize(self.hpoBenchmark, coalition)
@@ -157,7 +168,11 @@ class DataSpecificOptimizerBiasGame(OptimizerBiasGame):
             self, hpoBenchmark: HyperparameterOptimizationBenchmark, instance, ensemble, optimizer, random_state=None,
             verbose: bool = False
     ):
-        super().__init__(hpoBenchmark, ensemble, optimizer, lambda x: np.array(x).mean(), random_state, verbose)
         self.instance = instance
+        hpoBenchmark.set_instance(instance)
         assert self.hpoBenchmark.get_num_instances() == 1, ("Number of instances cannot exceed 1 for data-specific "
                                                             "optimizer bias.")
+
+        super().__init__(hpoBenchmark, ensemble, optimizer, lambda x: np.array(x).mean(), random_state, verbose)
+
+

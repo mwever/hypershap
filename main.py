@@ -105,9 +105,9 @@ def evaluate_scenario(benchmark, game_type, metric, approx, precis, instance=Non
 
 
 if __name__ == "__main__":
-    game_types = [ABLATION_GAME]
-    benchmark_list = ["lcbench"]
-    metrics = ["val_accuracy"]  # , "bac", "auc", "brier", "f1", "logloss"]
+    game_types = [TUNABILITY_GAME] #, ABLATION_GAME]
+    benchmark_list = ["rbv2_glmnet"]
+    metrics = ["auc"]  # , "bac", "auc", "brier", "f1", "logloss"]
     approx = ["exact"]
     precis_list = [10]
 
