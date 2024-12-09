@@ -1,4 +1,5 @@
 import copy
+import time
 from abc import ABC, abstractmethod
 from typing import Optional
 
@@ -49,6 +50,10 @@ class AbstractHPIGame(Game, ABC):
     def prepare_configs_for_coalition(self, coalition, cfgs):
         pass
 
+    @abstractmethod
+    def evaluate_single_coalition(self, coalition):
+        pass
+
     def blind_parameters_according_to_coalition(self, cfgs, coalition):
         cfgs = copy.deepcopy(cfgs)
         list_of_hyperparams_to_blind = np.array(self.hpoBenchmark.get_list_of_tunable_hyperparameters())[
@@ -60,11 +65,11 @@ class AbstractHPIGame(Game, ABC):
                 np.array(self.hpoBenchmark.get_list_of_nontunable_hyperparameters()),
             )
         )
-
         default = self.hpoBenchmark.get_default_config()
+
         for cfg in cfgs:
             for key in cfg.keys():
-                if key in list_of_hyperparams_to_blind:
+                if key in list_of_hyperparams_to_blind and key in default.keys():
                     cfg[key] = default[key]
         return cfgs
 
@@ -110,7 +115,7 @@ class TunabilityHPIGame(AbstractHPIGame):
             self,
             hpoBenchmark: HyperparameterOptimizationBenchmark,
             aggregator=lambda x: np.mean(np.array(x)),
-            n_configs=1000,
+            n_configs=10_000,
             random_state=None,
             verbose: bool = False
     ):
@@ -125,6 +130,9 @@ class TunabilityHPIGame(AbstractHPIGame):
         return self.aggregator(self.hpoBenchmark.get_default_config_performance())
 
     def evaluate_single_coalition(self, coalition: np.ndarray):
+        if coalition.sum() == 0:
+            return self.get_default_config_performance()
+
         cfgs = self.blind_parameters_according_to_coalition(self.cfgs, coalition)
         obj_list = self.hpoBenchmark.evaluate(cfgs)
         return self.aggregator(obj_list)
@@ -156,7 +164,7 @@ class OptimizerBiasGame(AbstractHPIGame):
 
     def evaluate_single_coalition(self, coalition: np.ndarray):
         opt_list = list()
-        ensemble_list= list()
+        ensemble_list = list()
         instances = self.hpoBenchmark.get_instances()
 
         for inst in instances:

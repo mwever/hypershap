@@ -6,6 +6,8 @@ from typing import Optional
 from yahpo_gym import local_config
 
 import shapiq
+from constants import DS_TUNABILITY_GAME, TUNABILITY_GAME, ABLATION_GAME, OB_GAME_SET_A_SUFFIX, DS_OPTIMIZER_BIAS_GAME, \
+    OB_GAME_SET_B_SUFFIX
 from utils import setup_game
 
 
@@ -25,7 +27,7 @@ def pre_compute_games(
     pre_compute: bool = False,
     verbose: bool = False,
     instance_index: Optional[int] = None,
-    n_configs: int = 1000,
+    n_configs: int = 10_000,
     n_instances_universal: Optional[int] = None,
 ) -> None:
     """Loads and pre-computes the games.
@@ -49,11 +51,12 @@ def pre_compute_games(
         print(f"\nInspecting benchmark: {benchmark_name}.")
 
         # Optimizer Behavior Marginal Search
-        if "optbias" in game_types:
+        if DS_OPTIMIZER_BIAS_GAME in game_types:
             setup_time = time.time()
             game_optbias, _, _ = setup_game(
-                "optbias",
-                benchmark_name,
+                DS_OPTIMIZER_BIAS_GAME,
+                benchmark=benchmark_name,
+                scenario="",
                 metric=metric,
                 pre_compute=pre_compute,
                 verbose=verbose,
@@ -64,10 +67,10 @@ def pre_compute_games(
             _print_game_info(game_optbias, setup_time)
 
         # Optimizer Behavior Subset A
-        if "optbias-seta" in game_types:
+        if DS_OPTIMIZER_BIAS_GAME + OB_GAME_SET_A_SUFFIX in game_types:
             setup_time = time.time()
             game_optbias, _, _ = setup_game(
-                "optbias-seta",
+                DS_OPTIMIZER_BIAS_GAME + OB_GAME_SET_A_SUFFIX,
                 benchmark_name,
                 metric=metric,
                 pre_compute=pre_compute,
@@ -79,10 +82,10 @@ def pre_compute_games(
             _print_game_info(game_optbias, setup_time)
 
         # Optimizer Behavior Subset B
-        if "optbias-setb" in game_types:
+        if DS_OPTIMIZER_BIAS_GAME + OB_GAME_SET_B_SUFFIX in game_types:
             setup_time = time.time()
             game_optbias, _, _ = setup_game(
-                "optbias-setb",
+                DS_OPTIMIZER_BIAS_GAME + OB_GAME_SET_B_SUFFIX,
                 benchmark_name,
                 metric=metric,
                 pre_compute=pre_compute,
@@ -93,11 +96,11 @@ def pre_compute_games(
             setup_time = time.time() - setup_time
             _print_game_info(game_optbias, setup_time)
 
-        # Universal game
-        if "universal" in game_types:
+        # Tunability Game
+        if TUNABILITY_GAME in game_types:
             setup_time = time.time()
-            game_universal, _, _ = setup_game(
-                "universal",
+            game_tunability, _, _ = setup_game(
+                TUNABILITY_GAME,
                 benchmark_name,
                 metric=metric,
                 pre_compute=pre_compute,
@@ -106,13 +109,13 @@ def pre_compute_games(
                 n_instances_universal=n_instances_universal,
             )
             setup_time = time.time() - setup_time
-            _print_game_info(game_universal, setup_time)
+            _print_game_info(game_tunability, setup_time)
 
-        # Global game
-        if "global" in game_types:
+        # Data-Specific Tunability Game
+        if DS_TUNABILITY_GAME in game_types:
             setup_time = time.time()
-            game_global, _, _ = setup_game(
-                "global",
+            game_ds_tunability, _, _ = setup_game(
+                DS_TUNABILITY_GAME,
                 benchmark_name,
                 metric=metric,
                 pre_compute=pre_compute,
@@ -121,13 +124,13 @@ def pre_compute_games(
                 n_configs=n_configs,
             )
             setup_time = time.time() - setup_time
-            _print_game_info(game_global, setup_time)
+            _print_game_info(game_ds_tunability, setup_time)
 
-        # Local game
-        if "local" in game_types:
+        # Ablation Game
+        if ABLATION_GAME in game_types:
             setup_time = time.time()
             game_local, _, _ = setup_game(
-                "local",
+                ABLATION_GAME,
                 benchmark_name,
                 metric=metric,
                 pre_compute=pre_compute,
@@ -137,21 +140,6 @@ def pre_compute_games(
             )
             setup_time = time.time() - setup_time
             _print_game_info(game_local, setup_time)
-
-        # Universal local game
-        if "universal-local" in game_types:
-            setup_time = time.time()
-            game_universal_local, _, _ = setup_game(
-                "universal-local",
-                benchmark_name,
-                metric=metric,
-                pre_compute=pre_compute,
-                verbose=verbose,
-                instance_index=instance_index,
-                n_configs=n_configs,
-            )
-            setup_time = time.time() - setup_time
-            _print_game_info(game_universal_local, setup_time)
 
 
 if __name__ == "__main__":
@@ -184,7 +172,7 @@ if __name__ == "__main__":
         print(f"Instance Index: {inst_index}")
         pre_compute_games(
             benchmark_list,
-            game_types=["global"],
+            game_types=[ABLATION_GAME, DS_TUNABILITY_GAME, TUNABILITY_GAME],
             metric="acc",
             pre_compute=True,
             verbose=True,

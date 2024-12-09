@@ -8,6 +8,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import shapiq
+from constants import ABLATION_GAME, DS_TUNABILITY_GAME
+from hpo_benchmarks import PD1Benchmark, JAHSBenchmark
+from shapiq import ExactComputer
 from si_graph import si_graph_plot
 from utils import setup_game
 
@@ -26,6 +29,10 @@ def _abbreviate_player_names(player_names: list[str]) -> list[str]:
     """
     abbreviated_player_names = []
     for player_name in player_names:
+        if len(player_name) <= 3:
+            abbreviated_player_names.append(player_name)
+            continue
+
         if "_" in player_name:
             abbreviated_player_names.append(
                 ("-".join([x[0] for x in player_name.split("_")])).upper()[:3]
@@ -73,11 +80,11 @@ def plot_si_graph(
         graph=si_graph_nodes,
         size_factor=3,
         node_size_scaling=1.75,  # how big the nodes of the graph are
-        compactness=100_000_000,  # para. for layouting the "explanations" -> higher values centered
+        compactness=1e50,  # para. for layouting the "explanations" -> higher values centered
         label_mapping=label_mapping,
         circular_layout=True,
         draw_original_edges=False,
-        node_area_scaling=True,
+        node_area_scaling=False,
         min_max_interactions=min_max_interactions,  # scales the plot to these upper/lower bounds
         orders_to_plot=orders_to_plot,
     )
@@ -163,6 +170,7 @@ def plot_interactions(
     sv: shapiq.InteractionValues = computer(index="SV", order=1)
     two_sii: shapiq.InteractionValues = computer(index="k-SII", order=2)
     mi: shapiq.InteractionValues = computer(index="Moebius", order=game.n_players)
+    print(mi)
 
     # plot the MI as a stacked bar plot
     plot_stacked_bars(mi, feature_names=player_names)
@@ -225,17 +233,31 @@ def plot_interactions(
 
 
 if __name__ == "__main__":
+    for i in range(4):
+        hpo_game, hpo_game_name, parameter_names = setup_game(
+            game_type=DS_TUNABILITY_GAME,
+            benchmark="pd1",
+            scenario=PD1Benchmark.valid_benchmark_names[i],
+            metric="default",
+            instance_index="default",
+            pre_compute=False,
+            verbose=False,
+            n_configs=10_000,
+            only_load=True,
+        )
+        shap = ExactComputer(n_players=hpo_game.n_players, game_fun=hpo_game)
+        res = shap(index="k-SII", order=hpo_game.n_players)
 
-    hpo_game, hpo_game_name, parameter_names = setup_game(
-        game_type="global",  # "universal", "global", "local", "universal-local"
-        benchmark_name="lcbench",
-        metric="val_accuracy",
-        pre_compute=False,
-        verbose=False,
-        n_configs=10_000,
-        instance_index=1,
-        only_load=True,
-    )
-    plot_interactions(
-        game=hpo_game, player_names=parameter_names, game_name=hpo_game_name, save=True, show=True
-    )
+        abbr_player_names = _abbreviate_player_names(parameter_names)
+        for k, v in res.interaction_lookup.items():
+            output = ""
+            for p in k:
+                output += f"{abbr_player_names[p]} "
+            print("|", output, "|", res.values[v],"|")
+
+        print(hpo_game._lookup_coalitions(np.array([[0,0,0,0]])))
+        print(hpo_game._lookup_coalitions(np.array([[1,1,1,1]])))
+
+        # plot_interactions(
+        #     game=hpo_game, player_names=parameter_names, game_name=hpo_game_name, save=True, show=True
+        # )

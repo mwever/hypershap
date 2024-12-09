@@ -46,7 +46,7 @@ class LoggingEval:
 
     def train(self, config, seed: int = 0):
         orig_config = self.hpoBenchmark.get_default_config()
-        req_config = config.get_dictionary()
+        req_config = config
         try:
             for param_name in self.parameter_selection:
                 orig_config[param_name] = req_config[param_name]
@@ -147,7 +147,7 @@ class RSSimulation(HPOSimulation):
         )
 
         incumbent = self.hpoBenchmark.get_default_config()
-        incumbent_perf = self.hpoBenchmark.evaluate(incumbent)
+        incumbent_perf = eval_fun.train(incumbent)
 
         for i in range(self.hpo_budget - 1):
             cfg = self.reduced_cfg_space.sample_configuration()
