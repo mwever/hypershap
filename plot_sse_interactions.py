@@ -4,8 +4,8 @@ import copy
 import os
 
 import matplotlib.pyplot as plt
-
 import shapiq
+
 from plot_utils import PLOT_DIR, abbreviate_player_names, get_min_max_of_interactions, plot_si_graph
 
 if __name__ == "__main__":
@@ -57,7 +57,7 @@ if __name__ == "__main__":
     os.makedirs(save_dir, exist_ok=True)
 
     for interaction, budget in zip(interactions_list, budgets):
-
+        print(interaction)
         plot = plot_si_graph(
             interaction_values=interaction,
             player_names=parameter_names,
