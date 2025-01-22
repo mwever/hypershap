@@ -2,7 +2,7 @@ import matplotlib
 from matplotlib import pyplot as plt
 from yahpo_gym import benchmark_set, local_config
 
-from plot_interactions import plot_si_graph
+from plot_utils import plot_si_graph
 from shapiq import ExactComputer
 from utils import setup_game
 
@@ -19,7 +19,7 @@ def evaluate_scenario(benchmark, metric, instance_idx=1, hpo_budget=10_000):
         instance_index=instance_idx,
     )
 
-    shap = ExactComputer(n_players=game.n_players, game_fun=game)
+    shap = ExactComputer(n_players=game.n_players, game=game)
     res = shap(index="k-SII", order=7)
 
     print(instance)
