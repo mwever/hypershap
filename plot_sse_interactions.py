@@ -32,7 +32,7 @@ if __name__ == "__main__":
         # get game
         path = "_".join(["continuous_smac_analysis_test", scenario, str(dataset), str(budget)])
         path += ".npz"
-        hpo_game = shapiq.Game(path_to_values=path, verbose=False, normalize=True)
+        hpo_game = shapiq.Game(path_to_values=path, verbose=False, normalize=False)
 
         # get interaction values
         shap = shapiq.ExactComputer(n_players=hpo_game.n_players, game=hpo_game)
@@ -61,6 +61,7 @@ if __name__ == "__main__":
     for interaction, budget, game in zip(interactions_list, budgets, all_games):
         print(interaction)
         print("Sum", sum(interaction.values))
+        print("Empty", game.empty_coalition_value)
         print("Grand", game.grand_coalition_value)
         plot = plot_si_graph(
             interaction_values=interaction,
