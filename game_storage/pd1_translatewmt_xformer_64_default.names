@@ -1,0 +1,4 @@
+lr_decay_factor
+lr_initial
+lr_power
+opt_momentum
