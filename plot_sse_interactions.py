@@ -26,6 +26,7 @@ if __name__ == "__main__":
     # budgets = [25, 50, 100, 200, 400, 800, 1600, 3200]
     budgets = [200, 800, 1600, 3200]
     interactions_list = []
+    all_games = []
     for budget in budgets:
 
         # get game
@@ -47,6 +48,7 @@ if __name__ == "__main__":
         print("Grand:", hpo_game.grand_coalition_value)
 
         interactions_list.append(copy.deepcopy(res))
+        all_games.append(hpo_game)
 
     # plot the si graphs for the list of interactions
 
@@ -56,8 +58,10 @@ if __name__ == "__main__":
     save_dir = os.path.join(PLOT_DIR, "si_graphs")
     os.makedirs(save_dir, exist_ok=True)
 
-    for interaction, budget in zip(interactions_list, budgets):
+    for interaction, budget, game in zip(interactions_list, budgets, all_games):
         print(interaction)
+        print("Sum", sum(interaction.values))
+        print("Grand", game.grand_coalition_value)
         plot = plot_si_graph(
             interaction_values=interaction,
             player_names=parameter_names,
