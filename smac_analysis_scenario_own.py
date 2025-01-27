@@ -19,12 +19,19 @@ from hpo_games import DataSpecificTunabilityHPIGame
 
 class SMACAnalysisBenchmark(HyperparameterOptimizationBenchmark):
 
-    def __init__(self, smac: AbstractFacade, scenario: Scenario, model=None):
+    def __init__(
+        self,
+        smac: AbstractFacade,
+        scenario: Scenario,
+        model=None,
+        default_performance: float | None = None,
+    ) -> None:
         self.smac = smac
         self.scenario = scenario
         self.model = model
         if self.model is None:
             raise NotImplementedError("Please provide a model for the SMACAnalysisBenchmark")
+        self.default_performance = default_performance
 
     def get_list_of_tunable_hyperparameters(self):
         return [cfg for cfg in self.scenario.configspace.get_hyperparameter_names()]
@@ -61,15 +68,16 @@ class SMACAnalysisBenchmark(HyperparameterOptimizationBenchmark):
             array = convert_configurations_to_array(cfg_list)
             pred = (-1) * self.smac._model.predict(array)
         else:
-            # TODO: maybe array is wrong here (double check with training in ``explain_hpo_run``)
             array = self._transform_to_array(cfg_list)
             pred = self.model.predict(array)
-        return pred
+        return max(pred)
 
     def get_default_config(self):
         return self.scenario.configspace.get_default_configuration().get_dictionary()
 
     def get_default_config_performance(self, instance=None):
+        if self.default_performance is not None:
+            return self.default_performance
         return self.evaluate(self.get_default_config())
 
     def get_instances(self):
@@ -121,6 +129,7 @@ class SMACExplanation(HPOSimulation):
             )
 
         self.random_state = random_state
+        self.default_config_performance = float(hpo_benchmark.get_default_config_performance())
 
         # define the surrogate model to mimic SMAC's internal model
         # we use the default hyperparameters for the RandomForestRegressor here
@@ -155,7 +164,7 @@ class SMACExplanation(HPOSimulation):
         )
         smac = None
 
-        budgets = [0.05, 0.25, 0.5, 0.75, 1]
+        budgets = [0.01, 0.02, 0.03, 0.04, 0.05, 0.25, 0.5, 0.75, 1]
         for budget in budgets:
             if budget < 0:
                 raise ValueError(f"Budget {budget} must be non-negative")
@@ -173,8 +182,10 @@ class SMACExplanation(HPOSimulation):
             model.fit(x_train_array, y_train_array)
 
             # initialize the tunability game with the new model
-            benchmark = SMACAnalysisBenchmark(smac, scenario, model=model)
-            game = DataSpecificTunabilityHPIGame(benchmark, 0, 10_000, 42)
+            benchmark = SMACAnalysisBenchmark(
+                smac, scenario, model=model, default_performance=self.default_config_performance
+            )
+            game = DataSpecificTunabilityHPIGame(benchmark, 0, 10_000, 42, verbose=True)
             game.precompute()
             file_path = "_".join((self.file_path, str(budget))) + ".npz"
             game.save_values(file_path)

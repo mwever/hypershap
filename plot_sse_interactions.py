@@ -10,6 +10,7 @@ from plot_utils import abbreviate_player_names, get_min_max_of_interactions, plo
 
 if __name__ == "__main__":
     data_dir = "smac_analysis"
+    fsii = False
 
     parameter_names = [
         "batch_size",
@@ -22,7 +23,6 @@ if __name__ == "__main__":
     ]
     parameter_names = abbreviate_player_names(parameter_names)
 
-    # budgets = [25, 50, 100, 200, 400, 800, 1600, 3200]
     all_interactions, all_games = {}, {}
     for file_name in os.listdir(data_dir):
         if not file_name.endswith(".npz"):
@@ -36,7 +36,10 @@ if __name__ == "__main__":
 
         # get interaction values
         shap = shapiq.ExactComputer(n_players=hpo_game.n_players, game=hpo_game)
-        interaction = shap(index="k-SII", order=hpo_game.n_players)
+        if fsii:
+            interaction = shap(index="FSII", order=2)
+        else:
+            interaction = shap("Moebius", order=hpo_game.n_players)
 
         for k, v in interaction.interaction_lookup.items():
             output = ""
