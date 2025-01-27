@@ -174,7 +174,9 @@ shapiq/datasets/data
 
 shapiq/games/benchmark/precomputed/
 precomputed.zip
-yahpodata
-yahpodata/*
+data/yahpodata
+data/yahpodata/*
 
 *.png
+
+database_credentials.yml

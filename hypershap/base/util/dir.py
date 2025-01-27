@@ -1,0 +1,17 @@
+
+BENCHMARK_DATA_FOLDER = "data/"
+
+YAHPOGYM_FOLDER = BENCHMARK_DATA_FOLDER + "yahpodata/"
+PD1_FOLDER = BENCHMARK_DATA_FOLDER + "pd1/"
+JAHS_FOLDER = BENCHMARK_DATA_FOLDER + "jahs/"
+
+RES_FOLDER = "res/"
+PLOTS_FOLDER = RES_FOLDER + "plots/"
+
+# folders comprising precomputed games for downstream analysis and plotting
+GAMES_FOLDER = RES_FOLDER + "games/"
+YAHPOGYM_GAMES_FOLDER = GAMES_FOLDER + "yahpogym/"
+PD1_GAMES_FOLDER = GAMES_FOLDER + "pd1/"
+JAHS_GAMES_FOLDER = GAMES_FOLDER + "jahs/"
+SMAC_ONLINE_GAMES_FOLDER = GAMES_FOLDER + "smac_online/"
+SMAC_OPTBIAS_GAMES_FOLDER = GAMES_FOLDER + "smac_optbias/"
