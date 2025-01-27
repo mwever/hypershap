@@ -24,9 +24,7 @@ class SMACAnalysisBenchmark(HyperparameterOptimizationBenchmark):
         self.scenario = scenario
         self.model = model
         if self.model is None:
-            import warnings
-
-            warnings.warn("No model provided. Using SMAC's internal model.")
+            raise NotImplementedError("Please provide a model for the SMACAnalysisBenchmark")
 
     def get_list_of_tunable_hyperparameters(self):
         return [cfg for cfg in self.scenario.configspace.get_hyperparameter_names()]
