@@ -112,7 +112,6 @@ class SMACExplanation(HPOSimulation):
 
         # define the surrogate model to mimic SMAC's internal model
         # we use the default hyperparameters for the RandomForestRegressor here
-        self.model = RandomForestRegressor(random_state=self.random_state)
 
     @staticmethod
     def parse_run_history(history_data: dict) -> (pd.DataFrame, pd.DataFrame):
@@ -133,19 +132,7 @@ class SMACExplanation(HPOSimulation):
     def inter_run_hook(self):
         time.sleep(1)
 
-    def explain_hpo_run(self, budget: float | int) -> None:
-
-        if budget < 0:
-            raise ValueError(f"Budget {budget} must be non-negative")
-        if budget > self.max_budget:
-            raise ValueError(f"Budget {budget} is larger than the maximum budget {self.max_budget}")
-        if budget < 1 or budget == 1:
-            budget = int(budget * self.max_budget)
-
-        x_train, y_train = self.data[:budget], self.target[:budget]
-        x_train_array, y_train_array = x_train.values, y_train.values
-        self.model.fit(x_train_array, y_train_array)
-
+    def explain_hpo_run(self) -> None:
         eval_fun = LoggingEval(self.hpoBenchmark, self.parameter_selection)
 
         scenario = Scenario(
@@ -155,19 +142,30 @@ class SMACExplanation(HPOSimulation):
             use_default_config=True,
             seed=self.random_state,
         )
-        smac = HyperparameterOptimizationFacade(
-            scenario,
-            eval_fun.train,
-            initial_design=RandomInitialDesign(scenario=scenario, n_configs=20),
-        )
+        smac = None
 
-        # initialize the tunability game with the new model
-        benchmark = SMACAnalysisBenchmark(smac, scenario, model=self.model)
-        game = DataSpecificTunabilityHPIGame(benchmark, 0, 10_000, 42)
-        game.precompute()
-        file_path = "_".join((self.file_path, str(budget))) + ".npz"
-        game.save_values(file_path)
-        print(f"Saved to {file_path}")
+        budgets = [0.05, 0.25, 0.5, 0.75, 1]
+        for budget in budgets:
+            if budget < 0:
+                raise ValueError(f"Budget {budget} must be non-negative")
+            if budget > self.max_budget:
+                raise ValueError(f"Budget {budget} is larger than the maximum budget {self.max_budget}")
+            if budget < 1 or budget == 1:
+                budget = int(budget * self.max_budget)
+            x_train, y_train = self.data[:budget], self.target[:budget]
+            x_train_array, y_train_array = x_train.values, y_train.values
+
+            print(f"Fit random forest model to budget {budget}")
+            model = RandomForestRegressor(random_state=self.random_state)
+            model.fit(x_train_array, y_train_array)
+
+            # initialize the tunability game with the new model
+            benchmark = SMACAnalysisBenchmark(smac, scenario, model=model)
+            game = DataSpecificTunabilityHPIGame(benchmark, 0, 10_000, 42)
+            game.precompute()
+            file_path = "_".join((self.file_path, str(budget))) + ".npz"
+            game.save_values(file_path)
+            print(f"Saved to {file_path}")
 
 
 if __name__ == "__main__":
@@ -184,7 +182,5 @@ if __name__ == "__main__":
         random_state=0,
     )
 
-    budgets = [0.05, 0.25, 0.5, 0.75, 1]
-    for budget_run in budgets:
-        sse.explain_hpo_run(budget=budget_run)
-        time.sleep(1)
+    sse.explain_hpo_run()
+
