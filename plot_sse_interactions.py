@@ -6,11 +6,10 @@ import os
 import matplotlib.pyplot as plt
 import shapiq
 
-from plot_utils import PLOT_DIR, abbreviate_player_names, get_min_max_of_interactions, plot_si_graph
+from plot_utils import abbreviate_player_names, get_min_max_of_interactions, plot_si_graph
 
 if __name__ == "__main__":
-    scenario = "lcbench"
-    dataset = 0
+    data_dir = "smac_analysis"
 
     parameter_names = [
         "batch_size",
@@ -24,41 +23,45 @@ if __name__ == "__main__":
     parameter_names = abbreviate_player_names(parameter_names)
 
     # budgets = [25, 50, 100, 200, 400, 800, 1600, 3200]
-    budgets = [200, 800, 1600, 3200]
-    interactions_list = []
-    all_games = []
-    for budget in budgets:
+    all_interactions, all_games = {}, {}
+    for file_name in os.listdir(data_dir):
+        if not file_name.endswith(".npz"):
+            continue
+
+        file_path = os.path.join(data_dir, file_name)
+        budget = int(file_name[:-4].split("_")[-1])
 
         # get game
-        path = "_".join(["continuous_smac_analysis_test", scenario, str(dataset), str(budget)])
-        path += ".npz"
-        hpo_game = shapiq.Game(path_to_values=path, verbose=False, normalize=False)
+        hpo_game = shapiq.Game(path_to_values=file_path, verbose=False, normalize=False)
 
         # get interaction values
         shap = shapiq.ExactComputer(n_players=hpo_game.n_players, game=hpo_game)
-        res = shap(index="k-SII", order=hpo_game.n_players)
+        interaction = shap(index="k-SII", order=hpo_game.n_players)
 
-        for k, v in res.interaction_lookup.items():
+        for k, v in interaction.interaction_lookup.items():
             output = ""
             for p in k:
                 output += f"{parameter_names[p]} "
-            print("|", output, "|", res.values[v], "|")
+            print("|", output, "|", interaction.values[v], "|")
 
         print("Empty:", hpo_game.exact_values)
         print("Grand:", hpo_game.grand_coalition_value)
 
-        interactions_list.append(copy.deepcopy(res))
-        all_games.append(hpo_game)
+        interaction = interaction.get_n_order(hpo_game.n_players, min_order=1)
+        all_interactions[budget] = copy.deepcopy(interaction)
+        all_games[budget] = copy.deepcopy(hpo_game)
 
     # plot the si graphs for the list of interactions
 
     # get the min and max to scale the plot to the same range
+    interactions_list = [int for int in all_interactions.values()]
     min_int, max_int = get_min_max_of_interactions(interactions_list)
 
-    save_dir = os.path.join(PLOT_DIR, "si_graphs")
-    os.makedirs(save_dir, exist_ok=True)
-
-    for interaction, budget, game in zip(interactions_list, budgets, all_games):
+    summary = []
+    for budget in sorted(all_games.keys()):
+        print("Budget", budget)
+        interaction = all_interactions[budget]
+        game = all_games[budget]
         print(interaction)
         print("Sum", sum(interaction.values))
         print("Empty", game.empty_coalition_value)
@@ -72,5 +75,17 @@ if __name__ == "__main__":
         )
         if plot is not None:
             fig, ax = plot
-            save_path = os.path.join(save_dir, f"si_graph_{scenario}_{dataset}_{budget}.pdf")
+            save_path = os.path.join(data_dir, f"si_graph_{budget}.pdf")
             plt.savefig(save_path)
+
+        summary.append(
+            {
+                "budget": budget,
+                "grand_coalition": game.grand_coalition_value,
+                "empty_coalition": game.empty_coalition_value,
+                "sum": sum(interaction.values),
+            }
+        )
+
+    for s in summary:
+        print(s)

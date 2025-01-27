@@ -4,15 +4,15 @@ import copy
 import os
 import time
 
+import numpy as np
 import pandas as pd
 from ConfigSpace import Configuration
 from sklearn.ensemble import RandomForestRegressor
-from smac import HyperparameterOptimizationFacade, Scenario
+from smac import Scenario
 from smac.facade import AbstractFacade
-from smac.initial_design import RandomInitialDesign
 from smac.utils.configspace import convert_configurations_to_array
 
-from downstream_hpo import HPOSimulation, LoggingEval
+from downstream_hpo import HPOSimulation
 from hpo_benchmarks import HyperparameterOptimizationBenchmark
 from hpo_games import DataSpecificTunabilityHPIGame
 
@@ -56,11 +56,13 @@ class SMACAnalysisBenchmark(HyperparameterOptimizationBenchmark):
             Configuration(configuration_space=self.scenario.configspace, values=cfg)
             for cfg in configuration
         ]
-        array = convert_configurations_to_array(cfg_list)
+
         if self.model is None:
+            array = convert_configurations_to_array(cfg_list)
             pred = (-1) * self.smac._model.predict(array)
         else:
             # TODO: maybe array is wrong here (double check with training in ``explain_hpo_run``)
+            array = self._transform_to_array(cfg_list)
             pred = self.model.predict(array)
         return pred
 
@@ -72,6 +74,16 @@ class SMACAnalysisBenchmark(HyperparameterOptimizationBenchmark):
 
     def get_instances(self):
         return []
+
+    @staticmethod
+    def _transform_to_array(cfg_list: list[Configuration]) -> np.ndarray:
+        result: list[dict] = []
+        for config in cfg_list:
+            result.append(config._values)
+        result_df = pd.DataFrame(result)
+        array = result_df.values
+        array = array.astype(np.float64)
+        return array
 
 
 class SMACExplanation(HPOSimulation):
@@ -133,7 +145,6 @@ class SMACExplanation(HPOSimulation):
         time.sleep(1)
 
     def explain_hpo_run(self) -> None:
-        eval_fun = LoggingEval(self.hpoBenchmark, self.parameter_selection)
 
         scenario = Scenario(
             self.reduced_cfg_space,
@@ -149,7 +160,9 @@ class SMACExplanation(HPOSimulation):
             if budget < 0:
                 raise ValueError(f"Budget {budget} must be non-negative")
             if budget > self.max_budget:
-                raise ValueError(f"Budget {budget} is larger than the maximum budget {self.max_budget}")
+                raise ValueError(
+                    f"Budget {budget} is larger than the maximum budget {self.max_budget}"
+                )
             if budget < 1 or budget == 1:
                 budget = int(budget * self.max_budget)
             x_train, y_train = self.data[:budget], self.target[:budget]
@@ -183,4 +196,3 @@ if __name__ == "__main__":
     )
 
     sse.explain_hpo_run()
-
