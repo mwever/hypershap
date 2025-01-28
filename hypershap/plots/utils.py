@@ -4,13 +4,70 @@ import copy
 import os
 from typing import Optional, Union
 
+import networkx as nx
 import numpy as np
 import pandas as pd
 import shapiq
 from matplotlib import pyplot as plt
 
-PLOT_DIR = "../../plots/smac-analysis"
+PAPER_PLOTS_DIR = os.path.join("..", "..", "paper_plots")
+MAIN_PAPER_PLOTS_DIR = os.path.join(PAPER_PLOTS_DIR, "main")
+APPENDIX_PAPER_PLOTS_DIR = os.path.join(PAPER_PLOTS_DIR, "appendix")
+os.makedirs(MAIN_PAPER_PLOTS_DIR, exist_ok=True)
+os.makedirs(APPENDIX_PAPER_PLOTS_DIR, exist_ok=True)
+
+PLOT_DIR = os.path.join("..", "..", "plots")
 os.makedirs(PLOT_DIR, exist_ok=True)
+
+
+def plot_upset(
+    interactions: shapiq.InteractionValues,
+    figsize=None,
+    save_path: str | None = None,
+    add_zero_y_lim: bool = False,
+    fontsize_param_names: int | None = 14,
+    y_label: str | None = "Hyperparameter Importance",
+    **kwargs,
+) -> Optional[plt.Figure]:
+    """Wrapper function for the upset plot of the interactions."""
+    show = True
+    if "show" in kwargs:
+        show = kwargs["show"]
+        kwargs.pop("show")
+    fig = interactions.plot_upset(**kwargs, show=False)
+    if add_zero_y_lim:  # extract upper axis of the plot and manually set the y-axis to 0 lower lim
+        ax = fig.get_axes()[0]
+        ax.set_ylim(bottom=-0.001)
+    if fontsize_param_names is not None:
+        ax = fig.get_axes()[1]
+        ax.set_yticklabels(ax.get_yticklabels(), fontsize=fontsize_param_names)
+        ax.yaxis.label.set_size(fontsize_param_names)
+    if y_label is not None:  # add y-label in same fontsize as param names if given
+        ax = fig.get_axes()[0]
+        if fontsize_param_names is not None:
+            ax.yaxis.label.set_size(fontsize_param_names)
+        ax.set_ylabel(y_label)
+        # also add "parameter" to the y-axis label
+        ax = fig.get_axes()[1]
+        if fontsize_param_names is not None:
+            ax.yaxis.label.set_size(fontsize_param_names)
+        ax.set_ylabel("Parameter")
+    if figsize is not None:
+        fig.set_size_inches(figsize)
+    plt.tight_layout()
+    if save_path is not None:
+        plt.savefig(save_path)
+    if not show:
+        return fig
+    plt.show()
+
+
+def get_circular_layout(n_players: int):
+    original_graph, graph_nodes = nx.Graph(), []
+    for i in range(n_players):
+        original_graph.add_node(i, label=i)
+        graph_nodes.append(i)
+    return nx.circular_layout(original_graph)
 
 
 def get_min_max_of_interactions(

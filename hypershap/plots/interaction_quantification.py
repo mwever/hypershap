@@ -8,10 +8,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import scipy
-
 import shapiq
 from shapiq.interaction_values import InteractionValues
 from shapiq.utils import powerset
+
 from hypershap.base.util.utils import setup_game
 
 # create paper_plots directory
@@ -34,7 +34,7 @@ def approximated_game(interaction_index):
         max_order=n_players,
         n_players=n_players,
         min_order=0,
-        baseline_value=baseline_value,
+        baseline_value=float(baseline_value),
         interaction_lookup=approximation_lookup,
         values=approximation_values,
     )
@@ -50,7 +50,6 @@ def _convert_game_to_interaction(exact_computer: shapiq.ExactComputer) -> shapiq
     Returns:
         The interaction values.
     """
-    baseline_value = exact_computer.game_values[exact_computer.coalition_lookup[tuple()]]
     game_values = shapiq.InteractionValues(
         values=exact_computer.game_values,
         index="Moebius",
@@ -58,7 +57,7 @@ def _convert_game_to_interaction(exact_computer: shapiq.ExactComputer) -> shapiq
         n_players=exact_computer.n,
         min_order=0,
         max_order=exact_computer.n,
-        baseline_value=baseline_value,
+        baseline_value=exact_computer.baseline_value,
     )
     return game_values
 

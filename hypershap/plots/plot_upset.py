@@ -2,10 +2,9 @@
 
 import os
 
-from matplotlib import pyplot as plt
-
 import shapiq
-from plot_utils import PLOT_DIR, abbreviate_player_names
+from matplotlib import pyplot as plt
+from utils import PLOT_DIR, abbreviate_player_names
 
 if __name__ == "__main__":
 

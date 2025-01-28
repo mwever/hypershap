@@ -1,9 +1,9 @@
 import matplotlib
 from matplotlib import pyplot as plt
+from shapiq import ExactComputer
+from utils import plot_si_graph
 from yahpo_gym import benchmark_set, local_config
 
-from plot_utils import plot_si_graph
-from shapiq import ExactComputer
 from hypershap.base.util.utils import setup_game
 
 

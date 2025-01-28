@@ -5,8 +5,7 @@ import os
 
 import matplotlib.pyplot as plt
 import shapiq
-
-from plot_utils import abbreviate_player_names, get_min_max_of_interactions, plot_si_graph
+from utils import abbreviate_player_names, get_min_max_of_interactions, plot_si_graph
 
 if __name__ == "__main__":
     data_dir = "smac_analysis"

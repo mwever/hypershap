@@ -2,7 +2,7 @@
 
 import os
 
-from plot_utils import plot_downstream
+from utils import plot_downstream
 
 if __name__ == "__main__":
 

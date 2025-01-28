@@ -1,11 +1,11 @@
 """This module contains functions to plot the SI values for different the different games."""
 
 import numpy as np
-
-from hypershap.base.util.constants import DS_TUNABILITY_GAME
-from hypershap.base.hpo_benchmarks import PD1Benchmark
-from plot_utils import abbreviate_player_names, plot_interactions
 from shapiq import ExactComputer
+from utils import abbreviate_player_names, plot_interactions
+
+from hypershap.base.hpo_benchmarks import PD1Benchmark
+from hypershap.base.util.constants import DS_TUNABILITY_GAME
 from hypershap.base.util.utils import setup_game
 
 if __name__ == "__main__":

@@ -1,8 +1,7 @@
 """This module contains functions to plot the SI values for different the different games."""
 
 import matplotlib.pyplot as plt
-
-from plot_utils import multiple_si
+from utils import multiple_si
 
 if __name__ == "__main__":
 
