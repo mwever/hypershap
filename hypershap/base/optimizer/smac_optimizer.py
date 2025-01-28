@@ -1,9 +1,11 @@
 import logging
+import json
 
 from ConfigSpace import ConfigurationSpace
 
 from hypershap.base.benchmark.abstract_benchmark import HyperparameterOptimizationBenchmark
 from hypershap.base.optimizer.abstract_optimizer import AbstractOptimizer
+from hypershap.base.util.dir import SMAC_OPTBIAS_GAMES_FOLDER
 
 
 class BenchmarkEvalWrapper:
@@ -74,3 +76,24 @@ class SMACOptimizer(AbstractOptimizer):
             incumbent_cost = (-1) * incumbent_cost
 
         return incumbent_cost
+
+class SMACLookUpOptimizer(AbstractOptimizer):
+
+    def __init__(self, verbose=False):
+        super().__init__(random_state=None, verbose=verbose)
+
+    def optimize(self, hpo_benchmark: HyperparameterOptimizationBenchmark, coalition):
+        instance_idx = 0
+        file_pattern = SMAC_OPTBIAS_GAMES_FOLDER + f"smac_optbias_{hpo_benchmark.scenario}_{hpo_benchmark.metric}_{instance_idx}_5000.json"
+        coalition_value_list = json.load(open(file_pattern))
+        cache = dict()
+        for coalition_value_item in coalition_value_list:
+            cache[str(coalition_value_item[0])] = coalition_value_item[1]
+
+
+        query_key = [1 if x else 0 for x in coalition]
+        query_key = str(query_key)
+
+        if query_key not in cache:
+            print("WARNING: Cache miss!")
+        return cache[query_key]

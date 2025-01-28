@@ -1,9 +1,11 @@
 import json
+import os
 from copy import copy
 
-from hypershap.base.benchmark.abstract_benchmark import HyperparameterOptimizationBenchmark
 from hypershap.base.benchmark.yahpogym import YahpoGymBenchmark
-from hypershap.base.optimizer.smac_optimizer import SMACOptimizer
+from hypershap.base.games.optimizer_bias import DataSpecificOptimizerBiasGame
+from hypershap.base.optimizer.random_optimizer import  RandomOptimizer
+from hypershap.base.optimizer.smac_optimizer import SMACOptimizer, SMACLookUpOptimizer
 from hypershap.base.util.dir import SMAC_OPTBIAS_GAMES_FOLDER
 
 from joblib import Parallel, delayed
@@ -38,6 +40,7 @@ def get_all_coalitions(num_members: int):
 if __name__ == '__main__':
     from yahpo_gym import benchmark_set, local_config
     local_config.init_config()
+    only_load_precomputed_results = True
 
     # instantiate hpo benchmark with yahpo gym benchmark
     scenario = "lcbench"
@@ -49,16 +52,29 @@ if __name__ == '__main__':
 
     # output base path
     output_base_path = SMAC_OPTBIAS_GAMES_FOLDER
+    file_name = "_".join(["smac_optbias", scenario, metric, str(dataset), str(hpo_budget)])
+    out_file = output_base_path + file_name + ".json"
 
-    # list all possible coalitions
-    list_of_coalitions = get_all_coalitions(yahpo.get_number_of_tunable_hyperparameters())
+    if not only_load_precomputed_results:
+        # list all possible coalitions
+        list_of_coalitions = get_all_coalitions(yahpo.get_number_of_tunable_hyperparameters())
+        # run smac instantiations in parallel to quickly assess the coalition values
+        results = Parallel(n_jobs=12)(
+            delayed(precompute_smac_optbias)(scenario, metric, dataset, coalition, hpo_budget, i) for i, coalition in enumerate(list_of_coalitions))
+        dump_string = json.dumps(results)
+        with open(out_file, "w") as file:
+            file.write(dump_string)
 
-    # run smac instantiations in parallel to quickly assess the coalition values
-    results = Parallel(n_jobs=12)(
-        delayed(precompute_smac_optbias)(scenario, metric, dataset, coalition, hpo_budget, i) for i, coalition in enumerate(list_of_coalitions))
+    ensemble = [RandomOptimizer(hpo_budget=50000), RandomOptimizer(hpo_budget=5000)]
+    optimizer = SMACLookUpOptimizer()
 
-    print(results)
+    game = DataSpecificOptimizerBiasGame(hpoBenchmark=yahpo, instance=dataset, ensemble=ensemble, optimizer=optimizer, verbose=True)
 
-    dump_string = json.dumps(results)
-    with open(output_base_path + "_".join(["smac_optbias", scenario, metric, str(dataset), str(hpo_budget)]) + ".json", "w") as file:
-        file.write(dump_string)
+    game.precompute()
+    game_path = SMAC_OPTBIAS_GAMES_FOLDER + file_name + ".npz"
+    game.save_values(game_path)
+
+    # save the player names
+    name_file = os.path.join(SMAC_OPTBIAS_GAMES_FOLDER, f"{yahpo.benchmark_lib}_{yahpo.scenario}_{yahpo.dataset}.names")
+    with open(name_file, "w") as f:
+        f.write("\n".join(yahpo.get_list_of_tunable_hyperparameters()))
