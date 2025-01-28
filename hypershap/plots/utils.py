@@ -19,8 +19,40 @@ os.makedirs(APPENDIX_PAPER_PLOTS_DIR, exist_ok=True)
 PLOT_DIR = os.path.join("..", "..", "plots")
 os.makedirs(PLOT_DIR, exist_ok=True)
 
-
-PARAMETER_NAMES = {"pd1": ["L-D", "L-I", "L-P", "O-M"]}
+PARAMETER_NAMES = {
+    "pd1": ["lr_decay_factor", "lr_initial", "lr_power", "opt_momentum"],
+    "yahs": [
+        "Activation",
+        "LearningRate",
+        "Op1",
+        "Op2",
+        "Op3",
+        "Op4",
+        "Op5",
+        "Op6",
+        "TrivialAugment",
+        "WeightDecay",
+    ],
+    "ranger": [
+        "min.node.size",
+        "mtry.power",
+        "num.impute.selected.cpo",
+        "num.trees",
+        "respect.unordered.factors",
+        "sample.fraction",
+        "splitrule",
+        "num.random.splits",
+    ],
+    "lcbench": [
+        "batch_size",
+        "learning_rate",
+        "max_dropout",
+        "max_units",
+        "momentum",
+        "num_layers",
+        "weight_decay",
+    ],
+}
 
 
 def plot_upset(
@@ -326,7 +358,6 @@ def plot_downstream(
     save_path: str,
     figsize: tuple = (4.5, 4.2),
 ) -> None:
-
     # settings for the plot
     _colors = {"hpi_bo": "#7DCE82", "full_bo": "#a8a8a8", "hpi_rs": "#7DCE82", "full_rs": "#a8a8a8"}
     _markers = {"hpi_bo": "o", "full_bo": "o", "hpi_rs": "s", "full_rs": "s"}
@@ -484,7 +515,6 @@ def multiple_si(
     save=True,
     show=True,
 ) -> None:
-
     from hypershap.base.util.utils import setup_game
 
     interactions = {}
