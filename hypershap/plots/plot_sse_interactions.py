@@ -1,15 +1,27 @@
-"""This module contains functions to plot the SI values for different the different games."""
+"""This script contains functions to plot FSII and MI plots for the experiment with SMAC's surrogate
+model. Note that you need to run `hypershap.precompute.smac_analysis_scenario` first."""
 
 import copy
 import os
 
 import matplotlib.pyplot as plt
 import shapiq
-from utils import abbreviate_player_names, get_min_max_of_interactions, plot_si_graph
+from utils import (
+    APPENDIX_PAPER_PLOTS_DIR,
+    MAIN_PAPER_PLOTS_DIR,
+    abbreviate_player_names,
+    get_min_max_of_interactions,
+    plot_si_graph,
+)
 
 if __name__ == "__main__":
-    data_dir = "smac_analysis"
-    fsii = False
+    data_dir = os.path.join("..", "..", "smac_analysis")
+    fsii = False  # set to True for FSII plots else MI plots
+
+    APPENDIX_PAPER_PLOTS_DIR = os.path.join(APPENDIX_PAPER_PLOTS_DIR, "smac_analysis")
+    MAIN_PAPER_PLOTS_DIR = os.path.join(MAIN_PAPER_PLOTS_DIR, "smac_analysis")
+    os.makedirs(APPENDIX_PAPER_PLOTS_DIR, exist_ok=True)
+    os.makedirs(MAIN_PAPER_PLOTS_DIR, exist_ok=True)
 
     parameter_names = [
         "batch_size",
@@ -53,8 +65,6 @@ if __name__ == "__main__":
         all_interactions[budget] = copy.deepcopy(interaction)
         all_games[budget] = copy.deepcopy(hpo_game)
 
-    # plot the si graphs for the list of interactions
-
     # get the min and max to scale the plot to the same range
     interactions_list = [int for int in all_interactions.values()]
     min_int, max_int = get_min_max_of_interactions(interactions_list)
@@ -68,17 +78,22 @@ if __name__ == "__main__":
         print("Sum", sum(interaction.values))
         print("Empty", game.empty_coalition_value)
         print("Grand", game.grand_coalition_value)
+
+        plt.rcParams.update({"font.size": 18})
         plot = plot_si_graph(
             interaction_values=interaction,
             player_names=parameter_names,
             min_max_interactions=(min_int, max_int),  # scales the plots together
             orders_to_plot=None,  # optionally specify which orders to plot as a list[int]
-            show=True,
+            show=False,
         )
-        if plot is not None:
-            fig, ax = plot
-            save_path = os.path.join(data_dir, f"si_graph_{budget}.pdf")
-            plt.savefig(save_path)
+        fig, ax = plot
+        if fsii:
+            save_path = os.path.join(APPENDIX_PAPER_PLOTS_DIR, f"fsii_graph_{budget}.pdf")
+        else:
+            save_path = os.path.join(APPENDIX_PAPER_PLOTS_DIR, f"mi_graph_{budget}.pdf")
+        plt.savefig(save_path)
+        plt.show()
 
         summary.append(
             {

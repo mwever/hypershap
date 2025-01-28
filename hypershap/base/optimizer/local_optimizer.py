@@ -1,4 +1,5 @@
 from hypershap.base.benchmark.abstract_benchmark import HyperparameterOptimizationBenchmark
+from hypershap.base.optimizer.abstract_optimizer import AbstractOptimizer
 from hypershap.downstream_hpo.downstream_hpo import RSSimulation
 
 
@@ -14,7 +15,9 @@ class LocalOptimizer(AbstractOptimizer):
         for i, incl in enumerate(coalition):
             if incl == 1:
                 param = param_set[i]
-                idx_cand, idx_res = RSSimulation(hpoBenchmark, [param], self.budget_per_param).simulate_hpo_run(0)
+                idx_cand, idx_res = RSSimulation(
+                    hpoBenchmark, [param], self.budget_per_param
+                ).simulate_hpo_run(0)
                 final_config[param] = idx_cand[param]
 
         def_cfg = hpoBenchmark.get_default_config()

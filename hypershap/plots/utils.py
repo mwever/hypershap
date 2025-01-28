@@ -190,7 +190,7 @@ def plot_si_graph(
     if "size_factor" not in kwargs:
         kwargs["size_factor"] = 3
     if "node_size_scaling" not in kwargs:
-        kwargs["node_size_scaling"] = 1.75
+        kwargs["node_size_scaling"] = 1.5
     if "compactness" not in kwargs:
         kwargs["compactness"] = 1e50
     if "circular_layout" not in kwargs:

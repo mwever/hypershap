@@ -4,18 +4,28 @@ import os
 from typing import Optional
 
 import numpy as np
-
 import shapiq
-from hypershap.base.util.constants import TUNABILITY_GAME, DS_TUNABILITY_GAME, ABLATION_GAME, OPTIMIZER_BIAS_GAME, OB_GAME_SET_A_SUFFIX, \
-    OB_GAME_SET_B_SUFFIX
-from hypershap.base.hpo_benchmarks import HyperparameterOptimizationBenchmark, YahpoGymBenchmark, PD1Benchmark, JAHSBenchmark
-from hypershap.base.hpo_games import (
+
+from hypershap.base.benchmark.abstract_benchmark import HyperparameterOptimizationBenchmark
+from hypershap.base.benchmark.jahs import JAHSBenchmark
+from hypershap.base.benchmark.pd1 import PD1Benchmark
+from hypershap.base.benchmark.yahpogym import YahpoGymBenchmark
+from hypershap.base.games.ablation import AblationHPIGame
+from hypershap.base.games.optimizer_bias import DataSpecificOptimizerBiasGame
+from hypershap.base.games.tunability import (
     DataSpecificTunabilityHPIGame,
-    AblationHPIGame,
-    DataSpecificOptimizerBiasGame,
     TunabilityHPIGame,
 )
-from hypershap.base.hpo_optimizers import LocalOptimizer, SubspaceRandomOptimizer
+from hypershap.base.optimizer.local_optimizer import LocalOptimizer
+from hypershap.base.optimizer.random_optimizer import SubspaceRandomOptimizer
+from hypershap.base.util.constants import (
+    ABLATION_GAME,
+    DS_TUNABILITY_GAME,
+    OB_GAME_SET_A_SUFFIX,
+    OB_GAME_SET_B_SUFFIX,
+    OPTIMIZER_BIAS_GAME,
+    TUNABILITY_GAME,
+)
 
 GAME_STORAGE_DIR = "game_storage"
 os.makedirs(GAME_STORAGE_DIR, exist_ok=True)
@@ -108,7 +118,9 @@ def setup_game(
 
     # compile hpo benchmark problem from provided arguments
     if benchmark == "yahpogym":
-        hpo_problem = YahpoGymBenchmark(scenario_name=scenario, metric=metric, instance_idx=instance_index)
+        hpo_problem = YahpoGymBenchmark(
+            scenario_name=scenario, metric=metric, instance_idx=instance_index
+        )
     elif benchmark == "pd1":
         hpo_problem = PD1Benchmark(scenario_name=scenario)
     elif benchmark == "jahs":
@@ -123,7 +135,10 @@ def setup_game(
 
     # check if the game is already stored
     game_path = os.path.join(GAME_STORAGE_DIR, f"{game_name}.npz")
-    name_file = os.path.join(GAME_STORAGE_DIR, f"{hpo_problem.benchmark_lib}_{hpo_problem.scenario}_{hpo_problem.dataset}.names")
+    name_file = os.path.join(
+        GAME_STORAGE_DIR,
+        f"{hpo_problem.benchmark_lib}_{hpo_problem.scenario}_{hpo_problem.dataset}.names",
+    )
 
     if os.path.exists(game_path) and os.path.exists(name_file):
         game = shapiq.Game(path_to_values=game_path, verbose=verbose, normalize=normalize_loaded)
@@ -138,11 +153,7 @@ def setup_game(
             f"instance_index={instance_index}, n_configs={n_configs}, random_state={random_state}"
         )
 
-    shared_game_config = {
-        "n_configs": n_configs,
-        "random_state": random_state,
-        "verbose": verbose
-    }
+    shared_game_config = {"n_configs": n_configs, "random_state": random_state, "verbose": verbose}
 
     # set up the game from parameters
     if game_type == TUNABILITY_GAME:
@@ -160,15 +171,18 @@ def setup_game(
             ensemble=[optimizer],
             optimizer=optimizer,
             random_state=random_state,
-            verbose=verbose
+            verbose=verbose,
         )
-    elif game_type in [OPTIMIZER_BIAS_GAME+OB_GAME_SET_A_SUFFIX, OPTIMIZER_BIAS_GAME+OB_GAME_SET_B_SUFFIX]:
+    elif game_type in [
+        OPTIMIZER_BIAS_GAME + OB_GAME_SET_A_SUFFIX,
+        OPTIMIZER_BIAS_GAME + OB_GAME_SET_B_SUFFIX,
+    ]:
         param_set = list()
-        if game_type == OPTIMIZER_BIAS_GAME+OB_GAME_SET_B_SUFFIX:
+        if game_type == OPTIMIZER_BIAS_GAME + OB_GAME_SET_B_SUFFIX:
             for hyperparam in hpo_problem.get_opt_space().get_hyperparameters():
                 if hyperparam.name not in ["OpenML_task_id", "epoch", "weight_decay"]:
                     param_set += [hyperparam.name]
-        elif game_type == OPTIMIZER_BIAS_GAME+OB_GAME_SET_A_SUFFIX:
+        elif game_type == OPTIMIZER_BIAS_GAME + OB_GAME_SET_A_SUFFIX:
             param_set = ["learning_rate", "max_dropout", "max_units"]
 
         optimizer = SubspaceRandomOptimizer(param_set, random_state=random_state, verbose=verbose)

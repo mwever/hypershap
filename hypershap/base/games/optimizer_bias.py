@@ -1,9 +1,20 @@
+import numpy as np
+
+from hypershap.base.benchmark.abstract_benchmark import HyperparameterOptimizationBenchmark
+from hypershap.base.games.abstract_hpi_game import AbstractHPIGame
+from hypershap.base.optimizer.abstract_optimizer import AbstractOptimizer
 
 
 class OptimizerBiasGame(AbstractHPIGame):
     def __init__(
-            self, hpoBenchmark: HyperparameterOptimizationBenchmark, ensemble, optimizer: AbstractOptimizer,
-            aggregator=lambda x: np.array(x).mean(), random_state=None, verbose: bool = False):
+        self,
+        hpoBenchmark: HyperparameterOptimizationBenchmark,
+        ensemble,
+        optimizer: AbstractOptimizer,
+        aggregator=lambda x: np.array(x).mean(),
+        random_state=None,
+        verbose: bool = False,
+    ):
         self.ensemble = ensemble
         self.optimizer = optimizer
         self.aggregator = aggregator
@@ -37,13 +48,19 @@ class OptimizerBiasGame(AbstractHPIGame):
 
 class DataSpecificOptimizerBiasGame(OptimizerBiasGame):
     def __init__(
-            self, hpoBenchmark: HyperparameterOptimizationBenchmark, instance, ensemble, optimizer, random_state=None,
-            verbose: bool = False
+        self,
+        hpoBenchmark: HyperparameterOptimizationBenchmark,
+        instance,
+        ensemble,
+        optimizer,
+        random_state=None,
+        verbose: bool = False,
     ):
         self.instance = instance
         hpoBenchmark.set_instance(instance)
-        assert hpoBenchmark.get_num_instances() == 1, ("Number of instances cannot exceed 1 for data-specific "
-                                                            "optimizer bias.")
-        super().__init__(hpoBenchmark, ensemble, optimizer, lambda x: np.array(x).mean(), random_state, verbose)
-
-
+        assert hpoBenchmark.get_num_instances() == 1, (
+            "Number of instances cannot exceed 1 for data-specific " "optimizer bias."
+        )
+        super().__init__(
+            hpoBenchmark, ensemble, optimizer, lambda x: np.array(x).mean(), random_state, verbose
+        )
