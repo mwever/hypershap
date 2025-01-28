@@ -8,13 +8,14 @@ import numpy as np
 import pandas as pd
 from ConfigSpace import Configuration
 from sklearn.ensemble import RandomForestRegressor
-from smac import Scenario
+from smac import HyperparameterOptimizationFacade, Scenario
 from smac.facade import AbstractFacade
+from smac.initial_design import RandomInitialDesign
 from smac.utils.configspace import convert_configurations_to_array
 
-from hypershap.downstream_hpo.downstream_hpo import HPOSimulation
-from hypershap.base.hpo_benchmarks import HyperparameterOptimizationBenchmark
-from hypershap.base.hpo_games import DataSpecificTunabilityHPIGame
+from hypershap.base.benchmark.abstract_benchmark import HyperparameterOptimizationBenchmark
+from hypershap.base.games.tunability import DataSpecificTunabilityHPIGame
+from hypershap.downstream_hpo.downstream_hpo import HPOSimulation, LoggingEval
 
 
 class SMACAnalysisBenchmark(HyperparameterOptimizationBenchmark):
@@ -30,7 +31,7 @@ class SMACAnalysisBenchmark(HyperparameterOptimizationBenchmark):
         self.scenario = scenario
         self.model = model
         if self.model is None:
-            raise NotImplementedError("Please provide a model for the SMACAnalysisBenchmark")
+            print("Running with default SMAC model")
         self.default_performance = default_performance
 
     def get_list_of_tunable_hyperparameters(self):
@@ -153,7 +154,8 @@ class SMACExplanation(HPOSimulation):
     def inter_run_hook(self):
         time.sleep(1)
 
-    def explain_hpo_run(self) -> None:
+    def explain_hpo_run(self, use_own_model: bool = True) -> None:
+        eval_fun = LoggingEval(self.hpoBenchmark, self.parameter_selection)
 
         scenario = Scenario(
             self.reduced_cfg_space,
@@ -162,7 +164,11 @@ class SMACExplanation(HPOSimulation):
             use_default_config=True,
             seed=self.random_state,
         )
-        smac = None
+        smac = HyperparameterOptimizationFacade(
+            scenario,
+            eval_fun.train,
+            initial_design=RandomInitialDesign(scenario=scenario, n_configs=20),
+        )
 
         budgets = [0.01, 0.02, 0.03, 0.04, 0.05, 0.25, 0.5, 0.75, 1]
         for budget in budgets:
@@ -174,12 +180,18 @@ class SMACExplanation(HPOSimulation):
                 )
             if budget < 1 or budget == 1:
                 budget = int(budget * self.max_budget)
-            x_train, y_train = self.data[:budget], self.target[:budget]
-            x_train_array, y_train_array = x_train.values, y_train.values
 
-            print(f"Fit random forest model to budget {budget}")
-            model = RandomForestRegressor(random_state=self.random_state)
-            model.fit(x_train_array, y_train_array)
+            file_path = "_".join((self.file_path, str(budget)))
+            if use_own_model:
+                smac = None
+                x_train, y_train = self.data[:budget], self.target[:budget]
+                x_train_array, y_train_array = x_train.values, y_train.values
+                model = RandomForestRegressor(random_state=self.random_state)
+                model.fit(x_train_array, y_train_array)
+                print(f"Fit random forest model to budget {budget}")
+            else:
+                model = None
+                file_path += "_smac_model"
 
             # initialize the tunability game with the new model
             benchmark = SMACAnalysisBenchmark(
@@ -187,13 +199,13 @@ class SMACExplanation(HPOSimulation):
             )
             game = DataSpecificTunabilityHPIGame(benchmark, 0, 10_000, 42, verbose=True)
             game.precompute()
-            file_path = "_".join((self.file_path, str(budget))) + ".npz"
+            file_path += ".npz"
             game.save_values(file_path)
             print(f"Saved to {file_path}")
 
 
 if __name__ == "__main__":
-    from hypershap.base.hpo_benchmarks import YahpoGymBenchmark
+    from hypershap.base.benchmark.yahpogym import YahpoGymBenchmark
 
     yahpo = YahpoGymBenchmark(scenario_name="lcbench", instance_idx=0, metric="val_accuracy")
     parameter_selection = yahpo.get_list_of_tunable_hyperparameters()
