@@ -8,12 +8,11 @@ import shapiq
 from utils import (
     APPENDIX_PAPER_PLOTS_DIR,
     MAIN_PAPER_PLOTS_DIR,
+    PARAMETER_NAMES,
     abbreviate_player_names,
     get_circular_layout,
     plot_upset,
 )
-
-PARAMETER_NAMES = {"pd1": ["L-D", "L-I", "L-P", "O-M"]}
 
 if __name__ == "__main__":
 
@@ -93,6 +92,8 @@ if __name__ == "__main__":
     )
 
     # plot si graph plots
+    # first increase font size in plt.rcParams
+    plt.rcParams["font.size"] = 18
     mi_abl.plot_si_graph(show=False, size_factor=3.0, feature_names=param_names, pos=pos)
     plt.tight_layout()
     plt.savefig(os.path.join(APPENDIX_PAPER_PLOTS_DIR, "ablation_si_graph.pdf"))

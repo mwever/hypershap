@@ -20,6 +20,9 @@ PLOT_DIR = os.path.join("..", "..", "plots")
 os.makedirs(PLOT_DIR, exist_ok=True)
 
 
+PARAMETER_NAMES = {"pd1": ["L-D", "L-I", "L-P", "O-M"]}
+
+
 def plot_upset(
     interactions: shapiq.InteractionValues,
     figsize=None,
