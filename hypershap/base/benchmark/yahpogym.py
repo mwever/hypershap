@@ -14,10 +14,11 @@ SKIP_PARAMS = ["OpenML_task_id", "task_id"]
 class YahpoGymBenchmark(HyperparameterOptimizationBenchmark):
     minimize_metrics = ["time", "runtime_train", "runtime_test", "memory_train", "memory_test"]
 
-    def __init__(self, scenario_name, metric, instance_idx=None, yahpogym_folder=YAHPOGYM_FOLDER):
+    def __init__(self, scenario_name, metric, instance_idx=None, yahpogym_folder=YAHPOGYM_FOLDER, sensitivity=False):
         from yahpo_gym import benchmark_set, local_config
         local_config.set_data_path(yahpogym_folder)
         self.instance_idx = None
+        self.sensitivity = sensitivity
 
         super().__init__("yahpogym", scenario_name, instance_idx, metric)
 
@@ -29,6 +30,8 @@ class YahpoGymBenchmark(HyperparameterOptimizationBenchmark):
 
         # cache default values for hyperparameters
         self.defaults = dict()
+
+        self.activate_instance_prints = False
 
         for hyperparam in self.benchmark.get_opt_space(drop_fidelity_params=True).get_hyperparameters():
             if hyperparam.name not in SKIP_PARAMS:
@@ -81,14 +84,18 @@ class YahpoGymBenchmark(HyperparameterOptimizationBenchmark):
         change_back = False
         if instance is not None and (type(instance) is int or type(instance) is str):
             if type(instance) is int:
-                instance = self.benchmark.instances[instance]
+                instance = self.get_instances()[instance]
             self.benchmark.set_instance(instance)
             change_back = True
+
+        if self.activate_instance_prints:
+            print("Instance in benchmark ", self.benchmark.instance)
 
         # if given configuration is not a list of configurations, make it a list
         if type(configuration) is dict:
             configuration = [configuration]
 
+        obj_list = []
         obj = None
         # iterate over the configurations in the list of configurations and return the maximum/minimum objective value
         for config in configuration:
@@ -110,6 +117,7 @@ class YahpoGymBenchmark(HyperparameterOptimizationBenchmark):
                     if m in self.minimize_metrics:
                         res = (-1) * res
 
+                    obj_list.append(res)
                     if obj is None or res > obj:
                         obj = res
                     success = True
@@ -117,12 +125,16 @@ class YahpoGymBenchmark(HyperparameterOptimizationBenchmark):
                     string_error = repr(e)
                     param_to_del = string_error.split("hyperparameter '")[1].split("' must")[0]
                     config.pop(param_to_del, None)
-                    print(e)
+                    # print(e)
 
         # restore instance index originally set
         if change_back and (type(self.instance_idx) is int or type(self.instance_idx) is str):
             self.set_instance(self.instance_idx)
-        return obj
+
+        if self.sensitivity:
+            return np.var(np.array(obj_list))
+        else:
+            return max(obj_list)
 
     def get_num_instances(self):
         if self.instance_idx is None:

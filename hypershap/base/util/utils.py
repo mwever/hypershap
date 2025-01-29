@@ -121,6 +121,10 @@ def setup_game(
         hpo_problem = YahpoGymBenchmark(
             scenario_name=scenario, metric=metric, instance_idx=instance_index
         )
+    elif benchmark == "yahpogym-sense":
+        hpo_problem = YahpoGymBenchmark(
+            scenario_name=scenario, metric=metric, instance_idx=instance_index, sensitivity=True
+        )
     elif benchmark == "pd1":
         hpo_problem = PD1Benchmark(scenario_name=scenario)
     elif benchmark == "jahs":
@@ -144,7 +148,7 @@ def setup_game(
         game = shapiq.Game(path_to_values=game_path, verbose=verbose, normalize=normalize_loaded)
         player_names = open(name_file).read().splitlines()
         print(f"Loaded game from {game_path}.")
-        return game, game_name, player_names
+        return game, game_name, player_names, hpo_problem
 
     if only_load:
         raise ValueError(
@@ -162,7 +166,7 @@ def setup_game(
         game = DataSpecificTunabilityHPIGame(hpo_problem, instance_index, **shared_game_config)
     elif game_type == ABLATION_GAME:
         optimal_cfg, _ = _find_optimal_configuration(hpo_problem, random_state, n_configs)
-        game = AblationHPIGame(hpo_problem, instance_index, optimal_cfg, random_state, verbose)
+        game = AblationHPIGame(hpo_problem, instance_index, optimal_cfg, hpo_problem.get_default_config(), random_state, verbose)
     elif game_type == OPTIMIZER_BIAS_GAME:
         optimizer = LocalOptimizer(random_state=random_state, verbose=verbose)
         random_search = SubspaceRandomOptimizer()

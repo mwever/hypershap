@@ -87,6 +87,3 @@ class AblationHPIGame(AblationSetHPIGame):
             random_state=random_state,
             verbose=verbose,
         )
-
-        print(self.optimized_cfg_list)
-        print(self.reference_cfg_list)
