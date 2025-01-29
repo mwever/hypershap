@@ -87,8 +87,9 @@ if __name__ == "__main__":
     # plot_and_save_interactions("data_specific_tunability_pd1_cifar100_wideresnet_2048_default_default_n_configs=10000_random_state=42.npz", benchmark="pd1")
     # plot_and_save_interactions("data_specific_tunability_pd1_translatewmt_xformer_64_default_default_n_configs=10000_random_state=42.npz", benchmark="pd1")
 
-    # lcbench --------------------------------------------------------------------------------------
+    # JAHS plots -----------------------------------------------------------------------------------
     plot_and_save_interactions(
-        "data_specific_tunability_yahpogym_rbv2_ranger_181_acc_n_configs=10000_random_state=42.npz",
-        benchmark="ranger",
+        "ablation_jahs_jahs_CIFAR10_default_n_configs=10000_random_state=42.npz", benchmark="jahs"
     )
+    # plot_and_save_interactions("ablation_pd1_lm1b_transformer_2048_default_default_n_configs=10000_random_state=42.npz", benchmark="pd1")
+    #

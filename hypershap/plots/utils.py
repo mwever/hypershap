@@ -34,7 +34,7 @@ if not os.path.exists(JAHS_GAME_STORAGE_DIR):
 
 PARAMETER_NAMES = {
     "pd1": ["lr_decay_factor", "lr_initial", "lr_power", "opt_momentum"],
-    "yahs": [
+    "jahs": [
         "Activation",
         "LearningRate",
         "Op1",
