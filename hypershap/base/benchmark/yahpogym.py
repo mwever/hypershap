@@ -14,9 +14,9 @@ SKIP_PARAMS = ["OpenML_task_id", "task_id"]
 class YahpoGymBenchmark(HyperparameterOptimizationBenchmark):
     minimize_metrics = ["time", "runtime_train", "runtime_test", "memory_train", "memory_test"]
 
-    def __init__(self, scenario_name, metric, instance_idx=None):
+    def __init__(self, scenario_name, metric, instance_idx=None, yahpogym_folder=YAHPOGYM_FOLDER):
         from yahpo_gym import benchmark_set, local_config
-        local_config.set_data_path(YAHPOGYM_FOLDER)
+        local_config.set_data_path(yahpogym_folder)
         self.instance_idx = None
 
         super().__init__("yahpogym", scenario_name, instance_idx, metric)

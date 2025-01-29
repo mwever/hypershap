@@ -165,6 +165,7 @@ def setup_game(
         game = AblationHPIGame(hpo_problem, instance_index, optimal_cfg, random_state, verbose)
     elif game_type == OPTIMIZER_BIAS_GAME:
         optimizer = LocalOptimizer(random_state=random_state, verbose=verbose)
+        random_search = SubspaceRandomOptimizer()
         game = DataSpecificOptimizerBiasGame(
             hpo_problem,
             instance=instance_index,

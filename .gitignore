@@ -180,3 +180,4 @@ data/yahpodata/*
 *.png
 
 database_credentials.yml
+/smac3_output

@@ -20,3 +20,12 @@ class SubspaceRandomOptimizer(AbstractOptimizer):
         res_cand, res_perf = rssim.simulate_hpo_run(0)
         return max(hpoBenchmark.get_default_config_performance(), res_perf)
 
+
+
+class RandomOptimizer(SubspaceRandomOptimizer):
+    def __init__(self, hpo_budget=50000, random_state=None, verbose=False):
+        super().__init__(None, hpo_budget, random_state, verbose)
+
+    def optimize(self, hpoBenchmark:HyperparameterOptimizationBenchmark, coalition):
+        self.param_selection = hpoBenchmark.get_list_of_tunable_hyperparameters()
+        return super().optimize(hpoBenchmark, coalition)
