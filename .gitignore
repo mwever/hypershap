@@ -181,3 +181,4 @@ data/yahpodata/*
 
 database_credentials.yml
 /smac3_output
+/game_storage/

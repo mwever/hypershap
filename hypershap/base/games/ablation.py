@@ -1,3 +1,5 @@
+import copy
+
 import numpy as np
 
 from hypershap.base.benchmark.abstract_benchmark import HyperparameterOptimizationBenchmark
@@ -65,6 +67,3 @@ class AblationHPIGame(AblationSetHPIGame):
 
         reference_cfg_list = [reference_cfg] if reference_cfg is not None else None
         super().__init__(hpoBenchmark, optimized_cfg_list=[optimized_cfg], reference_cfg_list=reference_cfg_list, random_state=random_state, verbose=verbose)
-
-        print(self.optimized_cfg_list)
-        print(self.reference_cfg_list)

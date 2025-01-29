@@ -1,7 +1,0 @@
-batch_size
-learning_rate
-max_dropout
-max_units
-momentum
-num_layers
-weight_decay

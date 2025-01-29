@@ -22,6 +22,7 @@ def _print_game_info(game: shapiq.Game, setup_time: float) -> None:
 
 def pre_compute_games(
     benchmark_names: list[str],
+    scenario_names: list[str],
     game_types: list[str] = None,
     metric: str = "acc",
     pre_compute: bool = False,
@@ -48,98 +49,101 @@ def pre_compute_games(
         game_types = ["optbias", "universal", "global", "local", "universal-local"]
 
     for benchmark_name in benchmark_names:
-        print(f"\nInspecting benchmark: {benchmark_name}.")
+        for scenario_name in scenario_names:
+            print(f"\nInspecting benchmark: {benchmark_name}.")
 
-        # Optimizer Behavior Marginal Search
-        if DS_OPTIMIZER_BIAS_GAME in game_types:
-            setup_time = time.time()
-            game_optbias, _, _ = setup_game(
-                DS_OPTIMIZER_BIAS_GAME,
-                benchmark=benchmark_name,
-                scenario="",
-                metric=metric,
-                pre_compute=pre_compute,
-                verbose=verbose,
-                instance_index=instance_index,
-                n_configs=n_configs,
-            )
-            setup_time = time.time() - setup_time
-            _print_game_info(game_optbias, setup_time)
+            # Optimizer Behavior Marginal Search
+            if DS_OPTIMIZER_BIAS_GAME in game_types:
+                setup_time = time.time()
+                game_optbias, _, _ = setup_game(
+                    DS_OPTIMIZER_BIAS_GAME,
+                    benchmark=benchmark_name,
+                    scenario="",
+                    metric=metric,
+                    pre_compute=pre_compute,
+                    verbose=verbose,
+                    instance_index=instance_index,
+                    n_configs=n_configs,
+                )
+                setup_time = time.time() - setup_time
+                _print_game_info(game_optbias, setup_time)
 
-        # Optimizer Behavior Subset A
-        if DS_OPTIMIZER_BIAS_GAME + OB_GAME_SET_A_SUFFIX in game_types:
-            setup_time = time.time()
-            game_optbias, _, _ = setup_game(
-                DS_OPTIMIZER_BIAS_GAME + OB_GAME_SET_A_SUFFIX,
-                benchmark_name,
-                metric=metric,
-                pre_compute=pre_compute,
-                verbose=verbose,
-                instance_index=instance_index,
-                n_configs=n_configs,
-            )
-            setup_time = time.time() - setup_time
-            _print_game_info(game_optbias, setup_time)
+            # Optimizer Behavior Subset A
+            if DS_OPTIMIZER_BIAS_GAME + OB_GAME_SET_A_SUFFIX in game_types:
+                setup_time = time.time()
+                game_optbias, _, _ = setup_game(
+                    DS_OPTIMIZER_BIAS_GAME + OB_GAME_SET_A_SUFFIX,
+                    benchmark_name,
+                    metric=metric,
+                    pre_compute=pre_compute,
+                    verbose=verbose,
+                    instance_index=instance_index,
+                    n_configs=n_configs,
+                )
+                setup_time = time.time() - setup_time
+                _print_game_info(game_optbias, setup_time)
 
-        # Optimizer Behavior Subset B
-        if DS_OPTIMIZER_BIAS_GAME + OB_GAME_SET_B_SUFFIX in game_types:
-            setup_time = time.time()
-            game_optbias, _, _ = setup_game(
-                DS_OPTIMIZER_BIAS_GAME + OB_GAME_SET_B_SUFFIX,
-                benchmark_name,
-                metric=metric,
-                pre_compute=pre_compute,
-                verbose=verbose,
-                instance_index=instance_index,
-                n_configs=n_configs,
-            )
-            setup_time = time.time() - setup_time
-            _print_game_info(game_optbias, setup_time)
+            # Optimizer Behavior Subset B
+            if DS_OPTIMIZER_BIAS_GAME + OB_GAME_SET_B_SUFFIX in game_types:
+                setup_time = time.time()
+                game_optbias, _, _ = setup_game(
+                    DS_OPTIMIZER_BIAS_GAME + OB_GAME_SET_B_SUFFIX,
+                    benchmark_name,
+                    metric=metric,
+                    pre_compute=pre_compute,
+                    verbose=verbose,
+                    instance_index=instance_index,
+                    n_configs=n_configs,
+                )
+                setup_time = time.time() - setup_time
+                _print_game_info(game_optbias, setup_time)
 
-        # Tunability Game
-        if TUNABILITY_GAME in game_types:
-            setup_time = time.time()
-            game_tunability, _, _ = setup_game(
-                TUNABILITY_GAME,
-                benchmark_name,
-                metric=metric,
-                pre_compute=pre_compute,
-                verbose=verbose,
-                n_configs=n_configs,
-                n_instances_universal=n_instances_universal,
-            )
-            setup_time = time.time() - setup_time
-            _print_game_info(game_tunability, setup_time)
+            # Tunability Game
+            if TUNABILITY_GAME in game_types:
+                setup_time = time.time()
+                game_tunability, _, _ = setup_game(
+                    TUNABILITY_GAME,
+                    benchmark_name,
+                    metric=metric,
+                    pre_compute=pre_compute,
+                    verbose=verbose,
+                    n_configs=n_configs,
+                    n_instances_universal=n_instances_universal,
+                )
+                setup_time = time.time() - setup_time
+                _print_game_info(game_tunability, setup_time)
 
-        # Data-Specific Tunability Game
-        if DS_TUNABILITY_GAME in game_types:
-            setup_time = time.time()
-            game_ds_tunability, _, _ = setup_game(
-                DS_TUNABILITY_GAME,
-                benchmark_name,
-                metric=metric,
-                pre_compute=pre_compute,
-                verbose=verbose,
-                instance_index=instance_index,
-                n_configs=n_configs,
-            )
-            setup_time = time.time() - setup_time
-            _print_game_info(game_ds_tunability, setup_time)
+            # Data-Specific Tunability Game
+            if DS_TUNABILITY_GAME in game_types:
+                setup_time = time.time()
+                game_ds_tunability, _, _, _ = setup_game(
+                    DS_TUNABILITY_GAME,
+                    benchmark=benchmark_name,
+                    scenario=scenario_name,
+                    metric=metric,
+                    pre_compute=pre_compute,
+                    verbose=verbose,
+                    instance_index=instance_index,
+                    n_configs=n_configs,
+                )
+                setup_time = time.time() - setup_time
+                _print_game_info(game_ds_tunability, setup_time)
 
-        # Ablation Game
-        if ABLATION_GAME in game_types:
-            setup_time = time.time()
-            game_local, _, _ = setup_game(
-                ABLATION_GAME,
-                benchmark_name,
-                metric=metric,
-                pre_compute=pre_compute,
-                verbose=verbose,
-                instance_index=instance_index,
-                n_configs=n_configs,
-            )
-            setup_time = time.time() - setup_time
-            _print_game_info(game_local, setup_time)
+            # Ablation Game
+            if ABLATION_GAME in game_types:
+                setup_time = time.time()
+                game_local, _, _, _ = setup_game(
+                    ABLATION_GAME,
+                    benchmark=benchmark_name,
+                    scenario=scenario_name,
+                    metric=metric,
+                    pre_compute=pre_compute,
+                    verbose=verbose,
+                    instance_index=instance_index,
+                    n_configs=n_configs,
+                )
+                setup_time = time.time() - setup_time
+                _print_game_info(game_local, setup_time)
 
 
 if __name__ == "__main__":
@@ -148,35 +152,41 @@ if __name__ == "__main__":
 
     # "rbv2_super" is excluded due to its long run-time
     benchmark_list = [
+        "yahpogym-sense"
+    ]
+
+    scenario_list = [
         # "rbv2_svm",
         # "rbv2_rpart",
         # "rbv2_aknn",
         # "rbv2_glmnet",
-        "rbv2_ranger",
+        # "rbv2_ranger",
         # "rbv2_xgboost",
-        # "lcbench",
+        "lcbench",
     ]
 
     pre_compute_games(
         benchmark_list,
-        game_types=["universal"],
-        metric="acc",
+        scenario_list,
+        game_types=[DS_TUNABILITY_GAME],
+        #metric="acc",
+        metric="val_accuracy",
         pre_compute=True,
         verbose=True,
-        instance_index=None,
+        instance_index=0,
         n_configs=10_000,
         n_instances_universal=10,
     )
 
-    for inst_index in list(range(0, 10)):
-        print(f"Instance Index: {inst_index}")
-        pre_compute_games(
-            benchmark_list,
-            game_types=[ABLATION_GAME, DS_TUNABILITY_GAME, TUNABILITY_GAME],
-            metric="acc",
-            pre_compute=True,
-            verbose=True,
-            instance_index=inst_index,
-            n_configs=10_000,
-            n_instances_universal=10,
-        )
+    # for inst_index in list(range(0, 10)):
+    #     print(f"Instance Index: {inst_index}")
+    #     pre_compute_games(
+    #         benchmark_list,
+    #         game_types=[ABLATION_GAME, DS_TUNABILITY_GAME, TUNABILITY_GAME],
+    #         metric="acc",
+    #         pre_compute=True,
+    #         verbose=True,
+    #         instance_index=inst_index,
+    #         n_configs=10_000,
+    #         n_instances_universal=10,
+    #     )
