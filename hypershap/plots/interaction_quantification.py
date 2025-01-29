@@ -2,7 +2,6 @@
 
 import copy
 import os
-from typing import Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -11,11 +10,8 @@ import scipy
 import shapiq
 from shapiq.interaction_values import InteractionValues
 from shapiq.utils import powerset
-
-from hypershap.base.util.utils import setup_game
-
-# create paper_plots directory
-os.makedirs("paper_plots", exist_ok=True)
+from tqdm import tqdm
+from utils import JAHS_GAME_STORAGE_DIR, PD1_GAME_STORAGE_DIR, YAHPOGYM_GAME_STORAGE_DIR
 
 
 def approximated_game(interaction_index):
@@ -144,31 +140,32 @@ def get_approximation_error(
 
 
 def evaluate_game(
-    game: shapiq.Game, indices: Optional[list[str]] = None, multiplier: float = 1.0
+    game: shapiq.Game, index: str = "FSII", verbose: bool = False
 ) -> tuple[dict, dict]:
     """Evaluates the game.
 
     Args:
         game: The game to evaluate.
-        indices: The indices to approximate the game with. Default is `None`.
+        index: The indices to approximate the game with. Default is `FSII`.
+        verbose: Whether to print verbose output. Default is `False`.
+
+    Returns:
+        A tuple containing the approximation errors and the Möbius transform.
     """
-    computer = shapiq.ExactComputer(n_players=game.n_players, game_fun=game)
+    computer = shapiq.ExactComputer(n_players=game.n_players, game=game)
     # computer.baseline_value = float(game.normalization_value)
     game_values = _convert_game_to_interaction(computer)
-    # multiply the game values with a factor
-    game_values.values *= multiplier
 
-    moebius = {}
-    approximations = {}
-    for index in indices:
-        approximations[index] = {}
-        for order in range(1, game.n_players + 1):
-            interactions = computer.shapley_interaction(index=index, order=order)
-            approximations[index][order] = approximated_game(interactions)
-        # For highest order Shapley interactions are Möbius transform
-        moebius[index] = interactions
+    moebius, approximations = {}, {}
+    approximations[index] = {}
+    for order in range(1, game.n_players + 1):
+        interactions = computer.shapley_interaction(index=index, order=order)
+        approximations[index][order] = approximated_game(interactions)
+        if order == game.n_players:  # For highest order Shapley interactions are Möbius transform
+            moebius[index] = interactions
     approximation_errors = get_approximation_error(approximations, game_values)
-    print("R2 Scores per Order:", approximation_errors)
+    if verbose:
+        print("R2 Scores per Order:", approximation_errors)
     return approximation_errors, moebius
 
 
@@ -210,14 +207,24 @@ def plot_violin(moebius, game_id):
     plt.show()
 
 
-def _aggregate_r2(r2_scores: dict[str, dict[int, float]], game_ids: list[str]):
+def _aggregate_r2(
+    r2_scores: list[dict[str, dict[int, float]]], index="FSII"
+) -> dict[str, dict[int, float]]:
     import pandas as pd
 
-    r2_scores_filtered = {game_id: r2_scores[game_id] for game_id in game_ids}
-    r2_scores_df = pd.DataFrame(r2_scores_filtered).T
-    scores_mean = r2_scores_df.mean(axis=0).to_dict()
-    scores_std = r2_scores_df.std(axis=0).to_dict()
-    scores_sem = r2_scores_df.sem(axis=0).to_dict()
+    scores = []
+    for score_game in r2_scores:
+        score_orders = score_game[index]
+        for order, r2_score in score_orders.items():
+            scores.append({"order": order, "r2_score": r2_score})
+    r2_scores_df = pd.DataFrame(scores)
+
+    scores_mean, scores_std, scores_sem = {}, {}, {}
+    for order in range(1, r2_scores_df["order"].max() + 1):
+        scores = r2_scores_df[r2_scores_df["order"] == order]["r2_score"]
+        scores_mean[order] = float(scores.mean())
+        scores_std[order] = float(scores.std())
+        scores_sem[order] = float(scores.sem())
     return {"mean": scores_mean, "std": scores_std, "sem": scores_sem}
 
 
@@ -381,180 +388,102 @@ def plot_violine_agg(
     return fig, axis
 
 
+def load_games(
+    benchmark_name: str, game_type: str, n_instances: int | None = None
+) -> list[shapiq.Game]:
+    """Helper function to load a pre-computed game from disc for evaluation."""
+    available_game_types = ["ablation", "tunability", "optbias", "data_specific_tunability"]
+    assert game_type in available_game_types
+    if benchmark_name == "lcbench":
+        game_storage_dir = YAHPOGYM_GAME_STORAGE_DIR
+    elif benchmark_name == "rbv2_ranger":
+        game_storage_dir = YAHPOGYM_GAME_STORAGE_DIR
+    elif benchmark_name == "pd1":
+        game_storage_dir = PD1_GAME_STORAGE_DIR
+    elif benchmark_name == "jahs":
+        game_storage_dir = JAHS_GAME_STORAGE_DIR
+    else:
+        raise ValueError(f"Invalid benchmark name: {benchmark_name}")
+
+    all_files = os.listdir(game_storage_dir)
+    all_files = [file for file in all_files if file.endswith(".npz")]
+    all_files = [file for file in all_files if benchmark_name in file]
+
+    # select the correct game type
+    all_files = [file for file in all_files if game_type + "_" in file]
+    if game_type == "tunability":  # remove all data-specific tunability games
+        all_files = [file for file in all_files if "data_specific_tunability" not in file]
+    print(f"Found {len(all_files)} games for {game_type} in {benchmark_name}.")
+    if n_instances is not None:
+        all_files = all_files[:n_instances]
+
+    games = []
+    for file in all_files:
+        game = shapiq.Game(path_to_values=os.path.join(game_storage_dir, file), normalize=True)
+        games.append(game)
+
+    return games
+
+
 if __name__ == "__main__":
 
-    LCBENCH = True
-    RANGER = True
+    index: str = "FSII"
+    max_order_to_plot: int | None = 5
 
-    if LCBENCH:
-        n_instances = 34
+    # configure the games to plot
+    games_to_plot: list[tuple[str, str, int | None]] = [
+        # ("jahs", "ablation", None),
+        ("pd1", "ablation", None),
+        # TODO: add more games here
+    ]
 
-        # UNIVERSAL
-        hpo_game_universal, _, names = setup_game(
-            game_type="universal",
-            benchmark_name="lcbench",
-            normalize_loaded=True,
-            n_configs=10_000,
-            only_load=True,
-        )
+    # load the games -------------------------------------------------------------------------------
+    all_games, n_games = {}, 0
+    for benchmark_name, game_type, n_instances in games_to_plot:
+        games = load_games(benchmark_name, game_type, n_instances)
+        all_games[(benchmark_name, game_type)] = games
+        n_games += len(games)
+    print(f"Loaded {n_games} games to plot")
 
-        universal_game = hpo_game_universal
-        universal_game_id = universal_game.game_id
+    # evaluate the games ---------------------------------------------------------------------------
+    all_results = {}
+    n_players_max = 0
+    pbar = tqdm(total=n_games, desc="Evaluating games")
+    for (benchmark_name, game_type), games in all_games.items():
+        results = {"errors": [], "moebius": []}
+        for game in games:
+            errors, mi = evaluate_game(game, index=index)
+            results["errors"].append(errors)
+            results["moebius"].append(mi)
+            pbar.update(1)
+            n_players_max = max(n_players_max, game.n_players)
+        all_results[(benchmark_name, game_type)] = results
+    pbar.close()
+    print(f"Evaluated {n_games} games. Maximum number of players: {n_players_max}")
 
-        # GLOBAL
-        global_games = []
-        for instance_index in range(n_instances):
-            hpo_game_global, _, names = setup_game(
-                game_type="global",
-                benchmark_name="lcbench",
-                normalize_loaded=True,
-                instance_index=instance_index,
-                n_configs=10_000,
-                only_load=True,
-            )
-            global_games.append(hpo_game_global)
-
-        # LOCAL
-        local_games = []
-        for instance_index in range(n_instances):
-            hpo_game_local, _, names = setup_game(
-                game_type="local",
-                benchmark_name="lcbench",
-                normalize_loaded=True,
-                instance_index=instance_index,
-                n_configs=100_000,
-                only_load=True,
-            )
-            local_games.append(hpo_game_local)
-
-        # evaluate games
-        r2_scores, moebius_interactions = {}, {}
-        for game in [universal_game] + global_games + local_games:
-            r2_score, moebius_interaction = evaluate_game(game=game, indices=["FSII"])
-            r2_scores[game.game_id] = r2_score["FSII"]
-            moebius_interactions[game.game_id] = moebius_interaction["FSII"]
-
-        # create aggregate r2 scores
-        global_agg = _aggregate_r2(r2_scores, [game.game_id for game in global_games])
-        local_agg = _aggregate_r2(r2_scores, [game.game_id for game in local_games])
-        r2_scores_agg = {
-            "universal": {"mean": r2_scores[universal_game_id]},
-            "global": global_agg,
-            "local": local_agg,
+    # aggregate the results ------------------------------------------------------------------------
+    all_agg_results = {}
+    for (benchmark_name, game_type), results in all_results.items():
+        all_agg_results[(benchmark_name, game_type)] = {
+            "scores": _aggregate_r2(results["errors"]),
+            "moebius": results["moebius"],
         }
 
-        # combine moebius interactions
-        moebius_interactions_agg = {
-            "universal": {universal_game_id: moebius_interactions[universal_game_id]},
-            "global": {game.game_id: moebius_interactions[game.game_id] for game in global_games},
-            "local": {game.game_id: moebius_interactions[game.game_id] for game in local_games},
-        }
+    # plot the results -----------------------------------------------------------------------------
+    fig, ax = plt.subplots(1, 1, figsize=(6, 6))
+    for (benchmark_name, game_type), agg_results in all_agg_results.items():
+        scores_mean = agg_results["scores"]["mean"]
+        scores_std = agg_results["scores"]["std"]
+        orders = list(sorted(scores_mean.keys()))
+        values = [scores_mean[order] for order in orders]
+        errors = [scores_std[order] for order in orders]
+        ax.errorbar(orders, values, yerr=errors, label=f"{benchmark_name} - {game_type}")
 
-        # plot the line plot
-        fig_line, ax_line = plot_r2_agg(r2_scores_agg, figsize=(4, 3))
-        plt.savefig("paper_plots/lcbench_r2.pdf")
-        plt.show()
-
-        # plot the violin plot
-        fig_violin, ax_violin = plot_violine_agg(
-            moebius_interactions_agg,
-            figsize=(5, 3),
-            violin=False,
-            ylim=(-0.5, 15.5),
-            y_ticks=[0, 5, 10, 15],
-        )
-        plt.savefig("paper_plots/lcbench_moebius.pdf")
-        plt.show()
-
-        # plot the violin plot
-        fig_violin, ax_violin = plot_violine_agg(
-            moebius_interactions_agg, figsize=(5, 3), violin=True
-        )
-        plt.savefig("paper_plots/lcbench_moebius_violin.pdf")
-        plt.show()
-
-    if RANGER:
-        n_instances = 10
-
-        # UNIVERSAL
-        hpo_game_universal, _, names = setup_game(
-            game_type="universal",
-            benchmark_name="rbv2_ranger",
-            normalize_loaded=True,
-            n_configs=10_000,
-            only_load=True,
-            metric="acc",
-        )
-
-        universal_game = hpo_game_universal
-        universal_game_id = universal_game.game_id
-
-        # GLOBAL
-        global_games = []
-        for instance_index in range(n_instances):
-            hpo_game_global, _, names = setup_game(
-                game_type="global",
-                benchmark_name="rbv2_ranger",
-                normalize_loaded=True,
-                instance_index=instance_index,
-                n_configs=10_000,
-                only_load=True,
-                metric="acc",
-            )
-            global_games.append(hpo_game_global)
-
-        # LOCAL
-        local_games = []
-        for instance_index in range(n_instances):
-            hpo_game_local, _, names = setup_game(
-                game_type="local",
-                benchmark_name="rbv2_ranger",
-                normalize_loaded=True,
-                instance_index=instance_index,
-                n_configs=100_000,
-                only_load=True,
-                metric="acc",
-            )
-            local_games.append(hpo_game_local)
-
-        # evaluate games
-        r2_scores, moebius_interactions = {}, {}
-        for game in [universal_game] + global_games + local_games:
-            r2_score, moebius_interaction = evaluate_game(game=game, indices=["FSII"], multiplier=1)
-            r2_scores[game.game_id] = r2_score["FSII"]
-            moebius_interactions[game.game_id] = moebius_interaction["FSII"]
-
-        # create aggregate r2 scores
-        global_agg = _aggregate_r2(r2_scores, [game.game_id for game in global_games])
-        local_agg = _aggregate_r2(r2_scores, [game.game_id for game in local_games])
-        r2_scores_agg = {
-            "universal": {"mean": r2_scores[universal_game_id]},
-            "global": global_agg,
-            "local": local_agg,
-        }
-
-        # combine moebius interactions
-        moebius_interactions_agg = {
-            "universal": {universal_game_id: moebius_interactions[universal_game_id]},
-            "global": {game.game_id: moebius_interactions[game.game_id] for game in global_games},
-            "local": {game.game_id: moebius_interactions[game.game_id] for game in local_games},
-        }
-
-        # plot the line plot
-        fig_line, ax_line = plot_r2_agg(r2_scores_agg, figsize=(4, 3))
-        plt.savefig("paper_plots/ranger_r2.pdf")
-        plt.show()
-
-        # plot the violin plot
-        fig_violin, ax_violin = plot_violine_agg(
-            moebius_interactions_agg, figsize=(5, 3), violin=False
-        )
-        plt.savefig("paper_plots/ranger_moebius.pdf")
-        plt.show()
-
-        # plot the violin plot
-        fig_violin, ax_violin = plot_violine_agg(
-            moebius_interactions_agg, figsize=(5, 3), violin=True
-        )
-        plt.savefig("paper_plots/ranger_moebius_violin.pdf")
-        plt.show()
+    # beautify the plot
+    ax.set_xlabel("Explanation Order")
+    ax.set_ylabel("Shapley-weighted R2")
+    if max_order_to_plot is not None:
+        ax.set_xlim(0.5, max_order_to_plot + 0.5)
+    # only integer ticks
+    ax.xaxis.set_major_locator(plt.MaxNLocator(integer=True))
+    plt.show()

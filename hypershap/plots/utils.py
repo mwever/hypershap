@@ -19,6 +19,20 @@ os.makedirs(APPENDIX_PAPER_PLOTS_DIR, exist_ok=True)
 PLOT_DIR = os.path.join("..", "..", "plots")
 os.makedirs(PLOT_DIR, exist_ok=True)
 
+# define the game storage directories
+GAME_STORAGE_DIR = os.path.join("..", "..", "res", "games")
+PD1_GAME_STORAGE_DIR = os.path.join(GAME_STORAGE_DIR, "pd1")
+if not os.path.exists(PD1_GAME_STORAGE_DIR):
+    raise FileNotFoundError(f"PD1 game storage directory not found at {PD1_GAME_STORAGE_DIR}")
+YAHPOGYM_GAME_STORAGE_DIR = os.path.join(GAME_STORAGE_DIR, "yahpogym")
+if not os.path.exists(YAHPOGYM_GAME_STORAGE_DIR):
+    raise FileNotFoundError(
+        f"YAHPOGYM game storage directory not found at {YAHPOGYM_GAME_STORAGE_DIR}"
+    )
+JAHS_GAME_STORAGE_DIR = os.path.join(GAME_STORAGE_DIR, "jahs")
+if not os.path.exists(JAHS_GAME_STORAGE_DIR):
+    raise FileNotFoundError(f"JAHS game storage directory not found at {JAHS_GAME_STORAGE_DIR}")
+
 PARAMETER_NAMES = {
     "pd1": ["lr_decay_factor", "lr_initial", "lr_power", "opt_momentum"],
     "yahs": [
@@ -57,7 +71,7 @@ PARAMETER_NAMES = {
 
 def plot_upset(
     interactions: shapiq.InteractionValues,
-    figsize=None,
+    figsize: tuple[float, float] | tuple[int, int] = None,
     save_path: str | None = None,
     add_zero_y_lim: bool = False,
     fontsize_param_names: int | None = 14,
