@@ -10,8 +10,8 @@ from utils import (
     APPENDIX_PAPER_PLOTS_DIR,
     MAIN_PAPER_PLOTS_DIR,
     abbreviate_player_names,
+    get_circular_layout,
     get_min_max_of_interactions,
-    plot_si_graph,
 )
 
 if __name__ == "__main__":
@@ -80,13 +80,18 @@ if __name__ == "__main__":
         print("Grand", game.grand_coalition_value)
 
         plt.rcParams.update({"font.size": 18})
-        plot = plot_si_graph(
-            interaction_values=interaction,
-            player_names=parameter_names,
-            min_max_interactions=(min_int, max_int),  # scales the plots together
-            orders_to_plot=None,  # optionally specify which orders to plot as a list[int]
+        pos = get_circular_layout(n_players=game.n_players)
+        plot = shapiq.si_graph_plot(
+            interaction,
+            feature_names=parameter_names,
+            min_max_interactions=(min_int, max_int),
+            pos=pos,
             show=False,
+            size_factor=3.0,
+            compactness=1e50,
+            node_size_scaling=1.5,
         )
+        plt.tight_layout()
         fig, ax = plot
         if fsii:
             save_path = os.path.join(APPENDIX_PAPER_PLOTS_DIR, f"fsii_graph_{budget}.pdf")

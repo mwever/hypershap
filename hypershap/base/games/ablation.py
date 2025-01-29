@@ -1,3 +1,5 @@
+import copy
+
 import numpy as np
 
 from hypershap.base.benchmark.abstract_benchmark import HyperparameterOptimizationBenchmark
@@ -6,20 +8,24 @@ from hypershap.base.games.abstract_hpi_game import AbstractHPIGame
 
 class AblationSetHPIGame(AbstractHPIGame):
     def __init__(
-            self,
-            hpoBenchmark: HyperparameterOptimizationBenchmark,
-            optimized_cfg_list,
-            reference_cfg_list=None,
-            aggregator=lambda x: np.array(x).mean(),
-            random_state=None,
-            verbose: bool = False,
+        self,
+        hpoBenchmark: HyperparameterOptimizationBenchmark,
+        optimized_cfg_list,
+        reference_cfg_list=None,
+        aggregator=lambda x: np.array(x).mean(),
+        random_state=None,
+        verbose: bool = False,
     ) -> None:
         self.optimized_cfg_list = optimized_cfg_list
         if reference_cfg_list is not None:
             self.reference_cfg_list = reference_cfg_list
-            assert len(self.reference_cfg_list) == len(self.optimized_cfg_list), "Optimized config list must have same length as reference config list"
+            assert len(self.reference_cfg_list) == len(
+                self.optimized_cfg_list
+            ), "Optimized config list must have same length as reference config list"
         else:
-            self.reference_cfg_list = [hpoBenchmark.get_default_config()] * len(self.optimized_cfg_list)
+            self.reference_cfg_list = [hpoBenchmark.get_default_config()] * len(
+                self.optimized_cfg_list
+            )
         self.aggregator = aggregator
         super().__init__(hpoBenchmark, random_state, verbose)
 
@@ -36,9 +42,9 @@ class AblationSetHPIGame(AbstractHPIGame):
 
     def blend_parameters_according_to_coalition(self, cfgs, coalition):
         cfgs = copy.deepcopy(cfgs)
-        list_of_hyperparams_to_blind = np.array(self.hpoBenchmark.get_list_of_tunable_hyperparameters())[
-            (1 - coalition).astype(bool)
-        ]
+        list_of_hyperparams_to_blind = np.array(
+            self.hpoBenchmark.get_list_of_tunable_hyperparameters()
+        )[(1 - coalition).astype(bool)]
         list_of_hyperparams_to_blind = np.concatenate(
             (
                 list_of_hyperparams_to_blind,
@@ -55,16 +61,32 @@ class AblationSetHPIGame(AbstractHPIGame):
                     cfg[key] = reference[i][key]
         return cfgs
 
+
 class AblationHPIGame(AblationSetHPIGame):
-    def __init__(self, hpoBenchmark: HyperparameterOptimizationBenchmark, instance, optimized_cfg, reference_cfg=None, random_state=None,
-                 verbose: bool = False):
+    def __init__(
+        self,
+        hpoBenchmark: HyperparameterOptimizationBenchmark,
+        instance,
+        optimized_cfg,
+        reference_cfg=None,
+        random_state=None,
+        verbose: bool = False,
+    ):
         self.optimized_cfg = optimized_cfg
         self.reference_cfg = reference_cfg
         hpoBenchmark.set_instance(instance)
-        assert hpoBenchmark.get_num_instances() == 1, "Number of instances cannot exceed 1 for ablations."
+        assert (
+            hpoBenchmark.get_num_instances() == 1
+        ), "Number of instances cannot exceed 1 for ablations."
 
         reference_cfg_list = [reference_cfg] if reference_cfg is not None else None
-        super().__init__(hpoBenchmark, optimized_cfg_list=[optimized_cfg], reference_cfg_list=reference_cfg_list, random_state=random_state, verbose=verbose)
+        super().__init__(
+            hpoBenchmark,
+            optimized_cfg_list=[optimized_cfg],
+            reference_cfg_list=reference_cfg_list,
+            random_state=random_state,
+            verbose=verbose,
+        )
 
         print(self.optimized_cfg_list)
         print(self.reference_cfg_list)

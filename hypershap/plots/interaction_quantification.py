@@ -11,7 +11,12 @@ import shapiq
 from shapiq.interaction_values import InteractionValues
 from shapiq.utils import powerset
 from tqdm import tqdm
-from utils import JAHS_GAME_STORAGE_DIR, PD1_GAME_STORAGE_DIR, YAHPOGYM_GAME_STORAGE_DIR
+from utils import (
+    JAHS_GAME_STORAGE_DIR,
+    MAIN_PAPER_PLOTS_DIR,
+    PD1_GAME_STORAGE_DIR,
+    YAHPOGYM_GAME_STORAGE_DIR,
+)
 
 
 def approximated_game(interaction_index):
@@ -25,6 +30,8 @@ def approximated_game(interaction_index):
             approximation_values[coalition_pos] += interaction_index[interaction]
 
     baseline_value = approximation_values[approximation_lookup[tuple()]]
+    if baseline_value != 0:  # we only want to include normalized values
+        raise ValueError("Baseline value is not zero.")
     approximation = InteractionValues(
         index=interaction_index.index,
         max_order=n_players,
@@ -153,7 +160,7 @@ def evaluate_game(
         A tuple containing the approximation errors and the Möbius transform.
     """
     computer = shapiq.ExactComputer(n_players=game.n_players, game=game)
-    # computer.baseline_value = float(game.normalization_value)
+    computer._baseline_value = float(game.normalization_value)
     game_values = _convert_game_to_interaction(computer)
 
     moebius, approximations = {}, {}
@@ -167,44 +174,6 @@ def evaluate_game(
     if verbose:
         print("R2 Scores per Order:", approximation_errors)
     return approximation_errors, moebius
-
-
-def plot_r2(results, game_id):
-    x_vals = list(results.keys())
-    y_vals = list(results.values())
-    plt.figure()
-    plt.plot(
-        x_vals,
-        y_vals,
-    )
-    plt.ylim(0, 1.05)
-    plt.legend()
-    plt.title(game_id)
-    plt.xlabel("Explanation Order")
-    plt.ylabel("Shapley-weighted R2")
-    plt.savefig("plots/r2/r2_" + game_id + ".png")
-    plt.show()
-
-
-def plot_violin(moebius, game_id):
-    x_vals = [len(elem) for elem in list(moebius.dict_values.keys()) if len(elem) > 0]
-    y_vals = [elem for key, elem in moebius.dict_values.items() if len(key) > 0]
-    df = pd.DataFrame({"size": x_vals, "interaction": y_vals})
-    df["interaction_abs"] = np.abs(df["interaction"])
-    # Group the data by the x categories
-    unique_x_vals = df["size"].unique()
-    grouped_data = [df[df["size"] == cat]["interaction_abs"].values for cat in unique_x_vals]
-    plt.figure(figsize=(8, 5))
-    plt.violinplot(grouped_data, showmeans=True)
-    plt.ylim(0, 15)
-    # Add custom labels for the x-axis
-    plt.xticks(ticks=range(1, len(unique_x_vals) + 1), labels=unique_x_vals)
-    plt.legend()
-    plt.title(game_id)
-    plt.xlabel("Interaction Order")
-    plt.ylabel("Absolute Interaction Effect")
-    plt.savefig("plots/moebius/moebius_" + game_id + ".png")
-    plt.show()
 
 
 def _aggregate_r2(
@@ -396,7 +365,7 @@ def load_games(
     assert game_type in available_game_types
     if benchmark_name == "lcbench":
         game_storage_dir = YAHPOGYM_GAME_STORAGE_DIR
-    elif benchmark_name == "rbv2_ranger":
+    elif benchmark_name.startswith("rbv2"):
         game_storage_dir = YAHPOGYM_GAME_STORAGE_DIR
     elif benchmark_name == "pd1":
         game_storage_dir = PD1_GAME_STORAGE_DIR
@@ -413,9 +382,10 @@ def load_games(
     all_files = [file for file in all_files if game_type + "_" in file]
     if game_type == "tunability":  # remove all data-specific tunability games
         all_files = [file for file in all_files if "data_specific_tunability" not in file]
-    print(f"Found {len(all_files)} games for {game_type} in {benchmark_name}.")
+    all_files = sorted(set(all_files))
     if n_instances is not None:
         all_files = all_files[:n_instances]
+    print(f"Found {len(all_files)} games for {game_type} in {benchmark_name}. Using {n_instances}.")
 
     games = []
     for file in all_files:
@@ -425,17 +395,13 @@ def load_games(
     return games
 
 
-if __name__ == "__main__":
+def create_plot_data(
+    games_to_plot: list[tuple[str, str, int | None]], index: str = "FSII", only_load: bool = False
+) -> pd.DataFrame:
+    save_name = "plot_data.csv"
 
-    index: str = "FSII"
-    max_order_to_plot: int | None = 5
-
-    # configure the games to plot
-    games_to_plot: list[tuple[str, str, int | None]] = [
-        # ("jahs", "ablation", None),
-        ("pd1", "ablation", None),
-        # TODO: add more games here
-    ]
+    if only_load:
+        return pd.read_csv(save_name)
 
     # load the games -------------------------------------------------------------------------------
     all_games, n_games = {}, 0
@@ -450,7 +416,7 @@ if __name__ == "__main__":
     n_players_max = 0
     pbar = tqdm(total=n_games, desc="Evaluating games")
     for (benchmark_name, game_type), games in all_games.items():
-        results = {"errors": [], "moebius": []}
+        results = {"errors": [], "moebius": [], "n_games": len(games)}
         for game in games:
             errors, mi = evaluate_game(game, index=index)
             results["errors"].append(errors)
@@ -462,28 +428,150 @@ if __name__ == "__main__":
     print(f"Evaluated {n_games} games. Maximum number of players: {n_players_max}")
 
     # aggregate the results ------------------------------------------------------------------------
-    all_agg_results = {}
+    plot_data = []
     for (benchmark_name, game_type), results in all_results.items():
-        all_agg_results[(benchmark_name, game_type)] = {
-            "scores": _aggregate_r2(results["errors"]),
-            "moebius": results["moebius"],
-        }
+        scores = _aggregate_r2(results["errors"])
+        n_games = results["n_games"]
+        mean, std, sem = scores["mean"], scores["std"], scores["sem"]
+        for order in mean.keys():
+            plot_data.append(
+                {
+                    "benchmark": benchmark_name,
+                    "game_type": game_type,
+                    "order": order,
+                    "mean": mean[order],
+                    "std": std[order],
+                    "sem": sem[order],
+                    "n_games": n_games,
+                }
+            )
+
+    # save the results to disc
+    plot_data = pd.DataFrame(plot_data)
+    plot_data.to_csv(save_name, index=False)
+    print(f"Saved plot data to {save_name}")
+
+    return plot_data
+
+
+LEGEND_NAME_MAPPING = {
+    "jahs": "JAHS",
+    "rbv2_ranger": "RBV2/Ranger",
+    "lcbench": "LCBench",
+    "pd1": "PD1",
+    # game types
+    "tunability": "Tunability",
+    "data_specific_tunability": "Data-Specific Tunability",
+    "ablation": "Ablation",
+}
+
+MARKER_MAPPING = {
+    "jahs": "o",
+    "rbv2_ranger": "s",
+    "lcbench": "D",
+    "pd1": "X",
+}
+
+COLOR_MAPPING = {
+    "tunability": "#00b4d8",
+    "data_specific_tunability": "#ff6f00",
+    "ablation": "#ef27a6",
+}
+
+
+if __name__ == "__main__":
+
+    save_folder = os.path.join(MAIN_PAPER_PLOTS_DIR, "interaction_quantification")
+    os.makedirs(save_folder, exist_ok=True)
+
+    index: str = "FSII"
+    max_order_to_plot: int | None = 5
+    only_load: bool = True
+
+    # configure the games to plot
+    # TODO: Atm. there is a bug in data_specific_tunability for yapogym and this must be re-run
+    # TODO: Atm. there is a bug in ablation for yapogym and this must be re-run (throws an error)
+    games_to_plot: list[tuple[str, str, int | None]] = [
+        ("jahs", "data_specific_tunability", None),  # order 10
+        ("pd1", "data_specific_tunability", None),  # order 4
+        # ("rbv2_ranger", "data_specific_tunability", 10), # order 8 # TODO: Must be re-run
+        ("rbv2_ranger", "tunability", None),  # order 8
+        # ("lcbench", "data_specific_tunability", 10),  # order 7  # TODO: Must be re-run
+        ("lcbench", "tunability", None),  # order 7
+    ]
+
+    legend_order = [
+        ("jahs", "data_specific_tunability"),
+        ("pd1", "data_specific_tunability"),
+        ("rbv2_ranger", "data_specific_tunability"),
+        ("rbv2_ranger", "tunability"),
+        ("lcbench", "data_specific_tunability"),
+        ("lcbench", "tunability"),
+    ]
+
+    # load the data --------------------------------------------------------------------------------
+    data = create_plot_data(games_to_plot, index=index, only_load=only_load)
 
     # plot the results -----------------------------------------------------------------------------
-    fig, ax = plt.subplots(1, 1, figsize=(6, 6))
-    for (benchmark_name, game_type), agg_results in all_agg_results.items():
-        scores_mean = agg_results["scores"]["mean"]
-        scores_std = agg_results["scores"]["std"]
-        orders = list(sorted(scores_mean.keys()))
-        values = [scores_mean[order] for order in orders]
-        errors = [scores_std[order] for order in orders]
-        ax.errorbar(orders, values, yerr=errors, label=f"{benchmark_name} - {game_type}")
+    styling = {"mew": 1, "mec": "white", "markersize": 7, "linestyle": "-", "linewidth": 2}
+
+    fig, ax = plt.subplots(1, 1, figsize=(6.1, 3.2))
+    plotted_games = set()
+    for benchmark_name, game_type, _ in games_to_plot:
+        data_subset = data[(data["benchmark"] == benchmark_name) & (data["game_type"] == game_type)]
+        if len(data_subset) == 0:
+            print(f"Skipping {benchmark_name} {game_type} as no data is available.")
+            continue
+        order = max(data_subset["order"].values)
+        print(f"Adding {benchmark_name} {game_type} with {order} orders.")
+        plotted_games.add((benchmark_name, game_type))
+
+        name = LEGEND_NAME_MAPPING[game_type]
+        name += f" ({LEGEND_NAME_MAPPING[benchmark_name]})"
+        marker = MARKER_MAPPING[benchmark_name]
+        color = COLOR_MAPPING[game_type]
+        ax.plot(data_subset["order"], data_subset["mean"], marker=marker, color=color, **styling)
+        # use sem for error bars
+        ax.fill_between(
+            data_subset["order"],
+            data_subset["mean"] - data_subset["sem"],
+            data_subset["mean"] + data_subset["sem"],
+            color=color,
+            alpha=0.25,
+        )
+
+    for benchmark_name, game_type in legend_order:
+        if (benchmark_name, game_type) not in plotted_games:
+            continue
+
+        name = LEGEND_NAME_MAPPING[game_type]
+        name += f" ({LEGEND_NAME_MAPPING[benchmark_name]})"
+        marker = MARKER_MAPPING[benchmark_name]
+        color = COLOR_MAPPING[game_type]
+        ax.plot([], [], label=name, marker=marker, color=color, **styling)
 
     # beautify the plot
-    ax.set_xlabel("Explanation Order")
-    ax.set_ylabel("Shapley-weighted R2")
     if max_order_to_plot is not None:
         ax.set_xlim(0.5, max_order_to_plot + 0.5)
-    # only integer ticks
+    ax.set_ylim(0.45, 1.05)  # ax.set_ylim(-0.05, 1.05)
+    ax.legend(loc="lower right")
+
+    # increase fontsizes of ticks and axis labels
+    ax.tick_params(axis="both", which="both", labelsize=12)
+    ax.set_xlabel("Explanation Order", fontsize=14)
+    # write R^2 in math mode
+    ax.set_ylabel(r"Shapley-weighted $R^2$", fontsize=14)
+    # ax.set_title("Faithfulness", fontsize=18)
+
+    # add vertical grid lines
+    for i in range(1, max_order_to_plot + 1):
+        if i % 2 == 0:
+            continue
+        ax.add_patch(plt.Rectangle((i - 0.5, -0.5), 1, 100, color="#eeeeee", alpha=0.5, zorder=0))
+
     ax.xaxis.set_major_locator(plt.MaxNLocator(integer=True))
+    plt.tight_layout()
+    save_path = os.path.join(save_folder, "faithfulness.pdf")
+    print(f"\nSaving plot to {save_path}")
+    plt.savefig(save_path)
     plt.show()

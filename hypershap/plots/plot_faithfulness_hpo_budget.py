@@ -10,7 +10,7 @@ from hypershap.base.util.utils import setup_game
 def evaluate_scenario(benchmark, metric, hpo_budget, instance_idx=1):
     bench = benchmark_set.BenchmarkSet(benchmark)
     instance = bench.instances[instance_idx]
-    game, _, param_names = setup_game(
+    game, _, param_names, _ = setup_game(
         "global",
         benchmark,
         metric,

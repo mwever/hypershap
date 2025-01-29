@@ -16,7 +16,7 @@ from utils import (
 )
 
 GAME_STORAGES = {
-    "yahpogym": YAHPOGYM_GAME_STORAGE_DIR,
+    "ranger": YAHPOGYM_GAME_STORAGE_DIR,
     "pd1": PD1_GAME_STORAGE_DIR,
     "jahs": JAHS_GAME_STORAGE_DIR,
 }
@@ -86,3 +86,9 @@ if __name__ == "__main__":
     # plot_and_save_interactions("data_specific_tunability_pd1_lm1b_transformer_2048_default_default_n_configs=10000_random_state=42.npz", benchmark="pd1")
     # plot_and_save_interactions("data_specific_tunability_pd1_cifar100_wideresnet_2048_default_default_n_configs=10000_random_state=42.npz", benchmark="pd1")
     # plot_and_save_interactions("data_specific_tunability_pd1_translatewmt_xformer_64_default_default_n_configs=10000_random_state=42.npz", benchmark="pd1")
+
+    # lcbench --------------------------------------------------------------------------------------
+    plot_and_save_interactions(
+        "data_specific_tunability_yahpogym_rbv2_ranger_181_acc_n_configs=10000_random_state=42.npz",
+        benchmark="ranger",
+    )

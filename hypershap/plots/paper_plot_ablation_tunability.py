@@ -59,7 +59,7 @@ if __name__ == "__main__":
         show=True,
         n_interactions=3,
         feature_names=param_names,
-        figsize=(7, 9),
+        figsize=(5, 7),
         save_path=os.path.join(MAIN_PAPER_PLOTS_DIR, "ablation_upset.pdf"),
         add_zero_y_lim=True,
     )
@@ -69,7 +69,7 @@ if __name__ == "__main__":
         show=True,
         n_interactions=3,
         feature_names=param_names,
-        figsize=(7, 9),
+        figsize=(5, 7),
         save_path=os.path.join(MAIN_PAPER_PLOTS_DIR, "tunability_upset.pdf"),
     )
 
