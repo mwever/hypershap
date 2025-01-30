@@ -137,9 +137,7 @@ if __name__ == "__main__":
     # plot_and_save_interactions("tunability_yahpogym_rbv2_ranger_None_acc_n_configs=10000_random_state=42.npz", benchmark="ranger", plot_sv=True)
 
     # sensitiviy analysis games --------------------------------------------------------------------
-    plot_and_save_interactions(
-        "data_specific_tunability_yahpogym-sense_lcbench_0_val_accuracy_n_configs=10000_random_state=42.npz",
-        benchmark="lcbench_sens",
-        plot_sv=True,
-    )
+    # plot_and_save_interactions("data_specific_tunability_yahpogym-sense_lcbench_0_val_accuracy_n_configs=10000_random_state=42.npz", benchmark="lcbench_sens", plot_sv=True)
     # plot_and_save_interactions("data_specific_tunability_yahpogym-nonsense_lcbench_0_val_accuracy_n_configs=10000_random_state=42.npz", benchmark="lcbench_sens", plot_sv=True)
+    # plot_and_save_interactions("data_specific_tunability_yahpogym-sense_lcbench_1_val_accuracy_n_configs=10000_random_state=42.npz", benchmark="lcbench_sens", plot_sv=True)
+    # plot_and_save_interactions("data_specific_tunability_yahpogym-nonsense_lcbench_1_val_accuracy_n_configs=10000_random_state=42.npz", benchmark="lcbench_sens", plot_sv=True)
