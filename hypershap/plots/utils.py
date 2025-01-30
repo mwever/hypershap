@@ -28,6 +28,11 @@ if not os.path.exists(YAHPOGYM_GAME_STORAGE_DIR):
     raise FileNotFoundError(
         f"YAHPOGYM game storage directory not found at {YAHPOGYM_GAME_STORAGE_DIR}"
     )
+YAHPOGYM_SENS_GAME_STORAGE_DIR = os.path.join(GAME_STORAGE_DIR, "yahpogym-sense")
+if not os.path.exists(YAHPOGYM_SENS_GAME_STORAGE_DIR):
+    raise FileNotFoundError(
+        f"YAHPOGYM sense game storage directory not found at {YAHPOGYM_SENS_GAME_STORAGE_DIR}"
+    )
 JAHS_GAME_STORAGE_DIR = os.path.join(GAME_STORAGE_DIR, "jahs")
 if not os.path.exists(JAHS_GAME_STORAGE_DIR):
     raise FileNotFoundError(f"JAHS game storage directory not found at {JAHS_GAME_STORAGE_DIR}")
@@ -57,6 +62,15 @@ PARAMETER_NAMES = {
         "num.random.splits",
     ],
     "lcbench": [
+        "batch_size",
+        "learning_rate",
+        "max_dropout",
+        "max_units",
+        "momentum",
+        "num_layers",
+        "weight_decay",
+    ],
+    "lcbench_sens": [
         "batch_size",
         "learning_rate",
         "max_dropout",

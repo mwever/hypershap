@@ -558,9 +558,9 @@ if __name__ == "__main__":
 
     # increase fontsizes of ticks and axis labels
     ax.tick_params(axis="both", which="both", labelsize=12)
-    ax.set_xlabel("Explanation Order", fontsize=14)
+    ax.set_xlabel("Explanation Order", fontsize=12)
     # write R^2 in math mode
-    ax.set_ylabel(r"Shapley-weighted $R^2$", fontsize=14)
+    ax.set_ylabel(r"Shapley-weighted $R^2$", fontsize=12)
     # ax.set_title("Faithfulness", fontsize=18)
 
     # add vertical grid lines
