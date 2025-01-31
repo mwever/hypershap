@@ -75,10 +75,5 @@ All plots presented in the paper can be reproduced by running the Python scripts
 /<hypershap-root-dir>
     hypershap/
         plots/
-    plot_downstream.py  # plotting anytime performances of downstream HPO
-    plot_faithfulness_hpo_budget.py # plotting R2 faithfulness graphs over interaction orders
-    plot_interactions.py  # plotting SI graphs independently of each other
-    plot_moebius_interactions.py  # plotting violin plots over interaction orders
-    plot_optimizer_bias.py  # plotting interaction graphs for the optimizer bias game
-    plot_si_multiple.py  # plot SI graphs with joint normalization across multiple graphs 
+            ...
 ````
