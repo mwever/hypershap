@@ -1,7 +1,7 @@
 import matplotlib
 from matplotlib import pyplot as plt
-from paper_plot_interactions import plot_si_graph
 from shapiq import ExactComputer
+from utils import get_circular_layout
 from yahpo_gym import benchmark_set, local_config
 
 from hypershap.base.util.utils import setup_game
@@ -19,7 +19,7 @@ def evaluate_scenario(benchmark, metric, hpo_budget, instance_idx=1):
         instance_index=instance_idx,
     )
 
-    shap = ExactComputer(n_players=game.n_players, game_fun=game)
+    shap = ExactComputer(n_players=game.n_players, game=game)
     res = shap(index="k-SII", order=3)
 
     matplotlib.use("TkAgg")
@@ -31,7 +31,8 @@ def evaluate_scenario(benchmark, metric, hpo_budget, instance_idx=1):
             abbr_param_names.append(p[0].upper())
 
     plt.rcParams["font.size"] = 18
-    plot_si_graph(res, player_names=abbr_param_names)
+    pos = get_circular_layout(n_players=game.n_players)
+    res.plot_si_graph(feature_names=abbr_param_names, pos=pos, size_factor=3.0)
     plt.savefig(
         "plots/hpo_quality/"
         + benchmark

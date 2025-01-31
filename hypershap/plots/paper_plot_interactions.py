@@ -1,4 +1,4 @@
-"""This module contains functions to plot the SI values for different the different games."""
+"""This script plots interaction plots for different settings and games."""
 
 import os
 
@@ -141,3 +141,7 @@ if __name__ == "__main__":
     # plot_and_save_interactions("data_specific_tunability_yahpogym-nonsense_lcbench_0_val_accuracy_n_configs=10000_random_state=42.npz", benchmark="lcbench_sens", plot_sv=True)
     # plot_and_save_interactions("data_specific_tunability_yahpogym-sense_lcbench_1_val_accuracy_n_configs=10000_random_state=42.npz", benchmark="lcbench_sens", plot_sv=True)
     # plot_and_save_interactions("data_specific_tunability_yahpogym-nonsense_lcbench_1_val_accuracy_n_configs=10000_random_state=42.npz", benchmark="lcbench_sens", plot_sv=True)
+
+    # plot optibias games (3945) -------------------------------------------------------------------
+    # plot_and_save_interactions("optbias-setb_lcbench_metric=val_accuracy_instance=3945_n_configs=10000_random_state=42.npz", benchmark="lcbench", plot_sv=True)
+    # plot_and_save_interactions("optbias_lcbench_metric=val_accuracy_instance=3945_n_configs=10000_random_state=42.npz", benchmark="lcbench", plot_sv=True,)

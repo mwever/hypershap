@@ -1,15 +1,17 @@
 import json
 import os
+import warnings
 
 import matplotlib.pyplot as plt
 import numpy as np
-from utils import APPENDIX_PAPER_PLOTS_DIR, MAIN_PAPER_PLOTS_DIR
+from utils import APPENDIX_PAPER_PLOTS_DIR
 
 
 def create_step_plot(
     instance: int,
     data: dict,
     save_dir: str,
+    sense_data: dict = None,
     show: bool = False,
     add_title: bool = True,
     log_scale: bool = True,
@@ -17,9 +19,14 @@ def create_step_plot(
 ) -> None | tuple[plt.Figure, plt.Axes]:
 
     # stylings
-    _colors = {"hypershap": "#7DCE82", "fanova": "black", "opt": "#a8a8a8"}
-    _labels = {"hypershap": "HyperSHAP (top-2)", "fanova": "fANOVA (top-2)", "opt": "Optimum"}
-    _linestyles = {"hypershap": "-", "fanova": "-", "opt": "--"}
+    _colors = {"hypershap": "#7DCE82", "fanova": "black", "opt": "#a8a8a8", "sense": "#FF5733"}
+    _labels = {
+        "hypershap": "HyperSHAP (top-2)",
+        "fanova": "fANOVA (top-2)",
+        "opt": "Optimum",
+        "sense": "Sensitivity (top-2)",
+    }
+    _linestyles = {"hypershap": "-", "fanova": "-", "opt": "--", "sense": "-"}
     _markers_on = [0, 1, 2, 3, 4, 9, 19, 49, 99]
 
     styling = {
@@ -34,10 +41,20 @@ def create_step_plot(
     full_std = data["fn_std"]
     hpi_res = data["hs_res"]
     hpi_std = data["hs_std"]
+    sense_res, sense_std = None, None
+    if sense_data is not None and len(sense_data) > 0:
+        try:
+            sense_res = sense_data["hs_res"]
+            sense_std = sense_data["hs_std"]
+        except KeyError:
+            sense_res = sense_data["sense_res"]
+            sense_std = sense_data["sense_std"]
+        sense_res = np.array(sense_res)
+        sense_std = np.array(sense_std)
+    else:
+        warnings.warn(f"No sensitivity data found for instance {instance}")
     opt = data["full_opt"]
     bo = data["bo"]
-
-    # plot the data
     full_res = np.array(full_res)
     full_std = np.array(full_std)
     hpi_res = np.array(hpi_res)
@@ -70,6 +87,25 @@ def create_step_plot(
     ax.fill_between(
         x, full_res - full_std, full_res + full_std, alpha=0.25, step="pre", color=_colors["fanova"]
     )
+
+    # add sensitivity
+    if sense_res is not None:
+        ax.step(
+            x,
+            sense_res,
+            label=_labels["sense"],
+            color=_colors["sense"],
+            linestyle=_linestyles["sense"],
+            **styling,
+        )
+        ax.fill_between(
+            x,
+            sense_res - sense_std,
+            sense_res + sense_std,
+            alpha=0.25,
+            step="pre",
+            color=_colors["sense"],
+        )
 
     # add hypershap
     ax.step(
@@ -138,13 +174,42 @@ def create_step_plot(
     plt.show()
 
 
+def _try_load_sens_data(data_id: int, data_folder: str) -> dict:
+    path = f"wref_sensitivity_downstream_{data_id}.json"
+    data_path = os.path.join(data_folder, path)
+    try:
+        return json.load(open(data_path))
+    except FileNotFoundError:
+        return {}
+
+
 if __name__ == "__main__":
 
     data_folder = os.path.join("..", "..", "res", "hpo_runs", "fanova")
 
-    # main paper plot ------------------------------------------------------------------------------
-    save_dir = os.path.join(MAIN_PAPER_PLOTS_DIR, "comparison_fanova")
+    # appendix plots for the paper -----------------------------------------------------------------
+    save_dir = os.path.join(APPENDIX_PAPER_PLOTS_DIR, "comparison_fanova")
     os.makedirs(save_dir, exist_ok=True)
+
+    data_id = 126025
+    data_path = os.path.join(data_folder, f"wref_fanova_vs_hypershap_downstream_{data_id}.json")
+    create_step_plot(
+        data_id,
+        data=json.load(open(data_path)),
+        save_dir=save_dir,
+        show=True,
+        sense_data=_try_load_sens_data(data_id, data_folder),
+    )
+
+    data_id = 126026
+    data_path = os.path.join(data_folder, f"wref_fanova_vs_hypershap_downstream_{data_id}.json")
+    create_step_plot(
+        data_id,
+        data=json.load(open(data_path)),
+        save_dir=save_dir,
+        show=True,
+        sense_data=_try_load_sens_data(data_id, data_folder),
+    )
 
     data_id = 126029
     data_path = os.path.join(data_folder, f"wref_fanova_vs_hypershap_downstream_{data_id}.json")
@@ -153,42 +218,65 @@ if __name__ == "__main__":
         data=json.load(open(data_path)),
         save_dir=save_dir,
         show=True,
-        fig_size=(6.1, 3.2),
-        add_title=False,
+        sense_data=_try_load_sens_data(data_id, data_folder),
     )
 
-    # appendix plots for the paper -----------------------------------------------------------------
-    save_dir = os.path.join(APPENDIX_PAPER_PLOTS_DIR, "comparison_fanova")
-    os.makedirs(save_dir, exist_ok=True)
-
-    data_id = 126025
+    data_id = 146212
     data_path = os.path.join(data_folder, f"wref_fanova_vs_hypershap_downstream_{data_id}.json")
-    create_step_plot(data_id, data=json.load(open(data_path)), save_dir=save_dir, show=True)
+    create_step_plot(
+        data_id,
+        data=json.load(open(data_path)),
+        save_dir=save_dir,
+        show=True,
+        sense_data=_try_load_sens_data(data_id, data_folder),
+    )
 
-    data_id = 126026
+    data_id = 167104
     data_path = os.path.join(data_folder, f"wref_fanova_vs_hypershap_downstream_{data_id}.json")
-    create_step_plot(data_id, data=json.load(open(data_path)), save_dir=save_dir, show=True)
+    create_step_plot(
+        data_id,
+        data=json.load(open(data_path)),
+        save_dir=save_dir,
+        show=True,
+        sense_data=_try_load_sens_data(data_id, data_folder),
+    )
 
-    data_id = 126029
+    data_id = 167161
     data_path = os.path.join(data_folder, f"wref_fanova_vs_hypershap_downstream_{data_id}.json")
-    create_step_plot(data_id, data=json.load(open(data_path)), save_dir=save_dir, show=True)
+    create_step_plot(
+        data_id,
+        data=json.load(open(data_path)),
+        save_dir=save_dir,
+        show=True,
+        sense_data=_try_load_sens_data(data_id, data_folder),
+    )
 
-    data_id = 167181
+    data_id = 167168
     data_path = os.path.join(data_folder, f"wref_fanova_vs_hypershap_downstream_{data_id}.json")
-    create_step_plot(data_id, data=json.load(open(data_path)), save_dir=save_dir, show=True)
-
-    data_id = 167190
-    data_path = os.path.join(data_folder, f"wref_fanova_vs_hypershap_downstream_{data_id}.json")
-    create_step_plot(data_id, data=json.load(open(data_path)), save_dir=save_dir, show=True)
-
-    data_id = 168910
-    data_path = os.path.join(data_folder, f"wref_fanova_vs_hypershap_downstream_{data_id}.json")
-    create_step_plot(data_id, data=json.load(open(data_path)), save_dir=save_dir, show=True)
+    create_step_plot(
+        data_id,
+        data=json.load(open(data_path)),
+        save_dir=save_dir,
+        show=True,
+        sense_data=_try_load_sens_data(data_id, data_folder),
+    )
 
     data_id = 189865
     data_path = os.path.join(data_folder, f"wref_fanova_vs_hypershap_downstream_{data_id}.json")
-    create_step_plot(data_id, data=json.load(open(data_path)), save_dir=save_dir, show=True)
+    create_step_plot(
+        data_id,
+        data=json.load(open(data_path)),
+        save_dir=save_dir,
+        show=True,
+        sense_data=_try_load_sens_data(data_id, data_folder),
+    )
 
     data_id = 189866
     data_path = os.path.join(data_folder, f"wref_fanova_vs_hypershap_downstream_{data_id}.json")
-    create_step_plot(data_id, data=json.load(open(data_path)), save_dir=save_dir, show=True)
+    create_step_plot(
+        data_id,
+        data=json.load(open(data_path)),
+        save_dir=save_dir,
+        show=True,
+        sense_data=_try_load_sens_data(data_id, data_folder),
+    )

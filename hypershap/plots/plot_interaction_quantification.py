@@ -455,13 +455,13 @@ def create_plot_data(
 
 
 LEGEND_NAME_MAPPING = {
-    "jahs": "JAHS",
-    "rbv2_ranger": "RBV2/Ranger",
-    "lcbench": "LCBench",
+    "jahs": "JAHS-Bench-201",
+    "rbv2_ranger": "rbv2_ranger",
+    "lcbench": "lcbench",
     "pd1": "PD1",
     # game types
-    "tunability": "Tunability",
-    "data_specific_tunability": "Data-Specific Tunability",
+    "tunability": "Multi-Data Tunability",
+    "data_specific_tunability": "Tunability",
     "ablation": "Ablation",
 }
 
@@ -489,14 +489,12 @@ if __name__ == "__main__":
     only_load: bool = True
 
     # configure the games to plot
-    # TODO: Atm. there is a bug in data_specific_tunability for yapogym and this must be re-run
-    # TODO: Atm. there is a bug in ablation for yapogym and this must be re-run (throws an error)
     games_to_plot: list[tuple[str, str, int | None]] = [
         ("jahs", "data_specific_tunability", None),  # order 10
         ("pd1", "data_specific_tunability", None),  # order 4
-        # ("rbv2_ranger", "data_specific_tunability", 10), # order 8 # TODO: Must be re-run
+        ("rbv2_ranger", "data_specific_tunability", 20),  # order 8
+        ("lcbench", "data_specific_tunability", 20),  # order 7
         ("rbv2_ranger", "tunability", None),  # order 8
-        # ("lcbench", "data_specific_tunability", 10),  # order 7  # TODO: Must be re-run
         ("lcbench", "tunability", None),  # order 7
     ]
 
@@ -504,8 +502,8 @@ if __name__ == "__main__":
         ("jahs", "data_specific_tunability"),
         ("pd1", "data_specific_tunability"),
         ("rbv2_ranger", "data_specific_tunability"),
-        ("rbv2_ranger", "tunability"),
         ("lcbench", "data_specific_tunability"),
+        ("rbv2_ranger", "tunability"),
         ("lcbench", "tunability"),
     ]
 
@@ -515,7 +513,7 @@ if __name__ == "__main__":
     # plot the results -----------------------------------------------------------------------------
     styling = {"mew": 1, "mec": "white", "markersize": 7, "linestyle": "-", "linewidth": 2}
 
-    fig, ax = plt.subplots(1, 1, figsize=(6.1, 3.2))
+    fig, ax = plt.subplots(1, 1, figsize=(5.5, 3))
     plotted_games = set()
     for benchmark_name, game_type, _ in games_to_plot:
         data_subset = data[(data["benchmark"] == benchmark_name) & (data["game_type"] == game_type)]

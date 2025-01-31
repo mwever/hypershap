@@ -1,13 +1,12 @@
+import json
 import math
 import os
-import json
 
 import shapiq
 
 from hypershap.base.benchmark.yahpogym import YahpoGymBenchmark
-from hypershap.downstream_hpo.downstream_hpo import BOSimulation, RSSimulation
+from hypershap.downstream_hpo.downstream_hpo import RSSimulation
 from hypershap.plots.utils import PARAMETER_NAMES
-
 
 fanova_hpi_results_folder = "res/fANOVA/"
 
@@ -62,22 +61,34 @@ for key in hypershap_dict.keys():
 
         print("Simulate HPO for HyperSHAP")
         # bo_hs = BOSimulation(hpoBenchmark=yahpo, parameter_selection=hs_params, hpo_budget=hpo_budget)
-        bo_hs = RSSimulation(hpoBenchmark=yahpo, parameter_selection=hs_params, hpo_budget=hpo_budget)
+        bo_hs = RSSimulation(
+            hpoBenchmark=yahpo, parameter_selection=hs_params, hpo_budget=hpo_budget
+        )
         hs_res, hs_std = bo_hs.simulate_hpo(hpo_runs)
         hs_std = hs_std / math.sqrt(hpo_runs)
 
         print("Simulate HPO for fANOVA")
-        bo_fn = RSSimulation(hpoBenchmark=yahpo, parameter_selection=fn_params, hpo_budget=hpo_budget)
+        bo_fn = RSSimulation(
+            hpoBenchmark=yahpo, parameter_selection=fn_params, hpo_budget=hpo_budget
+        )
         fn_res, fn_std = bo_fn.simulate_hpo(hpo_runs)
         fn_std = fn_std / math.sqrt(hpo_runs)
 
         print("Simulate HPO for full parameter set")
-        fp = RSSimulation(hpoBenchmark=yahpo, parameter_selection=yahpo.get_list_of_tunable_hyperparameters(), hpo_budget=hpo_budget)
+        fp = RSSimulation(
+            hpoBenchmark=yahpo,
+            parameter_selection=yahpo.get_list_of_tunable_hyperparameters(),
+            hpo_budget=hpo_budget,
+        )
         fp_res, fp_std = fp.simulate_hpo(hpo_runs)
         fp_std = fp_std / math.sqrt(hpo_runs)
 
         print("Determine optimum performance")
-        opt = RSSimulation(hpoBenchmark=yahpo, parameter_selection=yahpo.get_list_of_tunable_hyperparameters(), hpo_budget=100_000)
+        opt = RSSimulation(
+            hpoBenchmark=yahpo,
+            parameter_selection=yahpo.get_list_of_tunable_hyperparameters(),
+            hpo_budget=100_000,
+        )
         opt_res, opt_hs_std = opt.simulate_hpo(1)
 
         # ensure that the maximum is really max of everything seen here
@@ -97,7 +108,7 @@ for key in hypershap_dict.keys():
             "hs_std": hs_std.tolist(),
             "fp_res": fp_res.tolist(),
             "fp_std": fp_std.tolist(),
-            "full_opt": str(full_opt)
+            "full_opt": str(full_opt),
         }
 
         with open(outdir + "wref_fanova_vs_hypershap_downstream_" + key + ".json", "w") as outfile:
