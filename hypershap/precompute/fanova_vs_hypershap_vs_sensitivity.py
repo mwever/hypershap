@@ -39,15 +39,37 @@ for f in os.listdir(hypershap_hpi_results_folder):
         hypershap_dict[instance] = hpi
 
 
+sensitivity_hpi_results_folder = "res/games/yahpogym-sense/"
+sensitivity_dict = {}
+for f in os.listdir(sensitivity_hpi_results_folder):
+    if "data_specific_tunability" in f and "lcbench" in f:
+        hpo_game = shapiq.Game(path_to_values=sensitivity_hpi_results_folder + f, normalize=True)
+        comp = shapiq.ExactComputer(n_players=hpo_game.n_players, game=hpo_game)
+        fsii = comp(index="FSII", order=1)
+
+        instance = f.split("_")[5]
+
+        hpi = dict()
+        for i, interaction in enumerate(fsii.get_top_k_interactions(7)):
+            if i == 7:
+                break
+            hpi[player_names[i]] = interaction
+        sensitivity_dict[instance] = hpi
+
 for key in hypershap_dict.keys():
     if key not in fanova_dict.keys():
         continue
+    if key not in sensitivity_dict:
+        continue
+
     k = 2
     hs = sorted(list(hypershap_dict[key].items()), key=lambda x: -x[1])[0:k]
     fn = sorted(list(fanova_dict[key].items()), key=lambda x: -x[1])[0:k]
+    sense = sorted(list(sensitivity_dict[key].items()), key=lambda x: -x[1])[0:k]
 
     hs_params = [x[0] for x in hs]
     fn_params = [x[0] for x in fn]
+    sense_params = [x[0] for x in sense]
 
     intersect = set(hs_params).intersection(set(fn_params))
     if len(intersect) < 2:
@@ -59,6 +81,7 @@ for key in hypershap_dict.keys():
 
         yahpo = YahpoGymBenchmark(scenario_name="lcbench", metric="val_accuracy", instance_idx=key)
 
+        json.dump(top_2_data, open(outdir + key + "_sense_param_names.json", "w"))
         print("Simulate HPO for HyperSHAP")
         # bo_hs = BOSimulation(hpoBenchmark=yahpo, parameter_selection=hs_params, hpo_budget=hpo_budget)
         bo_hs = RSSimulation(
@@ -73,6 +96,14 @@ for key in hypershap_dict.keys():
         )
         fn_res, fn_std = bo_fn.simulate_hpo(hpo_runs)
         fn_std = fn_std / math.sqrt(hpo_runs)
+
+
+        print("Simulate HPO for Sensitivity")
+        bo_sense = RSSimulation(
+            hpoBenchmark=yahpo, parameter_selection=sense_params, hpo_budget=hpo_budget
+        )
+        sense_res, sense_std = bo_sense.simulate_hpo(hpo_runs)
+        sense_std = sense_std / math.sqrt(hpo_runs)
 
         print("Simulate HPO for full parameter set")
         fp = RSSimulation(
@@ -100,10 +131,13 @@ for key in hypershap_dict.keys():
             "hpo_budget": hpo_budget,
             "num_runs": hpo_runs,
             "param_set_hs": hs_params,
+            "param_set_sense": sense_params,
             "param_set_fn": fn_params,
             "bo": False,
             "fn_res": fn_res.tolist(),
             "fn_std": fn_std.tolist(),
+            "sense_res": sense_res.tolist(),
+            "sense_std": sense_std.tolist(),
             "hs_res": hs_res.tolist(),
             "hs_std": hs_std.tolist(),
             "fp_res": fp_res.tolist(),
@@ -111,5 +145,5 @@ for key in hypershap_dict.keys():
             "full_opt": str(full_opt),
         }
 
-        with open(outdir + "wref_fanova_vs_hypershap_downstream_" + key + ".json", "w") as outfile:
+        with open(outdir + "wref_fanova_vs_hypershap_vs_sensitivity_downstream_" + key + ".json", "w") as outfile:
             json.dump(data_storage, outfile)
