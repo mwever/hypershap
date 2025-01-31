@@ -137,4 +137,5 @@ if __name__ == '__main__':
         print("Unknown benchmark ", args.benchmark, "given")
         exit(1)
 
-    # experimenter.execute(experiment_function=run_experiment, max_experiments=1)
+    if not args.setup:
+        experimenter.execute(experiment_function=run_experiment, max_experiments=1)

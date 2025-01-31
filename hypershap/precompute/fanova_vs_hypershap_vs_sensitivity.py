@@ -38,9 +38,9 @@ for f in os.listdir(hypershap_hpi_results_folder):
             hpi[player_names[i]] = interaction
         hypershap_dict[instance] = hpi
 
-
 sensitivity_hpi_results_folder = "res/games/yahpogym-sense/"
 sensitivity_dict = {}
+yahpo = YahpoGymBenchmark("lcbench", "val_accuracy", instance_idx=0)
 for f in os.listdir(sensitivity_hpi_results_folder):
     if "data_specific_tunability" in f and "lcbench" in f:
         hpo_game = shapiq.Game(path_to_values=sensitivity_hpi_results_folder + f, normalize=True)
@@ -48,6 +48,8 @@ for f in os.listdir(sensitivity_hpi_results_folder):
         fsii = comp(index="FSII", order=1)
 
         instance = f.split("_")[5]
+        yahpo.set_instance(int(instance))
+        instance = yahpo.benchmark.instance
 
         hpi = dict()
         for i, interaction in enumerate(fsii.get_top_k_interactions(7)):
@@ -56,10 +58,12 @@ for f in os.listdir(sensitivity_hpi_results_folder):
             hpi[player_names[i]] = interaction
         sensitivity_dict[instance] = hpi
 
+print(sensitivity_dict.keys())
+
 for key in hypershap_dict.keys():
     if key not in fanova_dict.keys():
         continue
-    if key not in sensitivity_dict:
+    if key not in sensitivity_dict.keys():
         continue
 
     k = 2
@@ -77,11 +81,10 @@ for key in hypershap_dict.keys():
         print(hs_params, fn_params)
         print(" ")
         hpo_budget = 200
-        hpo_runs = 500
+        hpo_runs = 1000
 
         yahpo = YahpoGymBenchmark(scenario_name="lcbench", metric="val_accuracy", instance_idx=key)
 
-        json.dump(top_2_data, open(outdir + key + "_sense_param_names.json", "w"))
         print("Simulate HPO for HyperSHAP")
         # bo_hs = BOSimulation(hpoBenchmark=yahpo, parameter_selection=hs_params, hpo_budget=hpo_budget)
         bo_hs = RSSimulation(

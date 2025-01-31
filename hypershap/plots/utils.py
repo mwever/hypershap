@@ -15,11 +15,11 @@ APPENDIX_PAPER_PLOTS_DIR = os.path.join(PAPER_PLOTS_DIR, "appendix")
 os.makedirs(MAIN_PAPER_PLOTS_DIR, exist_ok=True)
 os.makedirs(APPENDIX_PAPER_PLOTS_DIR, exist_ok=True)
 
-PLOT_DIR = os.path.join("..", "..", "plots")
+PLOT_DIR = os.path.join("plots")
 os.makedirs(PLOT_DIR, exist_ok=True)
 
 # define the game storage directories
-GAME_STORAGE_DIR = os.path.join("..", "..", "res", "games")
+GAME_STORAGE_DIR = os.path.join("res", "games")
 PD1_GAME_STORAGE_DIR = os.path.join(GAME_STORAGE_DIR, "pd1")
 if not os.path.exists(PD1_GAME_STORAGE_DIR):
     raise FileNotFoundError(f"PD1 game storage directory not found at {PD1_GAME_STORAGE_DIR}")
