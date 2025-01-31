@@ -494,7 +494,7 @@ if __name__ == "__main__":
         max_order_to_plot = 5
     else:
         save_folder = os.path.join(APPENDIX_PAPER_PLOTS_DIR, "interaction_quantification")
-        fig_size = (7, 5)
+        fig_size = (8, 5)
         y_lim = (0, 1.05)
         max_order_to_plot = 10
     os.makedirs(save_folder, exist_ok=True)
