@@ -12,6 +12,7 @@ from shapiq.interaction_values import InteractionValues
 from shapiq.utils import powerset
 from tqdm import tqdm
 from utils import (
+    APPENDIX_PAPER_PLOTS_DIR,
     JAHS_GAME_STORAGE_DIR,
     MAIN_PAPER_PLOTS_DIR,
     PD1_GAME_STORAGE_DIR,
@@ -481,12 +482,22 @@ COLOR_MAPPING = {
 
 if __name__ == "__main__":
 
-    save_folder = os.path.join(MAIN_PAPER_PLOTS_DIR, "interaction_quantification")
-    os.makedirs(save_folder, exist_ok=True)
-
+    APPENDIX_PLOT = True
     index: str = "FSII"
-    max_order_to_plot: int | None = 5
     only_load: bool = True
+
+    # get the appendix specific settings
+    if not APPENDIX_PLOT:
+        save_folder = os.path.join(MAIN_PAPER_PLOTS_DIR, "interaction_quantification")
+        fig_size = (5.5, 3)
+        y_lim = (0.45, 1.05)
+        max_order_to_plot = 5
+    else:
+        save_folder = os.path.join(APPENDIX_PAPER_PLOTS_DIR, "interaction_quantification")
+        fig_size = (7, 5)
+        y_lim = (0, 1.05)
+        max_order_to_plot = 10
+    os.makedirs(save_folder, exist_ok=True)
 
     # configure the games to plot
     games_to_plot: list[tuple[str, str, int | None]] = [
@@ -513,7 +524,7 @@ if __name__ == "__main__":
     # plot the results -----------------------------------------------------------------------------
     styling = {"mew": 1, "mec": "white", "markersize": 7, "linestyle": "-", "linewidth": 2}
 
-    fig, ax = plt.subplots(1, 1, figsize=(5.5, 3))
+    fig, ax = plt.subplots(1, 1, figsize=fig_size)
     plotted_games = set()
     for benchmark_name, game_type, _ in games_to_plot:
         data_subset = data[(data["benchmark"] == benchmark_name) & (data["game_type"] == game_type)]
@@ -549,9 +560,8 @@ if __name__ == "__main__":
         ax.plot([], [], label=name, marker=marker, color=color, **styling)
 
     # beautify the plot
-    if max_order_to_plot is not None:
-        ax.set_xlim(0.5, max_order_to_plot + 0.5)
-    ax.set_ylim(0.45, 1.05)  # ax.set_ylim(-0.05, 1.05)
+    ax.set_xlim(0.5, max_order_to_plot + 0.5)
+    ax.set_ylim(y_lim)  # ax.set_ylim(-0.05, 1.05)
     ax.legend(loc="lower right")
 
     # increase fontsizes of ticks and axis labels
